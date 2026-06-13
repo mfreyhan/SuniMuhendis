@@ -1,0 +1,9 @@
+{
+  "geometry_type": "shell_and_tube",
+  "length": 3.0,
+  "inner_tube_di": 0.02,
+  "inner_tube_do": 0.025,
+  "outer_shell_di": 0.4,
+  "number_of_tubes": 100,
+  "baffle_spacing": 0.5
+}
