@@ -44,3 +44,6 @@ examples/outputs/
 .idea/
 *.swp
 *.swo
+
+# Project Docs (Local Only)
+Master_Plan.md
