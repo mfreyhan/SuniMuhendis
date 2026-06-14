@@ -3,5 +3,5 @@
   "w_heat": 0.5,
   "w_drop": 0.5,
   "target_heat_duty": 150000.0,
-  "max_pressure_drop": 50000.0
+  "max_pressure_drop": 100.0
 }
