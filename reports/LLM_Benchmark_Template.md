@@ -6,7 +6,7 @@
 ## 1. Test Ortamı ve Görev
 - **Görev (Task):** `he_task_001` (Heat Exchanger Design)
 - **Prompt:** Sistemimiz tarafından üretilen varsayılan (Zero-shot) JSON Schema Promptu.
-- **Hedef:** 150.000 W Isı transferi, Maksimum 50.000 Pa Basınç düşüşü.
+- **Hedef:** 150.000 W Isı transferi, Maksimum 100 Pa Basınç düşüşü.
 
 ---
 
