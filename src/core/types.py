@@ -20,5 +20,5 @@ class EvaluationResult(BaseModel):
     status: str = Field(..., description="'success', 'schema_error', 'drc_error', 'simulation_error'")
     error_message: Optional[str] = Field(None, description="Hata durumu mesajı")
     reward: RewardResult
-    metrics: Dict[str, float] = Field(default_factory=dict, description="Simülatörden dönen ham mühendislik metrikleri.")
+    metrics: Dict[str, Any] = Field(default_factory=dict, description="Simülatörden dönen ham mühendislik metrikleri.")
     raw_simulation_output: Dict[str, Any] = Field(default_factory=dict, description="Simülatörün dönebileceği diğer raw data (opsiyonel).")
