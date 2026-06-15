@@ -11,7 +11,7 @@ class BaseRewardFunction(ABC):
     def calculate_reward(
         self, 
         task_params: Dict[str, Any],
-        metrics: Dict[str, float], 
+        metrics: Dict[str, Any], 
         is_valid: bool = True, 
         error_message: Optional[str] = None
     ) -> RewardResult:

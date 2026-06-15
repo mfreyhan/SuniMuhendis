@@ -26,6 +26,13 @@ Engineering Rules (Design Rule Checks):
 - For shell_and_tube geometry, number_of_tubes MUST be > 1.
 - For concentric_tube geometry, number_of_tubes MUST be exactly 1.
 - All dimensions must be strictly positive.
+
+Performance Objectives:
+1. Maximize Heat Duty towards the target while respecting limits.
+2. Minimize Tube and Shell Pressure Drops below max limits.
+3. Maximize Thermodynamic Effectiveness.
+4. Minimize Annualised Cost (capital + operating).
+5. Avoid mechanical design warnings (e.g., tube vibration, excessive velocities) or else severe point penalties will apply.
 """
 
     user_prompt = f"""

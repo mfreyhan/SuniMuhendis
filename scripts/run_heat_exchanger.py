@@ -41,11 +41,19 @@ def main():
     # Show results
     logger.info(f"Status: {result.status}")
     if result.status == "success":
-        logger.info(f"Calculated Heat Duty: {result.metrics.get('heat_duty', 0):.2f} W")
-        logger.info(f"Tube Side Pressure Drop: {result.metrics.get('pressure_drop_tube', 0):.2f} Pa")
-        logger.info(f"Shell Side Pressure Drop: {result.metrics.get('pressure_drop_shell', 0):.2f} Pa")
-        logger.info(f"Total Area: {result.metrics.get('area', 0):.4f} m^2")
-        logger.info(f"Earned Reward: {result.reward.normalized_total:.4f} / 1.0000")
+        logger.info(f"Calculated Heat Duty: {result.metrics.get('heat_duty_W', 0):.2f} W")
+        logger.info(f"Tube Side Pressure Drop: {result.metrics.get('dp_tube_Pa', 0):.2f} Pa")
+        logger.info(f"Shell Side Pressure Drop: {result.metrics.get('dp_shell_Pa', 0):.2f} Pa")
+        logger.info(f"Total Area: {result.metrics.get('area_m2', 0):.4f} m^2")
+        logger.info(f"Effectiveness: {result.metrics.get('effectiveness', 0):.2%}")
+        logger.info(f"Annualised Cost: {result.metrics.get('cost_annualised_USD_per_yr', 0):.2f} USD/yr")
+        logger.info(f"Design Warnings: {int(result.metrics.get('num_warnings', 0))}")
+        
+        logger.info("--- Reward Breakdown ---")
+        for key, value in result.reward.components.items():
+            logger.info(f"  {key}: {value:.4f}")
+            
+        logger.info(f"Total Earned Reward: {result.reward.normalized_total:.4f} / 1.0000")
     else:
         logger.error(f"Error Message: {result.error_message}")
         

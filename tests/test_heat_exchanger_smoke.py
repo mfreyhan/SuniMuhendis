@@ -28,12 +28,12 @@ def test_smoke_valid_design():
     res1 = env.evaluate("task_001", task_params, "valid_design_001", design_params)
     assert res1.status == "success", f"Simulation failed: {res1.error_message}"
     assert res1.reward.is_valid == True
-    assert "heat_duty" in res1.metrics
+    assert "heat_duty_W" in res1.metrics
     assert res1.reward.normalized_total >= 0.0
     
     # 2nd run (Determinism check)
     res2 = env.evaluate("task_001", task_params, "valid_design_001", design_params)
-    assert res1.metrics["heat_duty"] == res2.metrics["heat_duty"]
+    assert res1.metrics["heat_duty_W"] == res2.metrics["heat_duty_W"]
     assert res1.reward.normalized_total == res2.reward.normalized_total
 
 def test_smoke_concentric_tube_design():
@@ -52,4 +52,4 @@ def test_smoke_concentric_tube_design():
     
     res = env.evaluate("task_001", task_params, "concentric_001", design_params)
     assert res.status == "success", f"Concentric simulation failed: {res.error_message}"
-    assert "heat_duty" in res.metrics
+    assert "heat_duty_W" in res.metrics
