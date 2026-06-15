@@ -31,12 +31,28 @@ pip install -r requirements.txt
 
 ## Usage
 
+### 1. Simple Physics Evaluation
 You can test the environment using the provided demo script. It loads a sample task (`task_001.json`) and a valid design (`heat_exchanger_valid_001.json`), runs the simulation, and prints the results.
 
 ```bash
 python scripts/run_heat_exchanger.py
 ```
 
+### 2. LLM Benchmarking & Interactive Dashboard
+You can evaluate LLMs (ChatGPT, Claude, etc.) interactively, prompt them with engineering tasks, and store their responses to a local database. 
+
+```bash
+# Run the interactive evaluator
+python scripts/run_llm_eval.py --client interactive
+```
+
+Once you save the models' designs, you can visualize and compare their performance metrics (Heat, Cost, Pressure Drops, etc.) via the interactive Streamlit web dashboard:
+
+```bash
+streamlit run scripts/dashboard.py
+```
+
+### 3. Running Tests
 To run the unit and smoke tests:
 ```bash
 pytest tests/ -v

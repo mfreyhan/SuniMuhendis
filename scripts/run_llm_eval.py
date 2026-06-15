@@ -62,6 +62,43 @@ def main():
     if res.status == "success":
         logger.info(f"Simulation Success! Reward: {res.reward.normalized_total:.4f}")
         logger.info(f"Metrics: {res.metrics}")
+        
+        # Soru sor ve kaydet
+        model_name = input("\nEnter Model Name (e.g. 'GPT 5.5 Pro' or 'Skip' to not save): ").strip()
+        if model_name.lower() != 'skip' and model_name != '':
+            db_path = os.path.join(os.path.dirname(__file__), '../reports/benchmark_results.json')
+            
+            # Kaydedilecek veri paketi
+            record = {
+                "model_name": model_name,
+                "task_id": "he_task_001",
+                "weights": {
+                    "w_heat": task_params.get("w_heat", 0.4),
+                    "w_cost": task_params.get("w_cost", 0.1),
+                    "w_drop_tube": task_params.get("w_drop_tube", 0.15),
+                    "w_drop_shell": task_params.get("w_drop_shell", 0.15),
+                    "w_eff": task_params.get("w_eff", 0.2)
+                },
+                "total_reward": res.reward.normalized_total,
+                "metrics": res.metrics,
+                "design": design
+            }
+            
+            db = []
+            if os.path.exists(db_path):
+                try:
+                    with open(db_path, 'r', encoding='utf-8') as f:
+                        db = json.load(f)
+                except json.JSONDecodeError:
+                    db = []
+            
+            db.append(record)
+            
+            with open(db_path, 'w', encoding='utf-8') as f:
+                json.dump(db, f, indent=4)
+                
+            logger.info(f"Saved results for {model_name} to {db_path}")
+            
     else:
         logger.warning(f"Simulation/DRC/Schema failed. Reason: {res.status}")
         if res.error_message:
