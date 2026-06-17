@@ -61,8 +61,8 @@ pytest tests/ -v
 ## Roadmap
 
 - **Phase 0 & Phase 1**: Core interfaces and Heat Exchanger Simulator (Completed ✅)
-- **Phase 2**: LLM-free Baseline and Dataset Generation (Next ⏳)
-- **Phase 3**: Model Client Interface and First LLM Integration
-- **Phase 4**: Small LLM Supervised Fine-Tuning (SFT)
+- **Phase 2**: LLM-free Baseline and Dataset Generation (Completed ✅)
+- **Phase 3**: Model Client Interface and First LLM Integration (Completed ✅)
+- **Phase 4**: Small LLM Supervised Fine-Tuning (SFT) (Next ⏳)
 - **Phase 5**: Reinforcement Learning (RL / GRPO) Training
 - **Phase 6+**: Commercial Benchmarks and Advanced Environments (UAV Wing, Turbomachinery)
