@@ -18,16 +18,28 @@ The pipeline consists of the following steps:
 
 ## Installation
 
-It is recommended to use a virtual environment.
+Use a virtual environment (Python 3.9).
 
 ```bash
 # Clone the repository
 git clone <repository_url>
 cd SuniMuhendis
 
-# Install the required packages
+# Create & activate the venv, then install dependencies
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+For the automated Hugging Face benchmark (Usage §2) you also need an HF token:
+
+```bash
+cp .env.example .env
+# then edit .env and set:  HF_TOKEN=hf_xxxxxxxx
+```
+
+The token is read from `.env` (git-ignored) automatically. Get one at
+<https://huggingface.co/settings/tokens> with "Make calls to Inference Providers" permission.
 
 ## Usage
 
@@ -38,21 +50,52 @@ You can test the environment using the provided demo script. It loads a sample t
 python scripts/run_heat_exchanger.py
 ```
 
-### 2. LLM Benchmarking & Interactive Dashboard
-You can evaluate LLMs (ChatGPT, Claude, etc.) interactively, prompt them with engineering tasks, and store their responses to a local database. 
+### 2. Automated HF Model Benchmark
+Send **one prompt to many Hugging Face models in a single command**, run every response through the same `schema → DRC → simulation → reward` pipeline, and store the results. (Requires `HF_TOKEN` in `.env` — see Installation.)
 
-```bash
-# Run the interactive evaluator
-python scripts/run_llm_eval.py --client interactive
+A **prompt unit** is a folder under `results/`:
+
+```
+results/<prompt-slug>/
+  prompt.txt    # the exact text sent to the model (committed)
+  task.json     # reward weights + targets used for scoring (committed)
+  benchmark/    # generated results — one JSON per run (git-ignored)
+    <model-name>/<timestamp>.json
 ```
 
-Once you save the models' designs, you can visualize and compare their performance metrics (Heat, Cost, Pressure Drops, etc.) via the interactive Streamlit web dashboard:
+The models to test are listed in `configs/benchmarks/models.json`
+(`name` = label/folder shown in the dashboard, `model` = HF model id).
+
+```bash
+# All models in models.json, 5 runs each:
+python scripts/run_hf_benchmark.py --prompt heat_exchanger_v1 --repeats 5
+
+# A single model (use the "name" from models.json, not the HF id):
+python scripts/run_hf_benchmark.py --prompt heat_exchanger_v1 --model Qwen3.5-27B
+
+# A subset:
+python scripts/run_hf_benchmark.py --prompt heat_exchanger_v1 --models Qwen3.5-27B,gpt-oss-20b
+```
+
+- **Add a new prompt:** create `results/<new-slug>/prompt.txt` + `task.json` (copy `heat_exchanger_v1` as a template).
+- **Add a model:** add a line to `configs/benchmarks/models.json`. A model that isn't served on HF Inference Providers just records `client_error` for that row; the run continues.
+
+View the results in the dashboard — the **"HF Benchmark (results/)"** source shows one row per model (the **average** of all its runs for the selected prompt):
 
 ```bash
 streamlit run scripts/dashboard.py
 ```
 
-### 3. Running Tests
+### 3. Manual LLM Evaluation (cloud models, by hand)
+For cloud models tested one-by-one (ChatGPT, Claude, etc.): the interactive evaluator prints the prompt, you paste the model's response back, and the result is appended to `reports/benchmark_results.json`.
+
+```bash
+python scripts/run_llm_eval.py --client interactive
+```
+
+These manual results are viewable under the dashboard's **"Manuel (reports/)"** source.
+
+### 4. Running Tests
 To run the unit and smoke tests:
 ```bash
 pytest tests/ -v
