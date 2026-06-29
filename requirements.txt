@@ -5,8 +5,9 @@ fluids
 CoolProp
 numpy
 scipy
-j s o n - r e p a i r > = 0 . 3 0 . 0  
+json-repair>=0.30.0
+openai>=1.0.0
+python-dotenv>=1.0.0
 streamlit
 pandas
 plotly
- 
