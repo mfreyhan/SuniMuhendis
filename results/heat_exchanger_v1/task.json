@@ -1,0 +1,11 @@
+{
+  "task_id": "he_task_001",
+  "w_heat": 0.4,
+  "w_drop_tube": 0.05,
+  "w_drop_shell": 0.05,
+  "w_eff": 0.2,
+  "w_cost": 0.3,
+  "target_heat_duty": 150000.0,
+  "max_dp_tube": 50000.0,
+  "max_dp_shell": 50000.0
+}
