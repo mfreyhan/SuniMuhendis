@@ -35,9 +35,19 @@ venv.bak/
 .coverage
 htmlcov/
 
+# Secrets / local env
+.env
+.env.local
+
 # Logs and outputs
 logs/
 examples/outputs/
+
+# Benchmark run outputs (prompt.txt / task.json are tracked; runs are not)
+results/**/benchmark/
+
+# Local-only report / notes folder (not tracked)
+rapor/
 
 # IDEs
 .vscode/
