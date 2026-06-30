@@ -1,6 +1,6 @@
 # Vast.ai Deployment Guide
 
-Bu doküman, SuniMuhendis projesini model eğitimi (SFT, RL) için kiralayacağınız Vast.ai (Ubuntu + GPU) sunucularına nasıl kuracağınızı açıklar.
+Bu doküman, SuniMuhendis projesini modelleri benchmark etmek ve simülasyonları koşturmak için kiralayacağınız Vast.ai (Ubuntu + GPU) sunucularına nasıl kuracağınızı açıklar.
 
 ## 1. Sunucuya Bağlanma
 Vast.ai üzerinden kiraladığınız sunucuya size verilen SSH komutuyla bağlanın:
@@ -29,4 +29,3 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-*(Not: Faz 4'e geldiğimizde buraya LLM modelini indirmek için `vllm`, `trl` veya `transformers` kurulum komutları eklenecektir.)*

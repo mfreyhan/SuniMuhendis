@@ -19,7 +19,7 @@ except ImportError:
 
 from src.core.logging import setup_logger
 from src.environments.heat_exchanger.env import HeatExchangerEnv
-from src.environments.heat_exchanger.reward import HeatExchangerReward
+from src.environments.heat_exchanger.score import HeatExchangerScore
 from src.environments.heat_exchanger.simulator import HeatExchangerSimulator
 from src.model_clients.base import BaseModelClient
 from src.parsing.json_parser import parse_llm_json
@@ -53,7 +53,7 @@ def _file_stamp() -> str:
 
 
 def _build_environment():
-    return HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerReward())
+    return HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScore())
 
 
 def hf_client_factory(spec: Dict[str, Any]) -> BaseModelClient:
@@ -161,8 +161,8 @@ def run_benchmark(
                         design_id = f"{model_name}_{r}_{uuid.uuid4().hex[:6]}"
                         result = env.evaluate(task_id, task_params, design_id, design)
                         record["status"] = result.status
-                        record["total_reward"] = float(result.reward.normalized_total)
-                        record["reward_components"] = dict(result.reward.components)
+                        record["total_reward"] = float(result.score.normalized_total)
+                        record["reward_components"] = dict(result.score.components)
                         record["metrics"] = dict(result.metrics)
                         record["error"] = result.error_message
                 except Exception as e:  # noqa: BLE001 - hicbir run tum kosuyu dusurmesin
@@ -176,7 +176,7 @@ def run_benchmark(
             written.append(fpath)
             logger.info(
                 f"{progress} {model_name} | r{r} -> {record['status']} "
-                f"reward={record['total_reward']:.3f}"
+                f"score={record['total_reward']:.3f}"
             )
 
     logger.info(f"Bitti. {len(written)} run yazildi -> {os.path.join(prompt_dir, 'benchmark')}")

@@ -4,17 +4,17 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.environments.heat_exchanger.reward import HeatExchangerReward
+from src.environments.heat_exchanger.score import HeatExchangerScore
 
 def test_reward_invalid():
-    rew = HeatExchangerReward()
-    res = rew.calculate_reward({}, {}, is_valid=False, error_message="DRC Failed")
+    rew = HeatExchangerScore()
+    res = rew.calculate_score({}, {}, is_valid=False, error_message="DRC Failed")
     assert res.is_valid == False
     assert res.normalized_total == 0.0
     assert "DRC Failed" in res.error_message
 
 def test_reward_valid_perfect():
-    rew = HeatExchangerReward()
+    rew = HeatExchangerScore()
     task_params = {
         "w_heat": 0.4,
         "w_drop_tube": 0.15,
@@ -34,12 +34,12 @@ def test_reward_valid_perfect():
         "num_warnings": 0.0 # No penalty
     }
     
-    res = rew.calculate_reward(task_params, metrics, is_valid=True)
+    res = rew.calculate_score(task_params, metrics, is_valid=True)
     assert res.is_valid == True
     assert res.normalized_total == 1.0
 
 def test_reward_valid_penalty():
-    rew = HeatExchangerReward()
+    rew = HeatExchangerScore()
     task_params = {
         "w_heat": 0.4,
         "w_drop_tube": 0.15,
@@ -59,7 +59,7 @@ def test_reward_valid_penalty():
         "num_warnings": 0.0 # No penalty
     }
     
-    res = rew.calculate_reward(task_params, metrics, is_valid=True)
+    res = rew.calculate_score(task_params, metrics, is_valid=True)
     assert res.is_valid == True
     # r_heat: 0.5 * 0.4 = 0.2
     # r_drop_tube: 0.5 * 0.15 = 0.075

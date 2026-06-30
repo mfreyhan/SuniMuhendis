@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
-from .types import EvaluationResult, RewardResult
+from .types import EvaluationResult, ScoreResult
 from .base_simulator import BaseSimulator
-from .base_reward import BaseRewardFunction
+from .base_score import BaseScoreFunction
 
 class BaseEnvironment(ABC):
     """
@@ -10,9 +10,9 @@ class BaseEnvironment(ABC):
     ana ortam (environment) sınıfı.
     """
     
-    def __init__(self, simulator: BaseSimulator, reward_function: BaseRewardFunction):
+    def __init__(self, simulator: BaseSimulator, score_function: BaseScoreFunction):
         self.simulator = simulator
-        self.reward_function = reward_function
+        self.score_function = score_function
         
     @abstractmethod
     def validate_schema(self, design_params: Dict[str, Any]) -> tuple[bool, Optional[str]]:
@@ -37,24 +37,24 @@ class BaseEnvironment(ABC):
         # 1. Schema Validation
         schema_valid, schema_err = self.validate_schema(design_params)
         if not schema_valid:
-            reward = self.reward_function.calculate_reward(task_params, {}, is_valid=False, error_message=schema_err)
+            score = self.score_function.calculate_score(task_params, {}, is_valid=False, error_message=schema_err)
             return EvaluationResult(
                 task_id=task_id,
                 design_id=design_id,
                 status="schema_error",
-                reward=reward,
+                score=score,
                 error_message=schema_err
             )
             
         # 2. DRC Validation
         drc_valid, drc_err = self.run_drc(design_params)
         if not drc_valid:
-            reward = self.reward_function.calculate_reward(task_params, {}, is_valid=False, error_message=drc_err)
+            score = self.score_function.calculate_score(task_params, {}, is_valid=False, error_message=drc_err)
             return EvaluationResult(
                 task_id=task_id,
                 design_id=design_id,
                 status="drc_error",
-                reward=reward,
+                score=score,
                 error_message=drc_err
             )
             
@@ -63,22 +63,22 @@ class BaseEnvironment(ABC):
             success, metrics, raw_data, sim_err = self.simulator.simulate(design_params)
             
             if not success:
-                reward = self.reward_function.calculate_reward(task_params, {}, is_valid=False, error_message=sim_err)
+                score = self.score_function.calculate_score(task_params, {}, is_valid=False, error_message=sim_err)
                 return EvaluationResult(
                     task_id=task_id,
                     design_id=design_id,
                     status="simulation_error",
-                    reward=reward,
+                    score=score,
                     error_message=sim_err
                 )
                 
-            # 4. Reward Calculation (Success case)
-            reward = self.reward_function.calculate_reward(task_params, metrics, is_valid=True)
+            # 4. Score Calculation (Success case)
+            score = self.score_function.calculate_score(task_params, metrics, is_valid=True)
             return EvaluationResult(
                 task_id=task_id,
                 design_id=design_id,
                 status="success",
-                reward=reward,
+                score=score,
                 metrics=metrics,
                 raw_simulation_output=raw_data
             )
@@ -86,11 +86,11 @@ class BaseEnvironment(ABC):
         except Exception as e:
             # Catch unexpected simulator crashes
             error_msg = f"Unexpected simulation crash: {str(e)}"
-            reward = self.reward_function.calculate_reward(task_params, {}, is_valid=False, error_message=error_msg)
+            score = self.score_function.calculate_score(task_params, {}, is_valid=False, error_message=error_msg)
             return EvaluationResult(
                 task_id=task_id,
                 design_id=design_id,
                 status="simulation_error",
-                reward=reward,
+                score=score,
                 error_message=error_msg
             )

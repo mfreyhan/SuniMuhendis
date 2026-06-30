@@ -4,9 +4,9 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.core.base_simulator import BaseSimulator
-from src.core.base_reward import BaseRewardFunction
+from src.core.base_score import BaseScoreFunction
 from src.core.base_environment import BaseEnvironment
-from src.core.types import EvaluationResult, RewardResult
+from src.core.types import EvaluationResult, ScoreResult
 from typing import Dict, Any, Tuple, Optional
 
 class DummySimulator(BaseSimulator):
@@ -17,11 +17,11 @@ class DummySimulator(BaseSimulator):
             raise ValueError("Crash!")
         return True, {"metric_1": 10.0}, {}, ""
 
-class DummyReward(BaseRewardFunction):
-    def calculate_reward(self, task_params: Dict[str, Any], metrics: Dict[str, float], is_valid: bool = True, error_message: Optional[str] = None) -> RewardResult:
+class DummyReward(BaseScoreFunction):
+    def calculate_score(self, task_params: Dict[str, Any], metrics: Dict[str, float], is_valid: bool = True, error_message: Optional[str] = None) -> ScoreResult:
         if not is_valid:
-            return RewardResult(normalized_total=-1.0, is_valid=False, error_message=error_message)
-        return RewardResult(normalized_total=1.0, components={"metric_1": metrics.get("metric_1", 0.0)}, is_valid=True)
+            return ScoreResult(normalized_total=-1.0, is_valid=False, error_message=error_message)
+        return ScoreResult(normalized_total=1.0, components={"metric_1": metrics.get("metric_1", 0.0)}, is_valid=True)
 
 class DummyEnvironment(BaseEnvironment):
     def validate_schema(self, design_params: Dict[str, Any]) -> tuple[bool, Optional[str]]:
@@ -41,34 +41,34 @@ def dummy_env():
 def test_successful_evaluation(dummy_env):
     res = dummy_env.evaluate("t1", {}, "d1", {"valid": True})
     assert res.status == "success"
-    assert res.reward.is_valid == True
-    assert res.reward.normalized_total == 1.0
+    assert res.score.is_valid == True
+    assert res.score.normalized_total == 1.0
     assert res.metrics["metric_1"] == 10.0
 
 def test_schema_error(dummy_env):
     res = dummy_env.evaluate("t1", {}, "d2", {"invalid_schema": True})
     assert res.status == "schema_error"
-    assert res.reward.is_valid == False
-    assert res.reward.normalized_total == -1.0
+    assert res.score.is_valid == False
+    assert res.score.normalized_total == -1.0
     assert "Schema is invalid" in res.error_message
 
 def test_drc_error(dummy_env):
     res = dummy_env.evaluate("t1", {}, "d3", {"invalid_drc": True})
     assert res.status == "drc_error"
-    assert res.reward.is_valid == False
-    assert res.reward.normalized_total == -1.0
+    assert res.score.is_valid == False
+    assert res.score.normalized_total == -1.0
     assert "DRC failed" in res.error_message
 
 def test_simulation_failure(dummy_env):
     res = dummy_env.evaluate("t1", {}, "d4", {"fail_sim": True})
     assert res.status == "simulation_error"
-    assert res.reward.is_valid == False
-    assert res.reward.normalized_total == -1.0
+    assert res.score.is_valid == False
+    assert res.score.normalized_total == -1.0
     assert "Simulation failed" in res.error_message
 
 def test_simulation_crash(dummy_env):
     res = dummy_env.evaluate("t1", {}, "d5", {"crash_sim": True})
     assert res.status == "simulation_error"
-    assert res.reward.is_valid == False
-    assert res.reward.normalized_total == -1.0
+    assert res.score.is_valid == False
+    assert res.score.normalized_total == -1.0
     assert "Unexpected simulation crash" in res.error_message

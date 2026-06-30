@@ -3,9 +3,9 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.core.base_simulator import BaseSimulator
-from src.core.base_reward import BaseRewardFunction
+from src.core.base_score import BaseScoreFunction
 from src.core.base_environment import BaseEnvironment
-from src.core.types import EvaluationResult, RewardResult
+from src.core.types import EvaluationResult, ScoreResult
 from src.core.logging import setup_logger, save_evaluation_result
 from typing import Dict, Any, Tuple, Optional
 
@@ -19,14 +19,14 @@ class DummySimulator(BaseSimulator):
         metrics = {"score": design_params.get("value", 0) * 2.0}
         return True, metrics, {"details": "Dummy simulation completed"}, ""
 
-class DummyReward(BaseRewardFunction):
-    def calculate_reward(self, task_params: Dict[str, Any], metrics: Dict[str, float], is_valid: bool = True, error_message: Optional[str] = None) -> RewardResult:
+class DummyReward(BaseScoreFunction):
+    def calculate_score(self, task_params: Dict[str, Any], metrics: Dict[str, float], is_valid: bool = True, error_message: Optional[str] = None) -> ScoreResult:
         if not is_valid:
-            return RewardResult(normalized_total=0.0, is_valid=False, error_message=error_message)
+            return ScoreResult(normalized_total=0.0, is_valid=False, error_message=error_message)
         
         score = metrics.get("score", 0.0)
         norm_score = min(max(score / 100.0, 0.0), 1.0)
-        return RewardResult(normalized_total=norm_score, components={"main": norm_score}, is_valid=True)
+        return ScoreResult(normalized_total=norm_score, components={"main": norm_score}, is_valid=True)
 
 class DummyEnvironment(BaseEnvironment):
     def validate_schema(self, design_params: Dict[str, Any]) -> tuple[bool, Optional[str]]:
@@ -60,7 +60,7 @@ def main():
     for d in designs:
         logger.info(f"Testing: {d['id']}")
         res = env.evaluate("task_1", task_params, d["id"], d["params"])
-        logger.info(f"Result: {res.status}, Reward: {res.reward.normalized_total}")
+        logger.info(f"Result: {res.status}, Score: {res.score.normalized_total}")
         
         saved_path = save_evaluation_result(res)
         logger.info(f"Log saved: {saved_path}")

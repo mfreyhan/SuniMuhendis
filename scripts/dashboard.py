@@ -28,7 +28,7 @@ def flatten_record(d: dict) -> dict:
     design = d.get("design", {}) or {}
     return {
         "Model": d.get("model_name", "Unknown"),
-        "Total Reward": d.get("total_reward", 0.0),
+        "Total Score": d.get("total_reward", 0.0),
         "Heat Duty (kW)": m.get("heat_duty_W", 0.0) / 1000.0,
         "Cost ($/y)": m.get("cost_annualised_USD_per_yr", 0.0),
         "Effectiveness (%)": m.get("effectiveness", 0.0) * 100,
@@ -64,7 +64,7 @@ def load_results_runs() -> pd.DataFrame:
 
 
 def aggregate_runs(df: pd.DataFrame) -> pd.DataFrame:
-    """Model basina ortalama: reward TUM run'lar uzerinden; muhendislik metrikleri
+    """Model basina ortalama: score TUM run'lar uzerinden; muhendislik metrikleri
     yalniz BASARILI run'lar uzerinden (basarisiz run'larin 0'lari metrikleri bozmasin)."""
     eng_cols = ["Heat Duty (kW)", "Cost ($/y)", "Effectiveness (%)",
                 "DP Tube (kPa)", "DP Shell (kPa)", "Warnings", "Area (m2)"]
@@ -76,12 +76,12 @@ def aggregate_runs(df: pd.DataFrame) -> pd.DataFrame:
             "Model": model,
             "Runs": n,
             "Success %": 100.0 * len(succ) / n if n else 0.0,
-            "Total Reward": g["Total Reward"].mean(),
+            "Total Score": g["Total Score"].mean(),
         }
         for c in eng_cols:
             row[c] = succ[c].mean() if len(succ) else 0.0
         out.append(row)
-    cols = ["Model", "Runs", "Success %", "Total Reward",
+    cols = ["Model", "Runs", "Success %", "Total Score",
             "Heat Duty (kW)", "Cost ($/y)", "Effectiveness (%)",
             "DP Tube (kPa)", "DP Shell (kPa)", "Warnings", "Area (m2)"]
     return pd.DataFrame(out)[cols] if out else pd.DataFrame(columns=cols)
@@ -121,8 +121,8 @@ def render_charts(df: pd.DataFrame):
     st.subheader("📈 Görsel Karşılaştırma")
     col1, col2 = st.columns(2)
     with col1:
-        st.plotly_chart(px.bar(df, x="Model", y="Total Reward", color="Model",
-                               title="Toplam Ödül Skoru (Total Reward)"),
+        st.plotly_chart(px.bar(df, x="Model", y="Total Score", color="Model",
+                               title="Toplam Ödül Skoru (Total Score)"),
                         use_container_width=True)
         fig_heat = px.bar(df, x="Model", y="Heat Duty (kW)", color="Model",
                           title="Isı Transferi (kW)")
@@ -166,14 +166,14 @@ if source == "HF Benchmark (results/)":
 
     sub = runs[runs["Prompt"] == selected_prompt]
     agg = aggregate_runs(sub)
-    agg = agg.sort_values("Total Reward", ascending=False)
+    agg = agg.sort_values("Total Score", ascending=False)
 
     st.subheader(f"📊 Ortalama Sonuçlar — Prompt: `{selected_prompt}`")
     st.caption("Her satır, o model klasöründeki tüm testlerin ortalamasıdır "
-               "(reward tüm run'lar; mühendislik metrikleri yalnız başarılı run'lar).")
+               "(score tüm run'lar; mühendislik metrikleri yalnız başarılı run'lar).")
     st.dataframe(
         agg.style
-           .highlight_max(subset=["Total Reward", "Heat Duty (kW)", "Success %"], color="lightgreen")
+           .highlight_max(subset=["Total Score", "Heat Duty (kW)", "Success %"], color="lightgreen")
            .highlight_min(subset=["Cost ($/y)", "Warnings"], color="lightgreen")
            .format(precision=2),
         use_container_width=True,
@@ -199,7 +199,7 @@ else:
     st.subheader("📊 Manuel Değerlendirme Sonuçları (her kayıt ayrı)")
     st.dataframe(
         df.style
-          .highlight_max(subset=["Total Reward", "Heat Duty (kW)"], color="lightgreen")
+          .highlight_max(subset=["Total Score", "Heat Duty (kW)"], color="lightgreen")
           .highlight_min(subset=["Cost ($/y)", "Warnings"], color="lightgreen")
           .format(precision=2),
         use_container_width=True,
