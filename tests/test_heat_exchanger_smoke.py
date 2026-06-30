@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from src.environments.heat_exchanger.env import HeatExchangerEnv
 from src.environments.heat_exchanger.simulator import HeatExchangerSimulator
-from src.environments.heat_exchanger.reward import HeatExchangerReward
+from src.environments.heat_exchanger.score import HeatExchangerScore
 
 def test_smoke_valid_design():
     task_path = os.path.join(os.path.dirname(__file__), '../configs/tasks/heat_exchanger/task_001.json')
@@ -21,20 +21,20 @@ def test_smoke_valid_design():
         
     env = HeatExchangerEnv(
         simulator=HeatExchangerSimulator(),
-        reward_function=HeatExchangerReward()
+        score_function=HeatExchangerScore()
     )
     
     # 1st run
     res1 = env.evaluate("task_001", task_params, "valid_design_001", design_params)
     assert res1.status == "success", f"Simulation failed: {res1.error_message}"
-    assert res1.reward.is_valid == True
+    assert res1.score.is_valid == True
     assert "heat_duty_W" in res1.metrics
-    assert res1.reward.normalized_total >= 0.0
+    assert res1.score.normalized_total >= 0.0
     
     # 2nd run (Determinism check)
     res2 = env.evaluate("task_001", task_params, "valid_design_001", design_params)
     assert res1.metrics["heat_duty_W"] == res2.metrics["heat_duty_W"]
-    assert res1.reward.normalized_total == res2.reward.normalized_total
+    assert res1.score.normalized_total == res2.score.normalized_total
 
 def test_smoke_concentric_tube_design():
     # Test concentric tube as well
@@ -48,7 +48,7 @@ def test_smoke_concentric_tube_design():
       "baffle_spacing": 0.0
     }
     task_params = {"w_heat": 0.5, "w_drop": 0.5, "target_heat_duty": 150000.0, "max_pressure_drop": 50000.0}
-    env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerReward())
+    env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScore())
     
     res = env.evaluate("task_001", task_params, "concentric_001", design_params)
     assert res.status == "success", f"Concentric simulation failed: {res.error_message}"

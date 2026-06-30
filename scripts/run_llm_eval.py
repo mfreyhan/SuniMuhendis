@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from src.environments.heat_exchanger.env import HeatExchangerEnv
 from src.environments.heat_exchanger.simulator import HeatExchangerSimulator
-from src.environments.heat_exchanger.reward import HeatExchangerReward
+from src.environments.heat_exchanger.score import HeatExchangerScore
 from src.prompts.templates import build_heat_exchanger_prompt
 from src.parsing.json_parser import parse_llm_json
 from src.model_clients.dummy_random import DummyRandomClient
@@ -22,7 +22,7 @@ def main():
     logger = setup_logger("llm_evaluator")
     
     # 1. Setup Environment
-    env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerReward())
+    env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScore())
     
     # 2. Load Task
     task_path = os.path.join(os.path.dirname(__file__), '../configs/tasks/heat_exchanger/task_001.json')
@@ -60,7 +60,7 @@ def main():
     # 8. Report Results
     logger.info(f"Evaluation Status: {res.status}")
     if res.status == "success":
-        logger.info(f"Simulation Success! Reward: {res.reward.normalized_total:.4f}")
+        logger.info(f"Simulation Success! Score: {res.score.normalized_total:.4f}")
         logger.info(f"Metrics: {res.metrics}")
         
         # Soru sor ve kaydet
@@ -79,7 +79,7 @@ def main():
                     "w_drop_shell": task_params.get("w_drop_shell", 0.15),
                     "w_eff": task_params.get("w_eff", 0.2)
                 },
-                "total_reward": res.reward.normalized_total,
+                "total_reward": res.score.normalized_total,
                 "metrics": res.metrics,
                 "design": design
             }

@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from src.environments.heat_exchanger.env import HeatExchangerEnv
 from src.environments.heat_exchanger.simulator import HeatExchangerSimulator
-from src.environments.heat_exchanger.reward import HeatExchangerReward
+from src.environments.heat_exchanger.score import HeatExchangerScore
 from src.baselines.random_sampler import RandomSampler
 from src.baselines.heuristic_sampler import HeuristicSampler
 from src.baselines.latin_hypercube_sampler import LatinHypercubeSampler
@@ -19,7 +19,7 @@ def main():
     logger.info("Starting Phase 2 Baseline Generation...")
     
     # 1. Setup Environment
-    env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerReward())
+    env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScore())
     
     # Target Task (from configs)
     task_path = os.path.join(os.path.dirname(__file__), '../configs/tasks/heat_exchanger/task_001.json')
@@ -51,7 +51,7 @@ def main():
             
             if res.status == "success":
                 valid_count += 1
-                r = res.reward.normalized_total
+                r = res.score.normalized_total
                 rewards.append(r)
                 
                 # Check threshold for SFT dataset
@@ -60,7 +60,7 @@ def main():
                         "sampler": sampler.name,
                         "task": task_params,
                         "design": design,
-                        "reward": r,
+                        "score": r,
                         "metrics": res.metrics
                     })
                     
@@ -85,7 +85,7 @@ def main():
         for item in all_successful_designs:
             f.write(json.dumps(item) + "\n")
             
-    logger.info(f"Total SFT Samples generated (Reward >= {REWARD_THRESHOLD}): {len(all_successful_designs)}")
+    logger.info(f"Total SFT Samples generated (Score >= {REWARD_THRESHOLD}): {len(all_successful_designs)}")
     logger.info(f"Dataset saved to: {sft_path}")
 
 if __name__ == "__main__":

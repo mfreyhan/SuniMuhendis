@@ -1,8 +1,8 @@
 # SuniMuhendis (AI-Driven Engineering Design)
 
-SuniMuhendis is an AI agent-based framework designed to explore whether Large Language Models (LLMs) can learn to generate valid and performant engineering designs using physics-based simulation feedback and Reinforcement Learning (RL).
+SuniMuhendis is an AI agent-based framework designed to explore whether Large Language Models (LLMs) can learn to generate valid and performant engineering designs using physics-based simulation feedback.
 
-Currently, this repository contains the core simulation and evaluation pipeline (Phase 0 & Phase 1) for a **Heat Exchanger** environment. The system acts as a strict evaluator (referee) that takes structural design parameters, runs Design Rule Checks (DRC), simulates the physical outcomes, and calculates a normalized reward score based on predefined targets.
+Currently, this repository contains the core simulation and evaluation pipeline (Phase 0 & Phase 1) for a **Heat Exchanger** environment. The system acts as a strict evaluator (referee) that takes structural design parameters, runs Design Rule Checks (DRC), simulates the physical outcomes, and calculates a normalized benchmark score based on predefined targets.
 
 ## Project Architecture
 
@@ -10,7 +10,7 @@ The pipeline consists of the following steps:
 1. **Schema Validation**: Ensures the proposed design matches the required data types (via Pydantic).
 2. **Design Rule Check (DRC)**: Filters out physically impossible geometries (e.g., inner diameter > outer diameter) before simulation.
 3. **Physics Simulator**: Runs actual engineering calculations using libraries like `ht`, `fluids`, and `CoolProp`.
-4. **Reward Calculation**: Compares the simulation metrics (e.g., heat duty, pressure drop) against the task targets and generates a normalized score between 0.0 and 1.0.
+4. **Benchmark Score Calculation**: Compares the simulation metrics (e.g., heat duty, pressure drop) against the task targets and generates a normalized score between 0.0 and 1.0.
 
 ## Current Environments
 
@@ -51,14 +51,14 @@ python scripts/run_heat_exchanger.py
 ```
 
 ### 2. Automated HF Model Benchmark
-Send **one prompt to many Hugging Face models in a single command**, run every response through the same `schema → DRC → simulation → reward` pipeline, and store the results. (Requires `HF_TOKEN` in `.env` — see Installation.)
+Send **one prompt to many Hugging Face models in a single command**, run every response through the same `schema → DRC → simulation → score` pipeline, and store the results. (Requires `HF_TOKEN` in `.env` — see Installation.)
 
 A **prompt unit** is a folder under `results/`:
 
 ```
 results/<prompt-slug>/
   prompt.txt    # the exact text sent to the model (committed)
-  task.json     # reward weights + targets used for scoring (committed)
+  task.json     # benchmark score weights + targets used for scoring (committed)
   benchmark/    # generated results — one JSON per run (git-ignored)
     <model-name>/<timestamp>.json
 ```
@@ -106,6 +106,5 @@ pytest tests/ -v
 - **Phase 0 & Phase 1**: Core interfaces and Heat Exchanger Simulator (Completed ✅)
 - **Phase 2**: LLM-free Baseline and Dataset Generation (Completed ✅)
 - **Phase 3**: Model Client Interface and First LLM Integration (Completed ✅)
-- **Phase 4**: Small LLM Supervised Fine-Tuning (SFT) (Next ⏳)
-- **Phase 5**: Reinforcement Learning (RL / GRPO) Training
-- **Phase 6+**: Commercial Benchmarks and Advanced Environments (UAV Wing, Turbomachinery)
+- **Phase 4**: Small Model SFT / LoRA
+- **Phase 6**: Commercial LLM Benchmarks and Advanced Environments (UAV Wing, Turbomachinery)

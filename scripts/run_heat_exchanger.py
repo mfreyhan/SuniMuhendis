@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from src.environments.heat_exchanger.env import HeatExchangerEnv
 from src.environments.heat_exchanger.simulator import HeatExchangerSimulator
-from src.environments.heat_exchanger.reward import HeatExchangerReward
+from src.environments.heat_exchanger.score import HeatExchangerScore
 from src.core.logging import setup_logger, save_evaluation_result
 
 def main():
@@ -17,7 +17,7 @@ def main():
     # Create real environment components
     env = HeatExchangerEnv(
         simulator=HeatExchangerSimulator(),
-        reward_function=HeatExchangerReward()
+        score_function=HeatExchangerScore()
     )
     
     # Task and Design file paths
@@ -49,11 +49,11 @@ def main():
         logger.info(f"Annualised Cost: {result.metrics.get('cost_annualised_USD_per_yr', 0):.2f} USD/yr")
         logger.info(f"Design Warnings: {int(result.metrics.get('num_warnings', 0))}")
         
-        logger.info("--- Reward Breakdown ---")
-        for key, value in result.reward.components.items():
+        logger.info("--- Score Breakdown ---")
+        for key, value in result.score.components.items():
             logger.info(f"  {key}: {value:.4f}")
             
-        logger.info(f"Total Earned Reward: {result.reward.normalized_total:.4f} / 1.0000")
+        logger.info(f"Total Earned Score: {result.score.normalized_total:.4f} / 1.0000")
     else:
         logger.error(f"Error Message: {result.error_message}")
         

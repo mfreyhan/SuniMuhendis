@@ -1,22 +1,22 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
-from .types import RewardResult
+from .types import ScoreResult
 
-class BaseRewardFunction(ABC):
+class BaseScoreFunction(ABC):
     """
-    Tüm reward fonksiyonlarının türeyeceği temel sınıf.
+    Tüm score fonksiyonlarının türeyeceği temel sınıf.
     """
     
     @abstractmethod
-    def calculate_reward(
+    def calculate_score(
         self, 
         task_params: Dict[str, Any],
         metrics: Dict[str, Any], 
         is_valid: bool = True, 
         error_message: Optional[str] = None
-    ) -> RewardResult:
+    ) -> ScoreResult:
         """
-        Simülatör çıktıları veya hatalarından reward hesaplar.
+        Simülatör çıktıları veya hatalarından score hesaplar.
         
         Args:
             task_params: Tasarımın hedeflerini veya ortam parametrelerini içerir.
@@ -25,6 +25,6 @@ class BaseRewardFunction(ABC):
             error_message: Hata durumunda mesaj.
             
         Returns:
-            RewardResult: Normalize edilmiş ve bileşenlerine ayrılmış reward nesnesi.
+            ScoreResult: Normalize edilmiş ve bileşenlerine ayrılmış score nesnesi.
         """
         pass

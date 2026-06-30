@@ -1,11 +1,11 @@
 from typing import Dict, Any, Optional
-from ...core.base_reward import BaseRewardFunction
-from ...core.types import RewardResult
+from ...core.base_score import BaseScoreFunction
+from ...core.types import ScoreResult
 
-class HeatExchangerReward(BaseRewardFunction):
-    def calculate_reward(self, task_params: Dict[str, Any], metrics: Dict[str, Any], is_valid: bool = True, error_message: Optional[str] = None) -> RewardResult:
+class HeatExchangerScore(BaseScoreFunction):
+    def calculate_score(self, task_params: Dict[str, Any], metrics: Dict[str, Any], is_valid: bool = True, error_message: Optional[str] = None) -> ScoreResult:
         if not is_valid:
-            return RewardResult(normalized_total=0.0, is_valid=False, error_message=error_message)
+            return ScoreResult(normalized_total=0.0, is_valid=False, error_message=error_message)
             
         # Task konfigürasyonundan ağırlıkları çekiyoruz, yoksa varsayılan
         w_heat = task_params.get("w_heat", 0.4)
@@ -27,7 +27,7 @@ class HeatExchangerReward(BaseRewardFunction):
         cost_annualised = metrics.get("cost_annualised_USD_per_yr", 100000.0)
         num_warnings = metrics.get("num_warnings", 0.0)
         
-        # 1. Heat duty reward: Ne kadar yüksekse o kadar iyi (maksimum 1.0)
+        # 1. Heat duty score: Ne kadar yüksekse o kadar iyi (maksimum 1.0)
         r_heat = min(heat_duty / target_heat, 1.0)
         
         # 2. Pressure drop tube penalty
@@ -42,10 +42,10 @@ class HeatExchangerReward(BaseRewardFunction):
         else:
             r_drop_shell = max(1.0 - ((dp_shell - max_dp_shell) / max_dp_shell), 0.0)
             
-        # 4. Effectiveness reward
+        # 4. Effectiveness score
         r_eff = min(max(effectiveness, 0.0), 1.0)
         
-        # 5. Cost reward: Daha düşük maliyet daha yüksek ödül (örnek baseline 50000 USD/yıl)
+        # 5. Cost score: Daha düşük maliyet daha yüksek ödül (örnek baseline 50000 USD/yıl)
         # Eğer maliyet 50k altındaysa 1.0'a yaklaşır, üstündeyse azalır.
         baseline_cost = 50000.0
         r_cost = min(baseline_cost / max(cost_annualised, 1.0), 1.0)
@@ -69,7 +69,7 @@ class HeatExchangerReward(BaseRewardFunction):
             "penalty_factor": penalty_factor
         }
         
-        return RewardResult(
+        return ScoreResult(
             normalized_total=normalized,
             components=components,
             is_valid=True
