@@ -21,6 +21,13 @@ Engineering Rules (Design Rule Checks):
 - For concentric_tube geometry, number_of_tubes MUST be exactly 1.
 - All dimensions must be strictly positive.
 
+Mechanical & Structural Constraints (CRITICAL to avoid point penalties):
+1. Tube Wall Thickness: (inner_tube_do - inner_tube_di) / 2.0 MUST be thick enough to withstand operating pressures based on ASME VIII standards. A safe approach is to ensure a wall thickness of at least 2.5 mm (0.0025 m) to 3.0 mm (0.003 m).
+2. Shell Wall Thickness: The outer_shell_di determines the required shell thickness. Even though outer_shell_do is not outputted, larger shell diameters require thicker walls. Keep outer_shell_di within reasonable limits for standard pipes.
+3. Baffle Spacing: The distance between baffles (`baffle_spacing`) MUST be strictly less than or equal to 1.5 meters to prevent tube sagging.
+4. Vibration (Connors' Criterion): The fluid velocity in the shell side must not exceed 80% of the critical velocity. Selecting a reasonably small baffle_spacing (e.g. 0.5 to 1.0 m) and ensuring the shell velocity isn't extreme will prevent resonance failure.
+If ANY of these 4 rules fail, the design will receive a Mechanical Warning and lose all points.
+
 Performance Objectives:
 1. Maximize Heat Duty towards the target of 150,000 W while respecting limits.
 2. Minimize Tube and Shell Pressure Drops below their max limit of 50,000 Pa each.

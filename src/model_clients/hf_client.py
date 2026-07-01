@@ -30,7 +30,7 @@ class HFInferenceClient(BaseModelClient):
         params: Optional[Dict[str, Any]] = None,
         api_key_env: str = "HF_TOKEN",
         base_url: str = HF_ROUTER_BASE_URL,
-        timeout: float = 120.0,
+        timeout: float = 600.0,
     ):
         super().__init__(name or model)
         self.model = model

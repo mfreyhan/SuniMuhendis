@@ -1,4 +1,4 @@
-# SuniMuhendis (AI-Driven Engineering Design)
+﻿# SuniMuhendis (AI-Driven Engineering Design)
 
 SuniMuhendis is an AI agent-based framework designed to explore whether Large Language Models (LLMs) can learn to generate valid and performant engineering designs using physics-based simulation feedback.
 
@@ -31,7 +31,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-For the automated Hugging Face benchmark (Usage §2) you also need an HF token:
+For the automated Hugging Face benchmark (Usage Â§2) you also need an HF token:
 
 ```bash
 cp .env.example .env
@@ -51,7 +51,7 @@ python scripts/run_heat_exchanger.py
 ```
 
 ### 2. Automated HF Model Benchmark
-Send **one prompt to many Hugging Face models in a single command**, run every response through the same `schema → DRC → simulation → score` pipeline, and store the results. (Requires `HF_TOKEN` in `.env` — see Installation.)
+Send **one prompt to many Hugging Face models in a single command**, run every response through the same `schema â†’ DRC â†’ simulation â†’ score` pipeline, and store the results. (Requires `HF_TOKEN` in `.env` â€” see Installation.)
 
 A **prompt unit** is a folder under `results/`:
 
@@ -59,7 +59,7 @@ A **prompt unit** is a folder under `results/`:
 results/<prompt-slug>/
   prompt.txt    # the exact text sent to the model (committed)
   task.json     # benchmark score weights + targets used for scoring (committed)
-  benchmark/    # generated results — one JSON per run (git-ignored)
+  benchmark/    # generated results â€” one JSON per run (git-ignored)
     <model-name>/<timestamp>.json
 ```
 
@@ -68,19 +68,19 @@ The models to test are listed in `configs/benchmarks/models.json`
 
 ```bash
 # All models in models.json, 5 runs each:
-python scripts/run_hf_benchmark.py --prompt heat_exchanger_v1 --repeats 5
+python scripts/run_api_benchmark.py --prompt heat_exchanger_v1 --repeats 5
 
 # A single model (use the "name" from models.json, not the HF id):
-python scripts/run_hf_benchmark.py --prompt heat_exchanger_v1 --model Qwen3.5-27B
+python scripts/run_api_benchmark.py --prompt heat_exchanger_v1 --model Qwen3.5-27B
 
 # A subset:
-python scripts/run_hf_benchmark.py --prompt heat_exchanger_v1 --models Qwen3.5-27B,gpt-oss-20b
+python scripts/run_api_benchmark.py --prompt heat_exchanger_v1 --models Qwen3.5-27B,gpt-oss-20b
 ```
 
 - **Add a new prompt:** create `results/<new-slug>/prompt.txt` + `task.json` (copy `heat_exchanger_v1` as a template).
 - **Add a model:** add a line to `configs/benchmarks/models.json`. A model that isn't served on HF Inference Providers just records `client_error` for that row; the run continues.
 
-View the results in the dashboard — the **"HF Benchmark (results/)"** source shows one row per model (the **average** of all its runs for the selected prompt):
+View the results in the dashboard â€” the **"HF Benchmark (results/)"** source shows one row per model (the **average** of all its runs for the selected prompt):
 
 ```bash
 streamlit run scripts/dashboard.py
@@ -103,8 +103,8 @@ pytest tests/ -v
 
 ## Roadmap
 
-- **Phase 0 & Phase 1**: Core interfaces and Heat Exchanger Simulator (Completed ✅)
-- **Phase 2**: LLM-free Baseline and Dataset Generation (Completed ✅)
-- **Phase 3**: Model Client Interface and First LLM Integration (Completed ✅)
+- **Phase 0 & Phase 1**: Core interfaces and Heat Exchanger Simulator (Completed âœ…)
+- **Phase 2**: LLM-free Baseline and Dataset Generation (Completed âœ…)
+- **Phase 3**: Model Client Interface and First LLM Integration (Completed âœ…)
 - **Phase 4**: Small Model SFT / LoRA
 - **Phase 6**: Commercial LLM Benchmarks and Advanced Environments (UAV Wing, Turbomachinery)
