@@ -1,7 +1,7 @@
 import json
 import os
 
-from scripts.run_hf_benchmark import _safe_name, _select_models, run_benchmark
+from scripts.run_api_benchmark import _safe_name, _select_models, run_benchmark
 from src.model_clients.dummy_random import DummyRandomClient
 
 _VALID_STATUS = {
@@ -38,17 +38,13 @@ def test_run_benchmark_offline(tmp_path):
         results_root=str(tmp_path),
     )
 
-    # 2 model x 2 repeat = 4 run dosyasi
-    assert len(written) == 4
+    # 2 model = 2 run dosyasi (her biri jsonl)
+    assert len(set(written)) == 2
     for p in written:
         assert os.path.exists(p)
+        assert p.endswith(".jsonl")
 
-    # Klasor yapisi: <slug>/benchmark/<model>/*.json
-    bench = os.path.join(str(tmp_path), slug, "benchmark")
-    assert set(os.listdir(bench)) == {"dummy-A", "dummy-B"}
-    assert len(os.listdir(os.path.join(bench, "dummy-A"))) == 2
-
-    rec = json.loads(open(written[0], encoding="utf-8").read())
+    rec = json.loads(open(written[0], encoding="utf-8").readline())
     for field in ("model_name", "prompt_slug", "task_id", "status",
                   "total_reward", "weights", "metrics", "design"):
         assert field in rec

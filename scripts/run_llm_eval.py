@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import argparse
+from datetime import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -17,6 +18,8 @@ from src.core.logging import setup_logger
 def main():
     parser = argparse.ArgumentParser(description="Evaluate LLM responses")
     parser.add_argument("--client", type=str, default="dummy", choices=["dummy", "interactive"], help="Client to use")
+    parser.add_argument("--prompt", type=str, required=True, help="Prompt slug (e.g. heat_exchanger_v1)")
+    parser.add_argument("--model", type=str, default=None, help="Model name to save results under (skips interactive prompt if provided)")
     args = parser.parse_args()
 
     logger = setup_logger("llm_evaluator")
@@ -25,7 +28,11 @@ def main():
     env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScore())
     
     # 2. Load Task
-    task_path = os.path.join(os.path.dirname(__file__), '../configs/tasks/heat_exchanger/task_001.json')
+    task_path = os.path.join(os.path.dirname(__file__), f'../results/{args.prompt}/task.json')
+    if not os.path.exists(task_path):
+        logger.error(f"Task file not found: {task_path}. Lütfen önce 'python scripts/build_task.py' çalıştırın.")
+        return
+        
     with open(task_path, 'r', encoding='utf-8') as f:
         task_params = json.load(f)
         
@@ -63,15 +70,26 @@ def main():
         logger.info(f"Simulation Success! Score: {res.score.normalized_total:.4f}")
         logger.info(f"Metrics: {res.metrics}")
         
-        # Soru sor ve kaydet
-        model_name = input("\nEnter Model Name (e.g. 'GPT 5.5 Pro' or 'Skip' to not save): ").strip()
+        if args.model:
+            model_name = args.model
+            logger.info(f"Using provided model name: {model_name}")
+        else:
+            model_name = input("\nEnter Model Name (e.g. 'GPT 5.5 Pro' or 'Skip' to not save): ").strip()
+            
         if model_name.lower() != 'skip' and model_name != '':
-            db_path = os.path.join(os.path.dirname(__file__), '../reports/benchmark_results.json')
+            # Safe model name for filename
+            safe_model = "".join(c if c.isalnum() else "_" for c in model_name).lower()
+            out_dir = os.path.join(os.path.dirname(__file__), f'../results/{args.prompt}/manual_runs')
+            os.makedirs(out_dir, exist_ok=True)
+            db_path = os.path.join(out_dir, f"{safe_model}.jsonl")
             
             # Kaydedilecek veri paketi
             record = {
                 "model_name": model_name,
-                "task_id": "he_task_001",
+                "timestamp": datetime.now().isoformat(),
+                "prompt_slug": args.prompt,
+                "status": "success",
+                "error": None,
                 "weights": {
                     "w_heat": task_params.get("w_heat", 0.4),
                     "w_cost": task_params.get("w_cost", 0.1),
@@ -79,23 +97,13 @@ def main():
                     "w_drop_shell": task_params.get("w_drop_shell", 0.15),
                     "w_eff": task_params.get("w_eff", 0.2)
                 },
-                "total_reward": res.score.normalized_total,
+                "total_score": res.score.normalized_total,
                 "metrics": res.metrics,
                 "design": design
             }
             
-            db = []
-            if os.path.exists(db_path):
-                try:
-                    with open(db_path, 'r', encoding='utf-8') as f:
-                        db = json.load(f)
-                except json.JSONDecodeError:
-                    db = []
-            
-            db.append(record)
-            
-            with open(db_path, 'w', encoding='utf-8') as f:
-                json.dump(db, f, indent=4)
+            with open(db_path, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
                 
             logger.info(f"Saved results for {model_name} to {db_path}")
             

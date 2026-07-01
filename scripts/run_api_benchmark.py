@@ -32,7 +32,7 @@ ClientFactory = Callable[[Dict[str, Any]], BaseModelClient]
 
 
 def _load_json(path: str) -> dict:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8-sig") as f:
         return json.load(f)
 
 
@@ -56,15 +56,31 @@ def _build_environment():
     return HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScore())
 
 
-def hf_client_factory(spec: Dict[str, Any]) -> BaseModelClient:
-    """Varsayilan fabrika: HF Inference Providers istemcisi."""
-    from src.model_clients.hf_client import HFInferenceClient
-
-    return HFInferenceClient(
-        model=spec["model"],
-        name=spec.get("name"),
-        params=spec.get("params"),
-    )
+def multi_client_factory(spec: Dict[str, Any]) -> BaseModelClient:
+    """Varsayilan fabrika: HF veya OpenCode istemcisi ureten fonksiyon."""
+    provider = spec.get("provider", "hf")
+    
+    if provider == "opencode":
+        from src.model_clients.opencode_client import OpenCodeClient
+        return OpenCodeClient(
+            model=spec["model"],
+            name=spec.get("name"),
+            params=spec.get("params"),
+        )
+    elif provider == "openrouter":
+        from src.model_clients.openrouter_client import OpenRouterClient
+        return OpenRouterClient(
+            model=spec["model"],
+            name=spec.get("name"),
+            params=spec.get("params"),
+        )
+    else:
+        from src.model_clients.hf_client import HFInferenceClient
+        return HFInferenceClient(
+            model=spec["model"],
+            name=spec.get("name"),
+            params=spec.get("params"),
+        )
 
 
 def run_benchmark(
@@ -92,7 +108,7 @@ def run_benchmark(
     if not os.path.exists(task_path):
         raise FileNotFoundError(f"task.json bulunamadi: {task_path}")
 
-    with open(prompt_path, "r", encoding="utf-8") as f:
+    with open(prompt_path, "r", encoding="utf-8-sig") as f:
         prompt_text = f.read()
     task_params = _load_json(task_path)
     task_id = task_params.get("task_id", prompt_slug)
@@ -104,17 +120,19 @@ def run_benchmark(
 
     written: List[str] = []
     done = 0
-    for spec in model_specs:
-        model_name = spec.get("name") or spec.get("model")
-        model_id = spec.get("model", model_name)
-        out_dir = os.path.join(prompt_dir, "benchmark", _safe_name(model_name))
-        os.makedirs(out_dir, exist_ok=True)
+    out_dir = os.path.join(prompt_dir, "api_runs")
+    os.makedirs(out_dir, exist_ok=True)
+    for model in model_specs:
+        model_name = model.get("name") or model.get("model")
+        model_id = model.get("model", model_name)
+        
+        fpath = os.path.join(out_dir, f"{_safe_name(model_name)}.jsonl")
 
         # Istemciyi model basina BIR KEZ kur.
         client = None
         client_err: Optional[str] = None
         try:
-            client = client_factory(spec)
+            client = client_factory(model)
         except Exception as e:  # noqa: BLE001
             client_err = f"{type(e).__name__}: {e}"
             logger.error(f"[{model_name}] istemci kurulamadi: {client_err}")
@@ -169,34 +187,35 @@ def run_benchmark(
                     record["status"] = "client_error"
                     record["error"] = f"{type(e).__name__}: {e}"
 
-            fname = f"{_file_stamp()}-{uuid.uuid4().hex[:8]}.json"
-            fpath = os.path.join(out_dir, fname)
-            with open(fpath, "w", encoding="utf-8") as f:
-                json.dump(record, f, indent=2, ensure_ascii=False)
+            with open(fpath, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
             written.append(fpath)
             logger.info(
                 f"{progress} {model_name} | r{r} -> {record['status']} "
                 f"score={record['total_reward']:.3f}"
             )
 
-    logger.info(f"Bitti. {len(written)} run yazildi -> {os.path.join(prompt_dir, 'benchmark')}")
+    logger.info(f"Bitti. {len(written)} run yazildi -> {os.path.join(prompt_dir, 'api_runs')}")
     return written
 
 
-def _select_models(all_models: List[dict], selection: Optional[List[str]]) -> List[dict]:
+def _select_models(all_models: List[dict], selection: Optional[List[str]], provider: Optional[str] = None) -> List[dict]:
+    if provider:
+        all_models = [m for m in all_models if m.get("provider", "hf") == provider]
+
     if not selection:
         return all_models
     wanted = {s.strip() for s in selection}
     chosen = [m for m in all_models if (m.get("name") or m.get("model")) in wanted]
     missing = wanted - {(m.get("name") or m.get("model")) for m in chosen}
     if missing:
-        raise SystemExit(f"models.json'da bulunamayan model(ler): {sorted(missing)}")
+        raise SystemExit(f"models.json'da belirtilen kriterlere uyan model bulunamadi: {sorted(missing)}")
     return chosen
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="HF Inference Providers ile prompt x model otomatik benchmark."
+        description="LLM API'leri ile prompt x model otomatik benchmark."
     )
     parser.add_argument("--prompt", required=True,
                         help="results/<slug> klasor adi (prompt.txt + task.json icerir).")
@@ -204,6 +223,8 @@ def main():
                         help="Virgulle ayrilmis model 'name' listesi (varsayilan: hepsi).")
     parser.add_argument("--model", type=str, default=None,
                         help="Tek bir model 'name' (--models'in kisayolu).")
+    parser.add_argument("--provider", type=str, default=None,
+                        help="Modelleri filtrelemek icin provider adi (hf, opencode, openrouter).")
     parser.add_argument("--repeats", type=int, default=1,
                         help="Model basina bu cagrida kac run.")
     parser.add_argument("--models-config", type=str,
@@ -213,26 +234,31 @@ def main():
 
     logger = setup_logger("hf_benchmark")
 
-    if not os.environ.get("HF_TOKEN"):
-        raise SystemExit(
-            "HF_TOKEN tanimli degil. `.env` dosyasina HF_TOKEN=hf_... ekleyin (bkz. .env.example)."
-        )
+    config_data = _load_json(args.models_config)
+    all_models = []
+    
+    if "providers" in config_data:
+        for prov_name, prov_models in config_data["providers"].items():
+            for m in prov_models:
+                m["provider"] = prov_name
+                all_models.append(m)
+    elif "models" in config_data:
+        all_models = config_data["models"]
 
-    all_models = _load_json(args.models_config).get("models", [])
     if not all_models:
-        raise SystemExit(f"models.json'da model yok: {args.models_config}")
+        raise SystemExit(f"models.json'da model yok veya okunamadi: {args.models_config}")
 
     selection = None
     if args.model:
         selection = [args.model]
     elif args.models:
         selection = [s for s in args.models.split(",") if s.strip()]
-    model_specs = _select_models(all_models, selection)
+    model_specs = _select_models(all_models, selection, args.provider)
 
     run_benchmark(
         prompt_slug=args.prompt,
         model_specs=model_specs,
-        client_factory=hf_client_factory,
+        client_factory=multi_client_factory,
         repeats=args.repeats,
         logger=logger,
     )

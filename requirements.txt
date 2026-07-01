@@ -11,3 +11,4 @@ python-dotenv>=1.0.0
 streamlit
 pandas
 plotly
+openai>=1.0.0

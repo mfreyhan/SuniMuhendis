@@ -1,9 +1,283 @@
 {
-  "_comment": "HF Inference Providers model listesi. 'name' = results/<slug>/benchmark/<name>/ klasor adi (dashboard'da gorunen ad). 'model' = HF model id (owner/model, istege bagli :provider soneki). Calismayan model client_error uretir, kosu devam eder.",
-  "models": [
-    {"name": "Qwen3.5-27B",           "model": "Qwen/Qwen3.5-27B",                              "params": {"temperature": 0.7, "max_tokens": 1024}},
-    {"name": "gemma-3-27b",           "model": "google/gemma-3-27b-it",                         "params": {"temperature": 0.7, "max_tokens": 1024}},
-    {"name": "Llama-3.3-70B",         "model": "meta-llama/Llama-3.3-70B-Instruct",             "params": {"temperature": 0.7, "max_tokens": 1024}},
-    {"name": "gpt-oss-20b",           "model": "openai/gpt-oss-20b",                            "params": {"temperature": 0.7, "max_tokens": 1024}}
-  ]
+  "_comment": "LLM API Providers model listesi. 'name' = dashboard'da gorunen ad. 'model' = API model id. Provider'lar ust baslik olarak gruplanmistir.",
+  "providers": {
+    "hf": [
+      {
+        "name": "gemma-3-27b",
+        "model": "google/gemma-3-27b-it",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 1024
+        }
+      },
+      {
+        "name": "gemma-4-31B",
+        "model": "google/gemma-4-31B-it",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 1024
+        }
+      },
+      {
+        "name": "gpt-oss-20b",
+        "model": "openai/gpt-oss-20b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 1024
+        }
+      },
+      {
+        "name": "Llama-3.3-70B",
+        "model": "meta-llama/Llama-3.3-70B-Instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 1024
+        }
+      },
+      {
+        "name": "Qwen3.5-27B",
+        "model": "Qwen/Qwen3.5-27B:novita",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 1024
+        }
+      }
+    ],
+    "opencode": [
+      {
+        "name": "deepseek-v4-flash",
+        "model": "deepseek-v4-flash",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 81920
+        }
+      },
+      {
+        "name": "deepseek-v4-pro",
+        "model": "deepseek-v4-pro",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-5",
+        "model": "glm-5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-5.1",
+        "model": "glm-5.1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-5.2",
+        "model": "glm-5.2",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "hy3-preview",
+        "model": "hy3-preview",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "kimi-k2.5",
+        "model": "kimi-k2.5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "kimi-k2.6",
+        "model": "kimi-k2.6",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "kimi-k2.7-code",
+        "model": "kimi-k2.7-code",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "mimo-v2-omni",
+        "model": "mimo-v2-omni",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "mimo-v2-pro",
+        "model": "mimo-v2-pro",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "mimo-v2.5",
+        "model": "mimo-v2.5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "mimo-v2.5-pro",
+        "model": "mimo-v2.5-pro",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "minimax-m2.5",
+        "model": "minimax-m2.5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "minimax-m2.7",
+        "model": "minimax-m2.7",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "minimax-m3",
+        "model": "minimax-m3",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3.5-plus",
+        "model": "qwen3.5-plus",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3.6-plus",
+        "model": "qwen3.6-plus",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3.7-max",
+        "model": "qwen3.7-max",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3.7-plus",
+        "model": "qwen3.7-plus",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      }
+    ],
+    "openrouter": [
+      {
+        "name": "Auto-Router-Free",
+        "model": "openrouter/free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-oss-20b",
+        "model": "openai/gpt-oss-20b:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-oss-120b",
+        "model": "openai/gpt-oss-120b:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nemotron-3-ultra-550b-a55b",
+        "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 162560
+        }
+      },
+      {
+        "name": "nemotron-3-nano-omni-30b-a3b-reasoning",
+        "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 162560
+        }
+      },
+      {
+        "name": "qwen3-next-80b-a3b-instruct",
+        "model": "qwen/qwen3-next-80b-a3b-instruct:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 162560
+        }
+      },
+      {
+        "name": "Gemma-7B-Free",
+        "model": "google/gemma-7b-it:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "Llama-3-8B-Free",
+        "model": "meta-llama/llama-3-8b-instruct:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "Mistral-7B-Free",
+        "model": "mistralai/mistral-7b-instruct:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      }
+    ]
+  }
 }
