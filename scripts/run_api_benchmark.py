@@ -255,13 +255,16 @@ def main():
         selection = [s for s in args.models.split(",") if s.strip()]
     model_specs = _select_models(all_models, selection, args.provider)
 
-    run_benchmark(
-        prompt_slug=args.prompt,
-        model_specs=model_specs,
-        client_factory=multi_client_factory,
-        repeats=args.repeats,
-        logger=logger,
-    )
+    prompt_slugs = [p.strip() for p in args.prompt.split(",") if p.strip()]
+    
+    for slug in prompt_slugs:
+        run_benchmark(
+            prompt_slug=slug,
+            model_specs=model_specs,
+            client_factory=multi_client_factory,
+            repeats=args.repeats,
+            logger=logger,
+        )
 
 
 if __name__ == "__main__":

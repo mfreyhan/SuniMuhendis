@@ -239,6 +239,22 @@
         }
       },
       {
+        "name": "llama-3.3-70b-instruct",
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 162560
+        }
+      },
+      {
+        "name": "llama-3.2-3b-instruct",
+        "model": "meta-llama/llama-3.2-3b-instruct:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 162560
+        }
+      },
+      {
         "name": "nemotron-3-nano-omni-30b-a3b-reasoning",
         "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
         "params": {

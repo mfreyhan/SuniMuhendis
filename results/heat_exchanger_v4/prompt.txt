@@ -1,0 +1,63 @@
+You are an expert mechanical and chemical engineer specializing in heat exchanger design.
+Your task is to design a heat exchanger that meets the requested constraints and maximizes the performance.
+You must output YOUR ENTIRE RESPONSE AS A VALID JSON OBJECT matching the following schema.
+Do not write any other text or explanations outside the JSON object.
+
+Required JSON Schema:
+{
+  "geometry_type": "string (either 'concentric_tube' or 'shell_and_tube')",
+  "length": "float (meters, e.g. 2.0 to 10.0)",
+  "inner_tube_di": "float (inner tube inside diameter in meters, e.g. 0.015)",
+  "inner_tube_do": "float (inner tube outside diameter in meters, e.g. 0.020)",
+  "outer_shell_di": "float (shell inside diameter in meters, e.g. 0.500)",
+  "number_of_tubes": "integer (number of tubes, e.g. 50)",
+  "baffle_spacing": "float (baffle spacing in meters, e.g. 0.5)"
+}
+
+Engineering Rules (Design Rule Checks):
+- inner_tube_do MUST be strictly greater than inner_tube_di
+- outer_shell_di MUST be strictly greater than inner_tube_do
+- For shell_and_tube geometry, number_of_tubes MUST be > 1.
+- For concentric_tube geometry, number_of_tubes MUST be exactly 1.
+- All dimensions must be strictly positive.
+
+Mechanical & Structural Constraints (CRITICAL to avoid point penalties):
+1. Tube Wall Thickness: (inner_tube_do - inner_tube_di) / 2.0 MUST be thick enough to withstand operating pressures based on ASME VIII standards. A safe approach is to ensure a wall thickness of at least 2.5 mm (0.0025 m) to 3.0 mm (0.003 m).
+2. Shell Wall Thickness: The outer_shell_di determines the required shell thickness. Even though outer_shell_do is not outputted, larger shell diameters require thicker walls. Keep outer_shell_di within reasonable limits for standard pipes.
+3. Baffle Spacing: The distance between baffles (`baffle_spacing`) MUST be strictly less than or equal to 1.5 meters to prevent tube sagging.
+4. Vibration (Connors' Criterion): The fluid velocity in the shell side must not exceed 80% of the critical velocity. Selecting a reasonably small baffle_spacing (e.g. 0.5 to 1.0 m) and ensuring the shell velocity isn't extreme will prevent resonance failure.
+If ANY of these 4 rules fail, the design will receive a Mechanical Warning and lose all points.
+
+Performance Objectives:
+1. Maximize Heat Duty towards the target of 150,000 W while respecting limits.
+2. Minimize Tube and Shell Pressure Drops below their max limit of 50,000 Pa each.
+3. Maximize Thermodynamic Effectiveness.
+4. Minimize Annualised Cost (capital + operating).
+5. Avoid mechanical design warnings (e.g., tube vibration, excessive velocities) or else severe point penalties will apply.
+
+Reward Calculation (Mathematical Explanation):
+Your final score is calculated programmatically using the following mathematical formulas:
+- Heat Duty Reward (r_heat): min(heat_duty_W / target_heat_duty, 1.0)
+- Tube Pressure Drop Reward (r_drop_tube): If dp_tube_Pa <= max_dp_tube then 1.0, else max(1.0 - ((dp_tube_Pa - max_dp_tube) / max_dp_tube), 0.0)
+- Shell Pressure Drop Reward (r_drop_shell): If dp_shell_Pa <= max_dp_shell then 1.0, else max(1.0 - ((dp_shell_Pa - max_dp_shell) / max_dp_shell), 0.0)
+- Effectiveness Reward (r_eff): min(max(effectiveness, 0.0), 1.0)
+- Cost Reward (r_cost): min(50000.0 / max(cost_annualised_USD_per_yr, 1.0), 1.0)
+
+Total Base Score = (w_heat * r_heat) + (w_drop_tube * r_drop_tube) + (w_drop_shell * r_drop_shell) + (w_eff * r_eff) + (w_cost * r_cost)
+Mechanical Warning Penalty (penalty_factor): max(1.0 - (num_warnings * 0.1), 0.0)
+Final Normalized Score = (Total Base Score / sum_of_weights) * penalty_factor
+
+Please generate a design for the following task constraints:
+Task Details:
+{
+  "target_heat_duty": 150000.0,
+  "max_dp_tube": 50000.0,
+  "max_dp_shell": 50000.0,
+  "w_heat": 0.4,
+  "w_cost": 0.3,
+  "w_eff": 0.2,
+  "w_drop_tube": 0.05,
+  "w_drop_shell": 0.05
+}
+
+Output ONLY valid JSON.
