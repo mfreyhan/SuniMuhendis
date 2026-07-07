@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sunimuhendis"
-version = "0.1.0"
+version = "0.1.1"
 description = "Physics-simulation evaluation environments (DRC + simulator + score) for engineering-design LLM benchmarking."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -25,12 +25,14 @@ dev = ["pytest>=7.0.0"]
 
 # src-layout: only the sunimuhendis library ships. The harness subpackages live
 # in-tree for the benchmark app but are excluded from the distributed wheel, so a
-# consumer that installs sunimuhendis pulls ONLY core + environments + parsing.
+# consumer that installs sunimuhendis pulls core + environments + parsing + prompts.
+# `prompts` ships (unlike model_clients/baselines) so the private training repo can
+# build the exact same prompt used for benchmarking/inference, keeping SFT data and
+# eval consistent with what commercial models are shown in Phase 6 comparisons.
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["sunimuhendis*"]
 exclude = [
     "sunimuhendis.model_clients*",
     "sunimuhendis.baselines*",
-    "sunimuhendis.prompts*",
 ]
