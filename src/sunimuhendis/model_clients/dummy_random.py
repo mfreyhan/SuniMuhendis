@@ -3,8 +3,8 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from src.model_clients.base import BaseModelClient
-from src.baselines.random_sampler import RandomSampler
+from sunimuhendis.model_clients.base import BaseModelClient
+from sunimuhendis.baselines.random_sampler import RandomSampler
 
 class DummyRandomClient(BaseModelClient):
     def __init__(self):

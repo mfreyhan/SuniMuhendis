@@ -17,12 +17,12 @@ try:
 except ImportError:
     pass
 
-from src.core.logging import setup_logger
-from src.environments.heat_exchanger.env import HeatExchangerEnv
-from src.environments.heat_exchanger.score import HeatExchangerScore
-from src.environments.heat_exchanger.simulator import HeatExchangerSimulator
-from src.model_clients.base import BaseModelClient
-from src.parsing.json_parser import parse_llm_json
+from sunimuhendis.core.logging import setup_logger
+from sunimuhendis.environments.heat_exchanger.env import HeatExchangerEnv
+from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScore
+from sunimuhendis.environments.heat_exchanger.simulator import HeatExchangerSimulator
+from sunimuhendis.model_clients.base import BaseModelClient
+from sunimuhendis.parsing.json_parser import parse_llm_json
 
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 _WEIGHT_KEYS = ("w_heat", "w_cost", "w_drop_tube", "w_drop_shell", "w_eff")
@@ -61,21 +61,21 @@ def multi_client_factory(spec: Dict[str, Any]) -> BaseModelClient:
     provider = spec.get("provider", "hf")
     
     if provider == "opencode":
-        from src.model_clients.opencode_client import OpenCodeClient
+        from sunimuhendis.model_clients.opencode_client import OpenCodeClient
         return OpenCodeClient(
             model=spec["model"],
             name=spec.get("name"),
             params=spec.get("params"),
         )
     elif provider == "openrouter":
-        from src.model_clients.openrouter_client import OpenRouterClient
+        from sunimuhendis.model_clients.openrouter_client import OpenRouterClient
         return OpenRouterClient(
             model=spec["model"],
             name=spec.get("name"),
             params=spec.get("params"),
         )
     else:
-        from src.model_clients.hf_client import HFInferenceClient
+        from sunimuhendis.model_clients.hf_client import HFInferenceClient
         return HFInferenceClient(
             model=spec["model"],
             name=spec.get("name"),

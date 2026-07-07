@@ -5,9 +5,9 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.environments.heat_exchanger.env import HeatExchangerEnv
-from src.environments.heat_exchanger.simulator import HeatExchangerSimulator
-from src.environments.heat_exchanger.score import HeatExchangerScore
+from sunimuhendis.environments.heat_exchanger.env import HeatExchangerEnv
+from sunimuhendis.environments.heat_exchanger.simulator import HeatExchangerSimulator
+from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScore
 
 def test_smoke_valid_design():
     task_path = os.path.join(os.path.dirname(__file__), '../configs/tasks/heat_exchanger/task_001.json')

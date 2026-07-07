@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sunimuhendis"
+version = "0.1.0"
+description = "Physics-simulation evaluation environments (DRC + simulator + score) for engineering-design LLM benchmarking."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pydantic>=2.0.0",
+    "json-repair>=0.30.0",
+]
+
+# Per-environment extras: install only the simulator deps you actually use,
+# e.g.  pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@main"
+[project.optional-dependencies]
+heat_exchanger = ["ht", "fluids"]
+all = ["ht", "fluids"]
+# The benchmark harness (model clients, dashboard, samplers) is NOT part of the
+# shipped library; these deps are only for running this repo's own benchmark app.
+benchmark = ["openai>=1.0.0", "python-dotenv>=1.0.0", "streamlit", "pandas", "plotly", "scipy", "numpy"]
+dev = ["pytest>=7.0.0"]
+
+# src-layout: only the sunimuhendis library ships. The harness subpackages live
+# in-tree for the benchmark app but are excluded from the distributed wheel, so a
+# consumer that installs sunimuhendis pulls ONLY core + environments + parsing.
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["sunimuhendis*"]
+exclude = [
+    "sunimuhendis.model_clients*",
+    "sunimuhendis.baselines*",
+    "sunimuhendis.prompts*",
+]

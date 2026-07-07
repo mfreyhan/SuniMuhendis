@@ -6,14 +6,14 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.environments.heat_exchanger.env import HeatExchangerEnv
-from src.environments.heat_exchanger.simulator import HeatExchangerSimulator
-from src.environments.heat_exchanger.score import HeatExchangerScore
-from src.prompts.templates import build_heat_exchanger_prompt
-from src.parsing.json_parser import parse_llm_json
-from src.model_clients.dummy_random import DummyRandomClient
-from src.model_clients.interactive_browser import InteractiveBrowserClient
-from src.core.logging import setup_logger
+from sunimuhendis.environments.heat_exchanger.env import HeatExchangerEnv
+from sunimuhendis.environments.heat_exchanger.simulator import HeatExchangerSimulator
+from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScore
+from sunimuhendis.prompts.templates import build_heat_exchanger_prompt
+from sunimuhendis.parsing.json_parser import parse_llm_json
+from sunimuhendis.model_clients.dummy_random import DummyRandomClient
+from sunimuhendis.model_clients.interactive_browser import InteractiveBrowserClient
+from sunimuhendis.core.logging import setup_logger
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate LLM responses")

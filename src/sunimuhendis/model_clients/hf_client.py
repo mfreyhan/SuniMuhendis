@@ -2,7 +2,7 @@ import os
 import time
 from typing import Any, Dict, Optional
 
-from src.model_clients.base import BaseModelClient
+from sunimuhendis.model_clients.base import BaseModelClient
 
 # Hugging Face Inference Providers — OpenAI-uyumlu router (chat-completions).
 HF_ROUTER_BASE_URL = "https://router.huggingface.co/v1"

@@ -3,10 +3,10 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.core.base_simulator import BaseSimulator
-from src.core.base_score import BaseScoreFunction
-from src.core.base_environment import BaseEnvironment
-from src.core.types import EvaluationResult, ScoreResult
+from sunimuhendis.core.base_simulator import BaseSimulator
+from sunimuhendis.core.base_score import BaseScoreFunction
+from sunimuhendis.core.base_environment import BaseEnvironment
+from sunimuhendis.core.types import EvaluationResult, ScoreResult
 from typing import Dict, Any, Tuple, Optional
 
 class DummySimulator(BaseSimulator):

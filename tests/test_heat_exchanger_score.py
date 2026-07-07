@@ -4,7 +4,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.environments.heat_exchanger.score import HeatExchangerScore
+from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScore
 
 def test_reward_invalid():
     rew = HeatExchangerScore()

@@ -5,10 +5,10 @@ import json
 # Add project root directory to Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.environments.heat_exchanger.env import HeatExchangerEnv
-from src.environments.heat_exchanger.simulator import HeatExchangerSimulator
-from src.environments.heat_exchanger.score import HeatExchangerScore
-from src.core.logging import setup_logger, save_evaluation_result
+from sunimuhendis.environments.heat_exchanger.env import HeatExchangerEnv
+from sunimuhendis.environments.heat_exchanger.simulator import HeatExchangerSimulator
+from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScore
+from sunimuhendis.core.logging import setup_logger, save_evaluation_result
 
 def main():
     logger = setup_logger("heat_exchanger_demo")

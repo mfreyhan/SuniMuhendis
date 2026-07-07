@@ -2,7 +2,7 @@ import os
 import time
 from typing import Any, Dict, Optional
 
-from src.model_clients.base import BaseModelClient
+from sunimuhendis.model_clients.base import BaseModelClient
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 

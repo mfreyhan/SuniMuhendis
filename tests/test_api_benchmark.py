@@ -2,7 +2,7 @@ import json
 import os
 
 from scripts.run_api_benchmark import _safe_name, _select_models, run_benchmark
-from src.model_clients.dummy_random import DummyRandomClient
+from sunimuhendis.model_clients.dummy_random import DummyRandomClient
 
 _VALID_STATUS = {
     "success", "schema_error", "drc_error", "simulation_error",

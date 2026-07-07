@@ -8,7 +8,7 @@ SuniMuhendis is a framework researching whether an LLM can learn to produce **va
 
 ## Environment & commands
 
-- **Setup:** dependencies live in a project venv. Activate it once per shell â€” `source .venv/bin/activate` â€” then use plain `python` / `pytest` / `streamlit`. (Recreate with `python3 -m venv .venv && pip install -r requirements.txt`.)
+- **Setup:** dependencies live in a project venv. Activate it once per shell â€” `source .venv/bin/activate` â€” then use plain `python` / `pytest` / `streamlit`. (Recreate with `python3 -m venv .venv && pip install -r requirements.txt && pip install -e .`.) The `pip install -e .` step makes the `sunimuhendis` package importable.
 - **Interpreter:** Python **3.9.6**. Keep all code **3.9-compatible** â€” no `X | Y` union syntax (use `typing.Optional`/`Union`), no `match`. PEP 585 generics (`tuple[...]`, `dict[...]`) are fine and already used.
 - **Tests:** `pytest tests/ -v` â€” run a single file/test with `pytest tests/test_heat_exchanger_score.py -v` or `-k <substring>`.
 - **Secrets:** `HF_TOKEN` is read from `.env` (gitignored; see `.env.example`) via `python-dotenv`.
@@ -58,5 +58,7 @@ Tests assert identical output for identical input (`test_heat_exchanger_smoke.py
 ### LLM output parsing
 `src/parsing/json_parser.py` â†’ `parse_llm_json()` uses the `json-repair` library to recover messy/markdown-wrapped/broken JSON (see `ARCHITECTURE_DECISIONS.md` ADR-01; constrained decoding via outlines/vLLM/guidance is a possible future move).
 
-### Import convention
-Scripts insert the repo root into `sys.path` then import `from src...`. Inside packages, relative imports are used (e.g. `from ...core.base_reward import BaseRewardFunction`). There are **no `__init__.py` files** â€” the project relies on implicit namespace packages.
+### Packaging & import convention
+The library is an installable **src-layout package**: everything importable lives under `src/sunimuhendis/` and is exposed via `pyproject.toml`. Install it editable once (`pip install -e .`) so `import sunimuhendis` works everywhere; the root `conftest.py` also puts `src/` on `sys.path` for tests. Scripts import `from sunimuhendis...` (the old repo-root `sys.path` + `from src...` convention is gone). Inside the package, relative imports are used (e.g. `from ...core.base_score import BaseScoreFunction`), and every subpackage has an `__init__.py`.
+
+**Consuming just the environments (e.g. from a separate training repo):** `pip install "sunimuhendis[heat_exchanger] @ git+<repo-url>@<tag>"`, then `from sunimuhendis import make_env, list_environments`. Instantiate by name â€” `make_env("heat_exchanger")` â€” via the registry in `environments/registry.py` (each factory imports its heavy sim deps **lazily**, so the per-env install extras are meaningful). The benchmark harness (`model_clients/`, `baselines/`, `prompts/`) lives in-tree for this repo's own scripts but is **excluded from the wheel** (see `[tool.setuptools.packages.find]` in `pyproject.toml`), so a consumer pulls only `core` + `environments` + `parsing`.

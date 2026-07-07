@@ -1,7 +1,7 @@
 import pytest
 import json
-from src.model_clients.dummy_random import DummyRandomClient
-from src.parsing.json_parser import parse_llm_json
+from sunimuhendis.model_clients.dummy_random import DummyRandomClient
+from sunimuhendis.parsing.json_parser import parse_llm_json
 
 def test_dummy_random_client():
     client = DummyRandomClient()

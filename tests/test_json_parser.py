@@ -1,5 +1,5 @@
 import pytest
-from src.parsing.json_parser import parse_llm_json
+from sunimuhendis.parsing.json_parser import parse_llm_json
 
 def test_parse_valid_json():
     raw = '{"key": "value"}'
