@@ -8,8 +8,8 @@ OPENCODE_BASE_URL = "https://opencode.ai/zen/go/v1"
 
 class OpenCodeClient(BaseModelClient):
     """
-    OpenCode API (OpenAI uyumlu) üzerinden model çağıran istemci.
-    Token `.env`/ortamdaki `OPENCODE_API_KEY`'dan okunur.
+    Client calling the model via OpenCode API (OpenAI compatible).
+    Token is read from `.env`/environment `OPENCODE_API_KEY`.
     """
 
     def __init__(
@@ -32,7 +32,7 @@ class OpenCodeClient(BaseModelClient):
         api_key = os.environ.get(api_key_env)
         if not api_key:
             raise RuntimeError(
-                f"{api_key_env} bulunamadı. `.env` dosyasına {api_key_env} ekleyin."
+                f"{api_key_env} not found. Add {api_key_env} to your .env file."
             )
 
         try:

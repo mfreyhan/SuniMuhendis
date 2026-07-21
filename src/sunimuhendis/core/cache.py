@@ -5,7 +5,7 @@ from .types import EvaluationResult
 
 class SimpleCache:
     """
-    Aynı task ve design parametreleri geldiğinde sonucu hatırlayan basit bir bellek içi cache.
+    A simple in-memory cache that remembers the result when the same task and design parameters are received.
     """
     def __init__(self):
         self._cache: Dict[str, EvaluationResult] = {}

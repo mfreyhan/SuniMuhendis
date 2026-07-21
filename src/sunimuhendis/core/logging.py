@@ -6,7 +6,7 @@ from typing import Dict, Any
 from .types import EvaluationResult
 
 def setup_logger(name: str, log_dir: str = "logs") -> logging.Logger:
-    """Temel bir logger oluşturur."""
+    """Creates a basic logger."""
     os.makedirs(log_dir, exist_ok=True)
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
@@ -32,7 +32,7 @@ def setup_logger(name: str, log_dir: str = "logs") -> logging.Logger:
     return logger
 
 def save_evaluation_result(result: EvaluationResult, output_dir: str = "examples/outputs") -> str:
-    """EvaluationResult objesini JSON olarak diske kaydeder."""
+    """Saves the EvaluationResult object to disk as JSON."""
     os.makedirs(output_dir, exist_ok=True)
     file_path = os.path.join(output_dir, f"{result.task_id}_{result.design_id}_result.json")
     

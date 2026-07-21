@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# .env varsa otomatik yukle (HF_TOKEN). python-dotenv yoksa sessizce gec.
+# Auto-load .env if exists (HF_TOKEN). Pass silently if python-dotenv is missing.
 try:
     from dotenv import load_dotenv
 
@@ -27,7 +27,7 @@ from sunimuhendis.parsing.json_parser import parse_llm_json
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 _WEIGHT_KEYS = ("w_heat", "w_cost", "w_drop_tube", "w_drop_shell", "w_eff")
 
-# Bir model_spec'ten istemci ureten fabrika tipi (test icin enjekte edilebilir).
+# Factory type generating a client from model_spec (injectable for testing).
 ClientFactory = Callable[[Dict[str, Any]], BaseModelClient]
 
 
@@ -37,7 +37,7 @@ def _load_json(path: str) -> dict:
 
 
 def _safe_name(name: str) -> str:
-    """Model adini dosya sistemi icin guvenli klasor adina cevirir."""
+    """Converts model name to a safe folder name for the file system."""
     cleaned = name.strip().replace(os.sep, "_")
     if os.altsep:
         cleaned = cleaned.replace(os.altsep, "_")
@@ -57,7 +57,7 @@ def _build_environment():
 
 
 def multi_client_factory(spec: Dict[str, Any]) -> BaseModelClient:
-    """Varsayilan fabrika: HF veya OpenCode istemcisi ureten fonksiyon."""
+    """Default factory: function generating HF or OpenCode client."""
     provider = spec.get("provider", "hf")
     
     if provider == "opencode":
@@ -92,10 +92,10 @@ def run_benchmark(
     logger=None,
 ) -> List[str]:
     """
-    Tek bir prompt'u verilen modellere `repeats` kez gonderir, her run'i ayri JSON'a yazar.
+    Sends a single prompt to given models 'repeats' times, writes each run to a separate JSON.
 
-    Klasor: <results_root>/<prompt_slug>/{prompt.txt, task.json, benchmark/<model>/<ts>-<id>.json}
-    Donus: yazilan run JSON dosyalarinin yollari.
+    Folder: <results_root>/<prompt_slug>/{prompt.txt, task.json, benchmark/<model>/<ts>-<id>.json}
+    Returns: paths of the written run JSON files.
     """
     logger = logger or setup_logger("hf_benchmark")
     results_root = results_root or os.path.join(_REPO_ROOT, "results")
@@ -104,9 +104,9 @@ def run_benchmark(
     prompt_path = os.path.join(prompt_dir, "prompt.txt")
     task_path = os.path.join(prompt_dir, "task.json")
     if not os.path.exists(prompt_path):
-        raise FileNotFoundError(f"prompt.txt bulunamadi: {prompt_path}")
+        raise FileNotFoundError(f"prompt.txt not found: {prompt_path}")
     if not os.path.exists(task_path):
-        raise FileNotFoundError(f"task.json bulunamadi: {task_path}")
+        raise FileNotFoundError(f"task.json not found: {task_path}")
 
     with open(prompt_path, "r", encoding="utf-8-sig") as f:
         prompt_text = f.read()
@@ -128,14 +128,14 @@ def run_benchmark(
         
         fpath = os.path.join(out_dir, f"{_safe_name(model_name)}.jsonl")
 
-        # Istemciyi model basina BIR KEZ kur.
+        # Instantiate client ONCE per model.
         client = None
         client_err: Optional[str] = None
         try:
             client = client_factory(model)
         except Exception as e:  # noqa: BLE001
             client_err = f"{type(e).__name__}: {e}"
-            logger.error(f"[{model_name}] istemci kurulamadi: {client_err}")
+            logger.error(f"[{model_name}] client could not be instantiated: {client_err}")
 
         for r in range(repeats):
             done += 1
@@ -183,7 +183,7 @@ def run_benchmark(
                         record["reward_components"] = dict(result.score.components)
                         record["metrics"] = dict(result.metrics)
                         record["error"] = result.error_message
-                except Exception as e:  # noqa: BLE001 - hicbir run tum kosuyu dusurmesin
+                except Exception as e:  # noqa: BLE001 - do not let any run crash the whole execution
                     record["status"] = "client_error"
                     record["error"] = f"{type(e).__name__}: {e}"
 
@@ -195,7 +195,7 @@ def run_benchmark(
                 f"score={record['total_reward']:.3f}"
             )
 
-    logger.info(f"Bitti. {len(written)} run yazildi -> {os.path.join(prompt_dir, 'api_runs')}")
+    logger.info(f"Done. {len(written)} runs written -> {os.path.join(prompt_dir, 'api_runs')}")
     return written
 
 
@@ -209,27 +209,27 @@ def _select_models(all_models: List[dict], selection: Optional[List[str]], provi
     chosen = [m for m in all_models if (m.get("name") or m.get("model")) in wanted]
     missing = wanted - {(m.get("name") or m.get("model")) for m in chosen}
     if missing:
-        raise SystemExit(f"models.json'da belirtilen kriterlere uyan model bulunamadi: {sorted(missing)}")
+        raise SystemExit(f"No model matching the criteria in models.json was found: {sorted(missing)}")
     return chosen
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="LLM API'leri ile prompt x model otomatik benchmark."
+        description="Automated benchmark for prompt x model using LLM APIs."
     )
     parser.add_argument("--prompt", required=True,
-                        help="results/<slug> klasor adi (prompt.txt + task.json icerir).")
+                        help="results/<slug> folder name (contains prompt.txt + task.json).")
     parser.add_argument("--models", type=str, default=None,
-                        help="Virgulle ayrilmis model 'name' listesi (varsayilan: hepsi).")
+                        help="Comma-separated model 'name' list (default: all).")
     parser.add_argument("--model", type=str, default=None,
-                        help="Tek bir model 'name' (--models'in kisayolu).")
+                        help="A single model 'name' (shortcut for --models).")
     parser.add_argument("--provider", type=str, default=None,
-                        help="Modelleri filtrelemek icin provider adi (hf, opencode, openrouter).")
+                        help="Provider name to filter models (hf, opencode, openrouter).")
     parser.add_argument("--repeats", type=int, default=1,
-                        help="Model basina bu cagrida kac run.")
+                        help="How many runs per model in this execution.")
     parser.add_argument("--models-config", type=str,
                         default=os.path.join(_REPO_ROOT, "configs", "benchmarks", "models.json"),
-                        help="Model listesi JSON yolu.")
+                        help="Path to model list JSON.")
     args = parser.parse_args()
 
     logger = setup_logger("hf_benchmark")
@@ -246,7 +246,7 @@ def main():
         all_models = config_data["models"]
 
     if not all_models:
-        raise SystemExit(f"models.json'da model yok veya okunamadi: {args.models_config}")
+        raise SystemExit(f"No models in models.json or could not read: {args.models_config}")
 
     selection = None
     if args.model:

@@ -6,7 +6,7 @@ def clean_client_errors():
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     results_dir = os.path.join(repo_root, 'results')
     
-    # Tüm JSONL dosyalarını bul (api_runs ve manual_runs dahil)
+    # Find all JSONL files (including api_runs and manual_runs)
     pattern = os.path.join(results_dir, '**', '*.jsonl')
     jsonl_files = glob.glob(pattern, recursive=True)
     
@@ -14,7 +14,7 @@ def clean_client_errors():
     total_kept = 0
     files_modified = 0
     
-    print("Mevcut sonuç dosyaları taranıyor...")
+    print("Scanning existing result files...")
     
     for filepath in jsonl_files:
         valid_lines = []
@@ -35,26 +35,26 @@ def clean_client_errors():
                         kept_in_file += 1
                         total_kept += 1
                 except json.JSONDecodeError:
-                    # JSON hatası olan raw satırları silmiyoruz
+                    # Do not delete raw lines with JSON errors
                     valid_lines.append(line)
                     kept_in_file += 1
                     total_kept += 1
         
-        # Sadece client_error silindiyse dosyayı güncelle
+        # Update the file only if client_error was deleted
         if removed_in_file > 0:
             with open(filepath, 'w', encoding='utf-8') as f:
                 for line in valid_lines:
                     f.write(line)
             files_modified += 1
-            print(f"  [+] Temizlendi: {os.path.relpath(filepath, repo_root)} "
-                  f"(-{removed_in_file} çöp, +{kept_in_file} geçerli)")
+            print(f"  [+] Cleaned: {os.path.relpath(filepath, repo_root)} "
+                  f"(-{removed_in_file} garbage, +{kept_in_file} valid)")
                   
     print("\n" + "="*30)
-    print("TEMİZLİK ÖZETİ")
+    print("CLEANUP SUMMARY")
     print("="*30)
-    print(f"Silinen 'client_error' sayısı : {total_removed}")
-    print(f"Kalan geçerli koşu sayısı     : {total_kept}")
-    print(f"Güncellenen dosya sayısı      : {files_modified}")
+    print(f"Deleted 'client_error' count : {total_removed}")
+    print(f"Remaining valid runs count   : {total_kept}")
+    print(f"Updated files count          : {files_modified}")
     print("="*30)
 
 if __name__ == "__main__":

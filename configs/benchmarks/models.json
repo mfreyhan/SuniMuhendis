@@ -293,6 +293,1222 @@
           "temperature": 0.7,
           "max_tokens": 8192
         }
+      },
+      {
+        "name": "laguna-xs-2.1",
+        "model": "poolside/laguna-xs-2.1:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "north-mini-code",
+        "model": "cohere/north-mini-code:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nemotron-3.5-content-safety",
+        "model": "nvidia/nemotron-3.5-content-safety:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "laguna-m.1",
+        "model": "poolside/laguna-m.1:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gemma-4-26b-a4b-it",
+        "model": "google/gemma-4-26b-a4b-it:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gemma-4-31b-it",
+        "model": "google/gemma-4-31b-it:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "lyria-3-pro-preview",
+        "model": "google/lyria-3-pro-preview",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "lyria-3-clip-preview",
+        "model": "google/lyria-3-clip-preview",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nemotron-3-super-120b-a12b",
+        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nemotron-3-nano-30b-a3b",
+        "model": "nvidia/nemotron-3-nano-30b-a3b:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nemotron-nano-12b-v2-vl",
+        "model": "nvidia/nemotron-nano-12b-v2-vl:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nemotron-nano-9b-v2",
+        "model": "nvidia/nemotron-nano-9b-v2:free",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "longcat-2.0",
+        "model": "meituan/longcat-2.0",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "kat-coder-air-v2.5",
+        "model": "kwaipilot/kat-coder-air-v2.5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "kat-coder-pro-v2.5",
+        "model": "kwaipilot/kat-coder-pro-v2.5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "aion-3.0-mini",
+        "model": "aion-labs/aion-3.0-mini",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "aion-3.0",
+        "model": "aion-labs/aion-3.0",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "hy3",
+        "model": "tencent/hy3",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "laguna-xs-2.1",
+        "model": "poolside/laguna-xs-2.1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-5.2",
+        "model": "z-ai/glm-5.2",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "fusion",
+        "model": "openrouter/fusion",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nemotron-3-ultra-550b-a55b",
+        "model": "nvidia/nemotron-3-ultra-550b-a55b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3.7-max",
+        "model": "qwen/qwen3.7-max",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "ring-2.6-1t",
+        "model": "inclusionai/ring-2.6-1t",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "granite-4.1-8b",
+        "model": "ibm-granite/granite-4.1-8b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "laguna-m.1",
+        "model": "poolside/laguna-m.1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3.6-max-preview",
+        "model": "qwen/qwen3.6-max-preview",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-v4-pro",
+        "model": "deepseek/deepseek-v4-pro",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-v4-flash",
+        "model": "deepseek/deepseek-v4-flash",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "ling-2.6-1t",
+        "model": "inclusionai/ling-2.6-1t",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "hy3-preview",
+        "model": "tencent/hy3-preview",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "mimo-v2.5-pro",
+        "model": "xiaomi/mimo-v2.5-pro",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "ling-2.6-flash",
+        "model": "inclusionai/ling-2.6-flash",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "pareto-code",
+        "model": "openrouter/pareto-code",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-5.1",
+        "model": "z-ai/glm-5.1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "trinity-large-thinking",
+        "model": "arcee-ai/trinity-large-thinking",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "kat-coder-pro-v2",
+        "model": "kwaipilot/kat-coder-pro-v2",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "minimax-m2.7",
+        "model": "minimax/minimax-m2.7",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-5-turbo",
+        "model": "z-ai/glm-5-turbo",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nemotron-3-super-120b-a12b",
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "mercury-2",
+        "model": "inception/mercury-2",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "aion-2.0",
+        "model": "aion-labs/aion-2.0",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "minimax-m2.5",
+        "model": "minimax/minimax-m2.5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-5",
+        "model": "z-ai/glm-5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-max-thinking",
+        "model": "qwen/qwen3-max-thinking",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-coder-next",
+        "model": "qwen/qwen3-coder-next",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "step-3.5-flash",
+        "model": "stepfun/step-3.5-flash",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "solar-pro-3",
+        "model": "upstage/solar-pro-3",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "minimax-m2-her",
+        "model": "minimax/minimax-m2-her",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "palmyra-x5",
+        "model": "writer/palmyra-x5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-4.7-flash",
+        "model": "z-ai/glm-4.7-flash",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "minimax-m2.1",
+        "model": "minimax/minimax-m2.1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-4.7",
+        "model": "z-ai/glm-4.7",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nemotron-3-nano-30b-a3b",
+        "model": "nvidia/nemotron-3-nano-30b-a3b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "relace-search",
+        "model": "relace/relace-search",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "bodybuilder",
+        "model": "openrouter/bodybuilder",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-v3.2",
+        "model": "deepseek/deepseek-v3.2",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "olmo-3-32b-think",
+        "model": "allenai/olmo-3-32b-think",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "cogito-v2.1-671b",
+        "model": "deepcogito/cogito-v2.1-671b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "kimi-k2-thinking",
+        "model": "moonshotai/kimi-k2-thinking",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-oss-safeguard-20b",
+        "model": "openai/gpt-oss-safeguard-20b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "minimax-m2",
+        "model": "minimax/minimax-m2",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "granite-4.0-h-micro",
+        "model": "ibm-granite/granite-4.0-h-micro",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-4.6",
+        "model": "z-ai/glm-4.6",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-v3.2-exp",
+        "model": "deepseek/deepseek-v3.2-exp",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "cydonia-24b-v4.1",
+        "model": "thedrummer/cydonia-24b-v4.1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "relace-apply-3",
+        "model": "relace/relace-apply-3",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-max",
+        "model": "qwen/qwen3-max",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-coder-plus",
+        "model": "qwen/qwen3-coder-plus",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-v3.1-terminus",
+        "model": "deepseek/deepseek-v3.1-terminus",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-coder-flash",
+        "model": "qwen/qwen3-coder-flash",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-next-80b-a3b-thinking",
+        "model": "qwen/qwen3-next-80b-a3b-thinking",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-next-80b-a3b-instruct",
+        "model": "qwen/qwen3-next-80b-a3b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen-plus-2025-07-28",
+        "model": "qwen/qwen-plus-2025-07-28",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen-plus-2025-07-28:thinking",
+        "model": "qwen/qwen-plus-2025-07-28:thinking",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "kimi-k2-0905",
+        "model": "moonshotai/kimi-k2-0905",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-30b-a3b-thinking-2507",
+        "model": "qwen/qwen3-30b-a3b-thinking-2507",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "hermes-4-70b",
+        "model": "nousresearch/hermes-4-70b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "hermes-4-405b",
+        "model": "nousresearch/hermes-4-405b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-chat-v3.1",
+        "model": "deepseek/deepseek-chat-v3.1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "jamba-large-1.7",
+        "model": "ai21/jamba-large-1.7",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-oss-120b",
+        "model": "openai/gpt-oss-120b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-oss-20b",
+        "model": "openai/gpt-oss-20b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-coder-30b-a3b-instruct",
+        "model": "qwen/qwen3-coder-30b-a3b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-30b-a3b-instruct-2507",
+        "model": "qwen/qwen3-30b-a3b-instruct-2507",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-4.5",
+        "model": "z-ai/glm-4.5",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "glm-4.5-air",
+        "model": "z-ai/glm-4.5-air",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-235b-a22b-thinking-2507",
+        "model": "qwen/qwen3-235b-a22b-thinking-2507",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-coder",
+        "model": "qwen/qwen3-coder",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-235b-a22b-2507",
+        "model": "qwen/qwen3-235b-a22b-2507",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "kimi-k2",
+        "model": "moonshotai/kimi-k2",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "dolphin-mistral-24b-venice-edition",
+        "model": "cognitivecomputations/dolphin-mistral-24b-venice-edition",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "hunyuan-a13b-instruct",
+        "model": "tencent/hunyuan-a13b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "morph-v3-large",
+        "model": "morph/morph-v3-large",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "morph-v3-fast",
+        "model": "morph/morph-v3-fast",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "minimax-m1",
+        "model": "minimax/minimax-m1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-r1-0528",
+        "model": "deepseek/deepseek-r1-0528",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gemma-3n-e4b-it",
+        "model": "google/gemma-3n-e4b-it",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "virtuoso-large",
+        "model": "arcee-ai/virtuoso-large",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-30b-a3b",
+        "model": "qwen/qwen3-30b-a3b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-8b",
+        "model": "qwen/qwen3-8b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-14b",
+        "model": "qwen/qwen3-14b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-32b",
+        "model": "qwen/qwen3-32b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen3-235b-a22b",
+        "model": "qwen/qwen3-235b-a22b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-chat-v3-0324",
+        "model": "deepseek/deepseek-chat-v3-0324",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "command-a",
+        "model": "cohere/command-a",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-4o-mini-search-preview",
+        "model": "openai/gpt-4o-mini-search-preview",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-4o-search-preview",
+        "model": "openai/gpt-4o-search-preview",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "reka-flash-3",
+        "model": "rekaai/reka-flash-3",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "skyfall-36b-v2",
+        "model": "thedrummer/skyfall-36b-v2",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "sonar-deep-research",
+        "model": "perplexity/sonar-deep-research",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "aion-rp-llama-3.1-8b",
+        "model": "aion-labs/aion-rp-llama-3.1-8b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen-plus",
+        "model": "qwen/qwen-plus",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "mistral-small-24b-instruct-2501",
+        "model": "mistralai/mistral-small-24b-instruct-2501",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-r1-distill-llama-70b",
+        "model": "deepseek/deepseek-r1-distill-llama-70b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-r1",
+        "model": "deepseek/deepseek-r1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "phi-4",
+        "model": "microsoft/phi-4",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "deepseek-chat",
+        "model": "deepseek/deepseek-chat",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "l3.3-euryale-70b",
+        "model": "sao10k/l3.3-euryale-70b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "command-r7b-12-2024",
+        "model": "cohere/command-r7b-12-2024",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "llama-3.3-70b-instruct",
+        "model": "meta-llama/llama-3.3-70b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "nova-micro-v1",
+        "model": "amazon/nova-micro-v1",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen-2.5-coder-32b-instruct",
+        "model": "qwen/qwen-2.5-coder-32b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "unslopnemo-12b",
+        "model": "thedrummer/unslopnemo-12b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "magnum-v4-72b",
+        "model": "anthracite-org/magnum-v4-72b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen-2.5-7b-instruct",
+        "model": "qwen/qwen-2.5-7b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "inflection-3-pi",
+        "model": "inflection/inflection-3-pi",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "inflection-3-productivity",
+        "model": "inflection/inflection-3-productivity",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "rocinante-12b",
+        "model": "thedrummer/rocinante-12b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "llama-3.2-1b-instruct",
+        "model": "meta-llama/llama-3.2-1b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "llama-3.2-3b-instruct",
+        "model": "meta-llama/llama-3.2-3b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "qwen-2.5-72b-instruct",
+        "model": "qwen/qwen-2.5-72b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "command-r-08-2024",
+        "model": "cohere/command-r-08-2024",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "command-r-plus-08-2024",
+        "model": "cohere/command-r-plus-08-2024",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "l3.1-euryale-70b",
+        "model": "sao10k/l3.1-euryale-70b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "hermes-3-llama-3.1-70b",
+        "model": "nousresearch/hermes-3-llama-3.1-70b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "hermes-3-llama-3.1-405b",
+        "model": "nousresearch/hermes-3-llama-3.1-405b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "l3-lunaris-8b",
+        "model": "sao10k/l3-lunaris-8b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "llama-3.1-70b-instruct",
+        "model": "meta-llama/llama-3.1-70b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "llama-3.1-8b-instruct",
+        "model": "meta-llama/llama-3.1-8b-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "mistral-nemo",
+        "model": "mistralai/mistral-nemo",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gemma-2-27b-it",
+        "model": "google/gemma-2-27b-it",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "wizardlm-2-8x22b",
+        "model": "microsoft/wizardlm-2-8x22b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-3.5-turbo-0613",
+        "model": "openai/gpt-3.5-turbo-0613",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-4-turbo-preview",
+        "model": "openai/gpt-4-turbo-preview",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-3.5-turbo-instruct",
+        "model": "openai/gpt-3.5-turbo-instruct",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-3.5-turbo-16k",
+        "model": "openai/gpt-3.5-turbo-16k",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "weaver",
+        "model": "mancer/weaver",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "remm-slerp-l2-13b",
+        "model": "undi95/remm-slerp-l2-13b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "mythomax-l2-13b",
+        "model": "gryphe/mythomax-l2-13b",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-3.5-turbo",
+        "model": "openai/gpt-3.5-turbo",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
+      },
+      {
+        "name": "gpt-4",
+        "model": "openai/gpt-4",
+        "params": {
+          "temperature": 0.7,
+          "max_tokens": 8192
+        }
       }
     ]
   }

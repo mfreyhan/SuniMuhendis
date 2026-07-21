@@ -7,19 +7,19 @@ class HeatExchangerScore(BaseScoreFunction):
         if not is_valid:
             return ScoreResult(normalized_total=0.0, is_valid=False, error_message=error_message)
             
-        # Task konfigürasyonundan ağırlıkları çekiyoruz, yoksa varsayılan
+        # Fetch weights from task configuration, use defaults if not present
         w_heat = task_params.get("w_heat", 0.4)
         w_drop_tube = task_params.get("w_drop_tube", 0.05)
         w_drop_shell = task_params.get("w_drop_shell", 0.05)
         w_eff = task_params.get("w_eff", 0.2)
         w_cost = task_params.get("w_cost", 0.3)
         
-        # Hedefleri al
+        # Get targets
         target_heat = task_params.get("target_heat_duty", 150000.0) # W
         max_dp_tube = task_params.get("max_dp_tube", 50000.0) # Pa
         max_dp_shell = task_params.get("max_dp_shell", 50000.0) # Pa
         
-        # Metrikleri al (Eski ve yeni simülatör isimlerini destekler)
+        # Get metrics (Supports both old and new simulator names)
         heat_duty = metrics.get("heat_duty_W", metrics.get("heat_duty", 0.0))
         dp_tube = metrics.get("dp_tube_Pa", metrics.get("pressure_drop_tube", max_dp_tube * 2))
         dp_shell = metrics.get("dp_shell_Pa", metrics.get("pressure_drop_shell", max_dp_shell * 2))
@@ -27,7 +27,7 @@ class HeatExchangerScore(BaseScoreFunction):
         cost_annualised = metrics.get("cost_annualised_USD_per_yr", 100000.0)
         num_warnings = metrics.get("num_warnings", 0.0)
         
-        # 1. Heat duty score: Ne kadar yüksekse o kadar iyi (maksimum 1.0)
+        # 1. Heat duty score: Higher is better (max 1.0)
         r_heat = min(heat_duty / target_heat, 1.0)
         
         # 2. Pressure drop tube penalty
@@ -45,15 +45,15 @@ class HeatExchangerScore(BaseScoreFunction):
         # 4. Effectiveness score
         r_eff = min(max(effectiveness, 0.0), 1.0)
         
-        # 5. Cost score: Daha düşük maliyet daha yüksek ödül (örnek baseline 50000 USD/yıl)
-        # Eğer maliyet 50k altındaysa 1.0'a yaklaşır, üstündeyse azalır.
+        # 5. Cost score: Lower cost yields higher reward (example baseline 50000 USD/yr)
+        # If cost is under 50k it approaches 1.0, decreases if above.
         baseline_cost = 50000.0
         r_cost = min(baseline_cost / max(cost_annualised, 1.0), 1.0)
         
-        # Toplam skoru hesapla
+        # Calculate total score
         total_score = (w_heat * r_heat) + (w_drop_tube * r_drop_tube) + (w_drop_shell * r_drop_shell) + (w_eff * r_eff) + (w_cost * r_cost)
         
-        # Warnings penalty (her bir uyarı için %10 kesinti)
+        # Warnings penalty (10% reduction for each warning)
         penalty_factor = max(1.0 - (num_warnings * 0.1), 0.0)
         
         # normalize

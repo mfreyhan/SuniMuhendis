@@ -3,22 +3,22 @@ from pydantic import BaseModel, Field
 
 class ScoreResult(BaseModel):
     """
-    Simülasyon sonuçlarından hesaplanan normalize edilmiş ödül değerlerini tutar.
+    Holds normalized reward values calculated from simulation results.
     """
-    normalized_total: float = Field(..., description="Normalize edilmiş toplam score.")
-    components: Dict[str, float] = Field(default_factory=dict, description="Score fonksiyonunun alt bileşenleri.")
-    is_valid: bool = Field(..., description="Tasarımın fiziksel/şema olarak geçerli olup olmadığı.")
-    error_message: Optional[str] = Field(None, description="Eğer is_valid False ise hata mesajı.")
+    normalized_total: float = Field(..., description="Normalized total score.")
+    components: Dict[str, float] = Field(default_factory=dict, description="Sub-components of the score function.")
+    is_valid: bool = Field(..., description="Whether the design is physically/schema-wise valid.")
+    error_message: Optional[str] = Field(None, description="Error message if is_valid is False.")
 
 
 class EvaluationResult(BaseModel):
     """
-    BaseEnvironment'in döneceği nihai değerlendirme objesi.
+    The final evaluation object returned by BaseEnvironment.
     """
-    task_id: str = Field(..., description="Değerlendirilen task'ın ID'si.")
-    design_id: str = Field(default="unknown", description="Değerlendirilen tasarımın ID'si (varsa).")
+    task_id: str = Field(..., description="ID of the evaluated task.")
+    design_id: str = Field(default="unknown", description="ID of the evaluated design (if any).")
     status: str = Field(..., description="'success', 'schema_error', 'drc_error', 'simulation_error'")
-    error_message: Optional[str] = Field(None, description="Hata durumu mesajı")
+    error_message: Optional[str] = Field(None, description="Error status message")
     score: ScoreResult
-    metrics: Dict[str, Any] = Field(default_factory=dict, description="Simülatörden dönen ham mühendislik metrikleri.")
-    raw_simulation_output: Dict[str, Any] = Field(default_factory=dict, description="Simülatörün dönebileceği diğer raw data (opsiyonel).")
+    metrics: Dict[str, Any] = Field(default_factory=dict, description="Raw engineering metrics returned from the simulator.")
+    raw_simulation_output: Dict[str, Any] = Field(default_factory=dict, description="Other raw data the simulator might return (optional).")

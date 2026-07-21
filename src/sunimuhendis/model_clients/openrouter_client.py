@@ -8,8 +8,8 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 class OpenRouterClient(BaseModelClient):
     """
-    OpenRouter API (OpenAI uyumlu) üzerinden model çağıran istemci.
-    Token `.env`/ortamdaki `OPENROUTER_API_KEY`'dan okunur.
+    Client calling the model via OpenRouter API (OpenAI compatible).
+    Token is read from `.env`/environment `OPENROUTER_API_KEY`.
     """
 
     def __init__(
@@ -32,7 +32,7 @@ class OpenRouterClient(BaseModelClient):
         api_key = os.environ.get(api_key_env)
         if not api_key:
             raise RuntimeError(
-                f"{api_key_env} bulunamadı. `.env` dosyasına {api_key_env} ekleyin."
+                f"{api_key_env} not found. Add {api_key_env} to your .env file."
             )
 
         try:
@@ -40,9 +40,9 @@ class OpenRouterClient(BaseModelClient):
         except ImportError as e:  # pragma: no cover
             raise ImportError("pip install openai") from e
 
-        # OpenRouter önerisi: Headers ile HTTP-Referer ve X-Title göndermek.
+        # OpenRouter recommendation: Send HTTP-Referer and X-Title via Headers.
         default_headers = {
-            "HTTP-Referer": "https://github.com/SuniMuhendis", # Sitenizin adresi veya depo linki
+            "HTTP-Referer": "https://github.com/SuniMuhendis", # Your site address or repository link
             "X-Title": "Heat Exchanger Benchmark"
         }
 

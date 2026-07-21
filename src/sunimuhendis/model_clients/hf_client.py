@@ -4,22 +4,22 @@ from typing import Any, Dict, Optional
 
 from sunimuhendis.model_clients.base import BaseModelClient
 
-# Hugging Face Inference Providers — OpenAI-uyumlu router (chat-completions).
+# Hugging Face Inference Providers — OpenAI-compatible router (chat-completions).
 HF_ROUTER_BASE_URL = "https://router.huggingface.co/v1"
 
 
 class HFInferenceClient(BaseModelClient):
     """
-    Hugging Face Inference Providers üzerinden model çağıran istemci.
+    Client calling the model via Hugging Face Inference Providers.
 
-    HF router OpenAI-uyumlu olduğu için resmi `openai` SDK'sını base_url'i
-    değiştirerek kullanır. Token `.env`/ortamdaki `HF_TOKEN`'dan okunur.
+    Since HF router is OpenAI-compatible, it uses the official `openai` SDK by
+    changing the base_url. Token is read from `.env`/environment `HF_TOKEN`.
 
-    Model id formatı: "owner/model" (ör. "Qwen/Qwen2.5-32B-Instruct"); isteğe bağlı
-    sağlayıcı/politika soneki eklenebilir (":cheapest", ":together" vb.).
+    Model id format: "owner/model" (e.g. "Qwen/Qwen2.5-32B-Instruct"); optional
+    provider/policy suffix can be appended (":cheapest", ":together" etc.).
 
-    `generate_design()` mevcut BaseModelClient sözleşmesini korur; ek meta veriler
-    çağrı sonrası attribute olarak okunabilir:
+    `generate_design()` maintains the existing BaseModelClient contract; additional metadata
+    can be read as attributes after the call:
       last_latency_ms, last_prompt_tokens, last_completion_tokens
     """
 
@@ -43,15 +43,15 @@ class HFInferenceClient(BaseModelClient):
         api_key = os.environ.get(api_key_env)
         if not api_key:
             raise RuntimeError(
-                f"{api_key_env} bulunamadı. `.env` dosyasına HF_TOKEN ekleyin "
-                f"(bkz. .env.example) veya ortam değişkeni olarak verin."
+                f"{api_key_env} not found. Add HF_TOKEN to .env file "
+                f"(see .env.example) or provide it as an environment variable."
             )
 
         try:
             from openai import OpenAI
-        except ImportError as e:  # pragma: no cover - ortam bağımlı
+        except ImportError as e:  # pragma: no cover - environment dependent
             raise ImportError(
-                "HFInferenceClient için 'openai' paketi gerekli: pip install openai"
+                "HFInferenceClient requires the 'openai' package: pip install openai"
             ) from e
 
         self._client = OpenAI(base_url=base_url, api_key=api_key, timeout=timeout)

@@ -4,7 +4,7 @@ from .types import ScoreResult
 
 class BaseScoreFunction(ABC):
     """
-    Tüm score fonksiyonlarının türeyeceği temel sınıf.
+    Base class from which all score functions inherit.
     """
     
     @abstractmethod
@@ -16,15 +16,15 @@ class BaseScoreFunction(ABC):
         error_message: Optional[str] = None
     ) -> ScoreResult:
         """
-        Simülatör çıktıları veya hatalarından score hesaplar.
+        Calculates the score from simulator outputs or errors.
         
         Args:
-            task_params: Tasarımın hedeflerini veya ortam parametrelerini içerir.
-            metrics: Simülasyondan dönen metrikler (is_valid=True ise).
-            is_valid: Tasarımın veya simülasyonun geçerli/başarılı olup olmadığı.
-            error_message: Hata durumunda mesaj.
+            task_params: Contains the design targets or environment parameters.
+            metrics: Metrics returned from simulation (if is_valid=True).
+            is_valid: Whether the design or simulation is valid/successful.
+            error_message: Message in case of error.
             
         Returns:
-            ScoreResult: Normalize edilmiş ve bileşenlerine ayrılmış score nesnesi.
+            ScoreResult: Normalized and decomposed score object.
         """
         pass

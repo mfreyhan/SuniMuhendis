@@ -6,8 +6,7 @@ from .base_score import BaseScoreFunction
 
 class BaseEnvironment(ABC):
     """
-    Simülatör, ödül fonksiyonu ve DRC doğrulamasını bir araya getiren
-    ana ortam (environment) sınıfı.
+    Main environment class combining the simulator, reward function, and DRC validation.
     """
     
     def __init__(self, simulator: BaseSimulator, score_function: BaseScoreFunction):
@@ -17,21 +16,21 @@ class BaseEnvironment(ABC):
     @abstractmethod
     def validate_schema(self, design_params: Dict[str, Any]) -> tuple[bool, Optional[str]]:
         """
-        Gelen tasarımın veri yapısının/şemasının doğruluğunu kontrol eder.
-        Örn: Pydantic modeli ile doğrulama.
+        Checks the structural/schema validity of the incoming design.
+        E.g., validation via Pydantic model.
         """
         pass
         
     @abstractmethod
     def run_drc(self, design_params: Dict[str, Any]) -> tuple[bool, Optional[str]]:
         """
-        Design Rule Check (DRC). Fiziksel/mantıksal sınırlamaları kontrol eder.
+        Design Rule Check (DRC). Checks physical/logical constraints.
         """
         pass
         
     def evaluate(self, task_id: str, task_params: Dict[str, Any], design_id: str, design_params: Dict[str, Any]) -> EvaluationResult:
         """
-        Ana değerlendirme döngüsü.
+        Main evaluation loop.
         """
         
         # 1. Schema Validation
