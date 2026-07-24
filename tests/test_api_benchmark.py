@@ -32,6 +32,7 @@ def test_run_benchmark_offline(tmp_path):
 
     written = run_benchmark(
         prompt_slug=slug,
+        task_path=os.path.join(str(tmp_path), slug, "task.json"),
         model_specs=specs,
         client_factory=lambda spec: DummyRandomClient(),
         repeats=2,
@@ -61,6 +62,7 @@ def test_run_benchmark_client_error_isolated(tmp_path):
 
     written = run_benchmark(
         prompt_slug=slug,
+        task_path=os.path.join(str(tmp_path), slug, "task.json"),
         model_specs=[{"name": "broken"}],
         client_factory=boom_factory,
         repeats=1,

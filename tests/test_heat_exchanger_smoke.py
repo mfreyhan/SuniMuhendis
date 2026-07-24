@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from sunimuhendis.environments.heat_exchanger.env import HeatExchangerEnv
 from sunimuhendis.environments.heat_exchanger.simulator import HeatExchangerSimulator
-from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScore
+from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScoreV1
 
 def test_smoke_valid_design():
     task_path = os.path.join(os.path.dirname(__file__), '../configs/tasks/heat_exchanger/task_001.json')
@@ -21,7 +21,7 @@ def test_smoke_valid_design():
         
     env = HeatExchangerEnv(
         simulator=HeatExchangerSimulator(),
-        score_function=HeatExchangerScore()
+        score_function=HeatExchangerScoreV1()
     )
     
     # 1st run
@@ -48,7 +48,7 @@ def test_smoke_concentric_tube_design():
       "baffle_spacing": 0.0
     }
     task_params = {"w_heat": 0.5, "w_drop": 0.5, "target_heat_duty": 150000.0, "max_pressure_drop": 50000.0}
-    env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScore())
+    env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScoreV1())
     
     res = env.evaluate("task_001", task_params, "concentric_001", design_params)
     assert res.status == "success", f"Concentric simulation failed: {res.error_message}"

@@ -1,0 +1,18 @@
+{
+  "task_id": "he_task_v2_balanced",
+  "task_set_version": "v2",
+  "score_version": "heat_exchanger_score_v2",
+  "w_heat": 0.4,
+  "w_drop_tube": 0.1,
+  "w_drop_shell": 0.1,
+  "w_eff": 0.2,
+  "w_cost": 0.2,
+  "target_heat_duty": 150000.0,
+  "max_dp_tube": 50000.0,
+  "max_dp_shell": 50000.0,
+  "target_cost": 50000.0,
+  "oversizing_penalty_factor": 0.5,
+  "heat_safety_margin": 1.05,
+  "warning_penalty_per_warning": 0.1,
+  "dp_decay_factor": 0.2
+}

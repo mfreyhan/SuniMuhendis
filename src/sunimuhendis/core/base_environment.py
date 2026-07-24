@@ -27,16 +27,25 @@ class BaseEnvironment(ABC):
         Design Rule Check (DRC). Checks physical/logical constraints.
         """
         pass
+
+    def get_score_function(self, task_params: Dict[str, Any]) -> BaseScoreFunction:
+        """
+        Returns the score function to be used for the current task.
+        By default, returns the environment's default score function.
+        Subclasses can override this to support dynamic score functions based on task_params.
+        """
+        return self.score_function
         
     def evaluate(self, task_id: str, task_params: Dict[str, Any], design_id: str, design_params: Dict[str, Any]) -> EvaluationResult:
         """
         Main evaluation loop.
         """
+        score_fn = self.get_score_function(task_params)
         
         # 1. Schema Validation
         schema_valid, schema_err = self.validate_schema(design_params)
         if not schema_valid:
-            score = self.score_function.calculate_score(task_params, {}, is_valid=False, error_message=schema_err)
+            score = score_fn.calculate_score(task_params, {}, is_valid=False, error_message=schema_err)
             return EvaluationResult(
                 task_id=task_id,
                 design_id=design_id,
@@ -48,7 +57,7 @@ class BaseEnvironment(ABC):
         # 2. DRC Validation
         drc_valid, drc_err = self.run_drc(design_params)
         if not drc_valid:
-            score = self.score_function.calculate_score(task_params, {}, is_valid=False, error_message=drc_err)
+            score = score_fn.calculate_score(task_params, {}, is_valid=False, error_message=drc_err)
             return EvaluationResult(
                 task_id=task_id,
                 design_id=design_id,
@@ -62,7 +71,7 @@ class BaseEnvironment(ABC):
             success, metrics, raw_data, sim_err = self.simulator.simulate(design_params)
             
             if not success:
-                score = self.score_function.calculate_score(task_params, {}, is_valid=False, error_message=sim_err)
+                score = score_fn.calculate_score(task_params, {}, is_valid=False, error_message=sim_err)
                 return EvaluationResult(
                     task_id=task_id,
                     design_id=design_id,
@@ -72,7 +81,7 @@ class BaseEnvironment(ABC):
                 )
                 
             # 4. Score Calculation (Success case)
-            score = self.score_function.calculate_score(task_params, metrics, is_valid=True)
+            score = score_fn.calculate_score(task_params, metrics, is_valid=True)
             return EvaluationResult(
                 task_id=task_id,
                 design_id=design_id,
@@ -85,7 +94,7 @@ class BaseEnvironment(ABC):
         except Exception as e:
             # Catch unexpected simulator crashes
             error_msg = f"Unexpected simulation crash: {str(e)}"
-            score = self.score_function.calculate_score(task_params, {}, is_valid=False, error_message=error_msg)
+            score = score_fn.calculate_score(task_params, {}, is_valid=False, error_message=error_msg)
             return EvaluationResult(
                 task_id=task_id,
                 design_id=design_id,

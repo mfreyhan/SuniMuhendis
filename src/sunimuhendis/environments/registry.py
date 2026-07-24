@@ -6,18 +6,22 @@ simulator dependencies *lazily*, so ``import sunimuhendis`` and
 only imported when you actually ``make_env(<name>)`` — which is what makes the
 per-environment install extras (e.g. ``sunimuhendis[heat_exchanger]``) meaningful.
 """
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Any
 from ..core.base_environment import BaseEnvironment
 
 
-def _make_heat_exchanger() -> BaseEnvironment:
+def _make_heat_exchanger(**kwargs) -> BaseEnvironment:
     from .heat_exchanger.env import HeatExchangerEnv
     from .heat_exchanger.simulator import HeatExchangerSimulator
-    from .heat_exchanger.score import HeatExchangerScore
-    return HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScore())
+    from .heat_exchanger.score import get_score_function
+    
+    score_version = kwargs.get("score_version", "heat_exchanger_score_v1")
+    score_fn = get_score_function(score_version)
+    
+    return HeatExchangerEnv(HeatExchangerSimulator(), score_fn)
 
 
-_REGISTRY: Dict[str, Callable[[], BaseEnvironment]] = {
+_REGISTRY: Dict[str, Callable[..., BaseEnvironment]] = {
     "heat_exchanger": _make_heat_exchanger,
 }
 
@@ -27,7 +31,7 @@ def list_environments() -> List[str]:
     return sorted(_REGISTRY)
 
 
-def make_env(name: str) -> BaseEnvironment:
+def make_env(name: str, **kwargs) -> BaseEnvironment:
     """Instantiate a registered environment by name.
 
     Raises KeyError if the name is unknown, listing the available options.
@@ -38,4 +42,4 @@ def make_env(name: str) -> BaseEnvironment:
         raise KeyError(
             "Unknown environment {!r}. Available: {}".format(name, list_environments())
         ) from None
-    return factory()
+    return factory(**kwargs)

@@ -4,17 +4,17 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScore
+from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScoreV1
 
 def test_reward_invalid():
-    rew = HeatExchangerScore()
+    rew = HeatExchangerScoreV1()
     res = rew.calculate_score({}, {}, is_valid=False, error_message="DRC Failed")
     assert res.is_valid == False
     assert res.normalized_total == 0.0
     assert "DRC Failed" in res.error_message
 
 def test_reward_valid_perfect():
-    rew = HeatExchangerScore()
+    rew = HeatExchangerScoreV1()
     task_params = {
         "w_heat": 0.4,
         "w_drop_tube": 0.15,
@@ -39,7 +39,7 @@ def test_reward_valid_perfect():
     assert res.normalized_total == 1.0
 
 def test_reward_valid_penalty():
-    rew = HeatExchangerScore()
+    rew = HeatExchangerScoreV1()
     task_params = {
         "w_heat": 0.4,
         "w_drop_tube": 0.15,
@@ -68,4 +68,3 @@ def test_reward_valid_penalty():
     # r_cost: 0.5 * 0.1 = 0.05
     # total = 0.5
     assert res.normalized_total == 0.5
-
