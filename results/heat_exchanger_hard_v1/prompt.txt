@@ -1,0 +1,50 @@
+Design a heat exchanger for the numerical requirements below. Return ONLY one JSON object with exactly these seven fields:
+{
+  "geometry_type": "shell_and_tube or concentric_tube",
+  "length": "tube length, metres, positive float",
+  "inner_tube_di": "tube inside diameter, metres, positive float",
+  "inner_tube_do": "tube outside diameter, metres, positive float",
+  "outer_shell_di": "shell inside diameter, metres, positive float",
+  "number_of_tubes": "positive integer",
+  "baffle_spacing": "baffle spacing, metres, positive float"
+}
+Replace the descriptions with actual values. Do not output operating conditions or any additional parameters.
+
+Fixed operating conditions (not design variables):
+- Hot water: 2.5 kg/s, inlet 80 degrees C; rho=971.8 kg/m3, mu=0.000355 Pa.s, k=0.67 W/(m.K), Cp=4190 J/(kg.K), Pr=2.2.
+- Cold water: 2.5 kg/s, inlet 20 degrees C; rho=998.2 kg/m3, mu=0.001002 Pa.s, k=0.598 W/(m.K), Cp=4182 J/(kg.K), Pr=7.0.
+- Default tube passes=2, square pitch, pitch ratio=1.25, carbon steel, wall conductivity=50 W/(m.K), baffle cut=0.25.
+- The simulator evaluates heat transfer, pressure losses including nozzles, and mechanical warnings. These fixed conditions cannot be changed by the design.
+
+Geometric rules:
+- inner_tube_di < inner_tube_do < outer_shell_di.
+- For shell_and_tube: use an even number of tubes (two equal tube passes), and baffle_spacing < length.
+- Tubes use square pitch with pitch/diameter = 1.25. The complete Phadke tube bundle, including pass lanes and shell-to-bundle clearance, must fit inside outer_shell_di. A useful lower-bound estimate is outer_shell_di > inner_tube_do + 1.25*inner_tube_do*sqrt(4*number_of_tubes/pi); leave additional clearance above this estimate.
+- For concentric_tube: exactly 1 tube.
+- All dimensions must be positive.
+
+Objectives:
+Deliver at least 350,000 W while keeping BOTH tube-side and shell-side pressure losses at or below 2,500 Pa. Increasing heat transfer area can reduce velocities but also change heat-transfer coefficients; seek a design balancing thermal and hydraulic performance. Avoid mechanical warnings, including excessive velocities, unsupported spans, and vibration. Zero warnings is desirable but is not a mandatory feasibility condition.
+
+Exact Score V1 rules (soft objectives, not pass/fail constraints):
+r_heat = min(heat_duty_W / target_heat_duty, 1).
+For each pressure drop: r_dp = 1 if dp <= max_dp, otherwise max(1 - (dp - max_dp)/max_dp, 0).
+r_eff = min(max(effectiveness, 0), 1).
+r_cost = min(50000 / max(cost_annualised_USD_per_yr, 1), 1), but its weight is zero in this task.
+base = (w_heat*r_heat + w_drop_tube*r_dp_tube + w_drop_shell*r_dp_shell + w_eff*r_eff + w_cost*r_cost) / sum_of_weights.
+final_score = base * max(1 - 0.1*num_warnings, 0).
+Each warning subtracts 0.1 from the multiplier; a single warning does not zero the score. Schema, geometric validation, or simulation failure yields zero. Higher heat duty beyond target does not increase r_heat. Cost is reported but does not contribute to this task's score.
+
+Task Details:
+{
+  "target_heat_duty": 350000.0,
+  "max_dp_tube": 2500.0,
+  "max_dp_shell": 2500.0,
+  "w_heat": 0.6,
+  "w_drop_tube": 0.175,
+  "w_drop_shell": 0.175,
+  "w_eff": 0.05,
+  "w_cost": 0.0
+}
+
+Return ONLY the design JSON, without explanations or markdown.

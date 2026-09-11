@@ -1,0 +1,31 @@
+# Hard task with Score V3
+
+This prompt unit uses simulator V3 and `heat_exchanger_score_v3`. It is separate
+from `heat_exchanger_hard_v1`; results from different simulator or score versions
+must not be pooled.
+
+The task rewards heat duty (50%), tube pressure drop (17.5%), shell pressure drop
+(17.5%), effectiveness (5%), and annualised cost (10%). Cost receives full raw
+reward at or below 5,000 USD/year, decreases linearly, and reaches zero at 15,000
+USD/year. Its reward is softly gated by the weakest thermal/hydraulic reward.
+
+Each missed primary requirement (heat duty and the two pressure-drop limits) adds
+the same 10% penalty as one simulator warning. Partial objective rewards are still
+retained, so near misses remain distinguishable.
+
+Generate the deterministic calibration report with:
+
+```bash
+python scripts/calibrate_hard_task.py --prompt heat_exchanger_hard_v2 --output reports/hard_task_v2_calibration.json
+```
+
+The seeded 3,000-design calibration produced 2,977 successful simulations and
+838 designs meeting all three thermal/hydraulic requirements. Scores span
+0.0651–0.7834. The highest-scoring design meets all three requirements and has
+an annualised cost of 3,855 USD/year. No feasible sampled design was warning-free.
+
+Run a model with:
+
+```bash
+python scripts/run_api_benchmark.py --prompt heat_exchanger_hard_v2 --provider openrouter --model gpt-oss-20b --repeats 20
+```

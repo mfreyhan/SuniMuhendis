@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Literal
 
 class HeatExchangerDesign(BaseModel):
@@ -6,6 +6,8 @@ class HeatExchangerDesign(BaseModel):
     Represents Heat Exchanger design parameters.
     The LLM is expected to generate JSON in this format.
     """
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+
     geometry_type: Literal["concentric_tube", "shell_and_tube"] = Field(
         ..., description="Must be 'concentric_tube' or 'shell_and_tube'."
     )

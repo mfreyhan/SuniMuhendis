@@ -20,10 +20,16 @@ class OpenRouterClient(BaseModelClient):
         api_key_env: str = "OPENROUTER_API_KEY",
         base_url: str = OPENROUTER_BASE_URL,
         timeout: float = 600.0,
+        max_retries: int = 3,
+        backoff_factor: float = 3.0,
+        auto_fallback_free: bool = True,
     ):
         super().__init__(name or model)
         self.model = model
         self.params = params or {}
+        self.max_retries = max_retries
+        self.backoff_factor = backoff_factor
+        self.auto_fallback_free = auto_fallback_free
 
         self.last_latency_ms: float = 0.0
         self.last_prompt_tokens: Optional[int] = None
@@ -54,16 +60,45 @@ class OpenRouterClient(BaseModelClient):
         )
 
     def generate_design(self, prompt: str) -> str:
-        start = time.perf_counter()
-        resp = self._client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            **self.params,
-        )
-        self.last_latency_ms = (time.perf_counter() - start) * 1000
+        for attempt in range(self.max_retries):
+            try:
+                start = time.perf_counter()
+                resp = self._client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": prompt}],
+                    **self.params,
+                )
+                self.last_latency_ms = (time.perf_counter() - start) * 1000
 
-        if resp.usage:
-            self.last_prompt_tokens = getattr(resp.usage, "prompt_tokens", None)
-            self.last_completion_tokens = getattr(resp.usage, "completion_tokens", None)
+                if resp.usage:
+                    self.last_prompt_tokens = getattr(resp.usage, "prompt_tokens", None)
+                    self.last_completion_tokens = getattr(resp.usage, "completion_tokens", None)
 
-        return resp.choices[0].message.content or ""
+                return resp.choices[0].message.content or ""
+            except Exception as e:
+                err_str = str(e).lower()
+
+                # 1. 404 / Free unavailable fallback: automatically fall back to base model
+                if self.auto_fallback_free and ":free" in self.model.lower():
+                    if "404" in err_str or "unavailable for free" in err_str or "not found" in err_str:
+                        fallback_model = self.model.replace(":free", "")
+                        print(
+                            f"[OpenRouterClient] Warning: '{self.model}' is unavailable for free. "
+                            f"Falling back to '{fallback_model}'..."
+                        )
+                        self.model = fallback_model
+                        continue
+
+                # 2. 429 Rate limit retry: wait with backoff
+                is_rate_limit = "429" in err_str or "rate" in err_str
+                if is_rate_limit and attempt < self.max_retries - 1:
+                    sleep_time = self.backoff_factor * (attempt + 1)
+                    print(
+                        f"[OpenRouterClient] Rate limited (429) on '{self.model}'. "
+                        f"Retrying in {sleep_time:.1f}s (attempt {attempt + 1}/{self.max_retries})..."
+                    )
+                    time.sleep(sleep_time)
+                    continue
+
+                raise
+        return ""

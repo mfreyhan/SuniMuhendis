@@ -1,0 +1,12 @@
+{
+  "task_id": "he_hard_001",
+  "score_version": "heat_exchanger_score_v1",
+  "target_heat_duty": 350000.0,
+  "max_dp_tube": 2500.0,
+  "max_dp_shell": 2500.0,
+  "w_heat": 0.6,
+  "w_drop_tube": 0.175,
+  "w_drop_shell": 0.175,
+  "w_eff": 0.05,
+  "w_cost": 0.0
+}

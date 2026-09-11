@@ -21,6 +21,15 @@ from typing import Dict, Any, Tuple, List
 import ht
 import fluids
 
+from .geometry import (
+    DEFAULT_PITCH_RATIO,
+    DEFAULT_PITCH_TYPE,
+    DEFAULT_TUBE_PASSES,
+    PITCH_ANGLES,
+    available_bundle_diameter,
+    bundle_diameter,
+)
+
 
 class HeatExchangerSimulator:
     """
@@ -32,6 +41,8 @@ class HeatExchangerSimulator:
     tube-bundle correlations.
     """
 
+    VERSION = "v3"
+
     # ── Material cost multipliers (relative to carbon steel) ────────
     MATERIAL_FACTORS = {
         "carbon_steel": 1.0,
@@ -39,6 +50,13 @@ class HeatExchangerSimulator:
         "stainless_316": 2.0,
         "titanium": 5.0,
         "cupronickel": 2.5,
+    }
+    YOUNGS_MODULUS = {
+        "carbon_steel": 200e9,
+        "stainless_304": 193e9,
+        "stainless_316": 193e9,
+        "titanium": 116e9,
+        "cupronickel": 150e9,
     }
 
     STEEL_DENSITY = 7850.0        # kg/m³
@@ -96,7 +114,7 @@ class HeatExchangerSimulator:
             #  1. TUBE-SIDE  (uses ht + fluids libraries)
             # ═════════════════════════════════════════════════════════
             tube = self._calc_tube_side(
-                di, do, L, N_tubes, N_pass,
+                geo, di, do, L, N_tubes, N_pass,
                 hot, wall, mech,
             )
 
@@ -141,6 +159,7 @@ class HeatExchangerSimulator:
             # ═════════════════════════════════════════════════════════
             wall_temp = self._calc_wall_temperature(
                 tube["h_i"], shell["h_o"], thermal["U_dirty"],
+                di, do,
                 ntu["T_hot_out"], ntu["T_cold_out"],
                 hot["T_in"], cold["T_in"],
             )
@@ -149,8 +168,9 @@ class HeatExchangerSimulator:
             #  7. MECHANICAL CHECKS
             # ═════════════════════════════════════════════════════════
             mechanical = self._calc_mechanical(
-                di, do, D_shell, L, baffle_spacing,
-                N_tubes, shell["v"], cold["rho"], mech,
+                geo, di, do, D_shell, L, baffle_spacing,
+                N_tubes, shell["v"], hot["rho"], cold["rho"],
+                material, mech,
             )
 
             # ═════════════════════════════════════════════════════════
@@ -165,7 +185,7 @@ class HeatExchangerSimulator:
             #  9. COST MODEL
             # ═════════════════════════════════════════════════════════
             cost = self._calc_cost(
-                L, di, do, D_shell, N_tubes, N_pass, n_baffles,
+                geo, L, di, do, D_shell, N_tubes, N_pass, n_baffles,
                 tube["dp_total"], shell["dp_total"],
                 hot["m_dot"], cold["m_dot"],
                 hot["rho"], cold["rho"], material,
@@ -226,6 +246,12 @@ class HeatExchangerSimulator:
         except KeyError as e:
             return None  # caller handles
 
+        required_numbers = (L, di, do, D_shell)
+        if any(not isinstance(value, (int, float)) or isinstance(value, bool)
+               or not math.isfinite(value) for value in required_numbers):
+            return None
+        if not isinstance(N_tubes, int) or isinstance(N_tubes, bool):
+            return None
         if do <= di:
             return None
         if D_shell <= do:
@@ -233,16 +259,56 @@ class HeatExchangerSimulator:
         if L <= 0 or N_tubes <= 0:
             return None
 
-        N_pass = dp.get("tube_passes", 2)
-        pitch_type = dp.get("pitch_type", "square")
+        N_pass = dp.get(
+            "tube_passes",
+            1 if geo == "concentric_tube" else DEFAULT_TUBE_PASSES,
+        )
+        pitch_type = dp.get("pitch_type", DEFAULT_PITCH_TYPE)
         material = dp.get("material", "carbon_steel")
+        if geo not in ("concentric_tube", "shell_and_tube"):
+            return None
+        if not isinstance(N_pass, int) or isinstance(N_pass, bool) or N_pass <= 0:
+            return None
+        if geo == "concentric_tube" and (N_tubes != 1 or N_pass != 1):
+            return None
+        if geo == "shell_and_tube":
+            if N_pass % 2 != 0 or N_pass > N_tubes or N_tubes % N_pass != 0:
+                return None
+        if pitch_type not in PITCH_ANGLES or material not in HeatExchangerSimulator.MATERIAL_FACTORS:
+            return None
 
         baffle_spacing = dp.get("baffle_spacing", L / 5)
-        if baffle_spacing <= 0:
-            baffle_spacing = L / 5
+        if not isinstance(baffle_spacing, (int, float)) or isinstance(baffle_spacing, bool):
+            return None
+        if geo == "shell_and_tube" and (baffle_spacing <= 0 or baffle_spacing >= L):
+            return None
+        if geo == "concentric_tube":
+            baffle_spacing = L
         baffle_cut = dp.get("baffle_cut", 0.25)
-        n_baffles = max(1, int(round(L / baffle_spacing)) - 1)
-        pitch = do * dp.get("pitch_ratio", 1.25)
+        pitch_ratio = dp.get("pitch_ratio", DEFAULT_PITCH_RATIO)
+        if (not isinstance(baffle_cut, (int, float)) or isinstance(baffle_cut, bool)
+                or not 0.15 <= baffle_cut <= 0.45):
+            return None
+        if (not isinstance(pitch_ratio, (int, float)) or isinstance(pitch_ratio, bool)
+                or not math.isfinite(pitch_ratio) or pitch_ratio < 1.25):
+            return None
+        n_baffles = (max(0, int(math.ceil(L / baffle_spacing)) - 1)
+                     if geo == "shell_and_tube" else 0)
+        pitch = do * pitch_ratio
+
+        if geo == "shell_and_tube":
+            try:
+                D_bundle = bundle_diameter(
+                    N_tubes, do, pitch, N_pass, pitch_type,
+                )
+                D_bundle_available = available_bundle_diameter(D_shell)
+            except (ValueError, ZeroDivisionError):
+                return None
+            if D_bundle > D_bundle_available:
+                return None
+        else:
+            D_bundle = do
+            D_bundle_available = D_shell
 
         hot = {
             "m_dot": dp.get("m_dot_hot", 2.5),
@@ -273,13 +339,26 @@ class HeatExchangerSimulator:
             "D_nozzle_cold": dp.get("D_nozzle_cold", 0.05),
         }
 
+        fluid_values = tuple(hot.values()) + tuple(cold.values())
+        if any(not isinstance(value, (int, float)) or isinstance(value, bool)
+               or not math.isfinite(value) for value in fluid_values):
+            return None
+        if hot["m_dot"] <= 0 or cold["m_dot"] <= 0 or hot["T_in"] <= cold["T_in"]:
+            return None
+        if (wall["k_wall"] <= 0 or wall["R_fi"] < 0 or wall["R_fo"] < 0
+                or mech["P_design"] <= 0 or mech["allowable_stress"] <= 0
+                or mech["D_nozzle_hot"] <= 0 or mech["D_nozzle_cold"] <= 0):
+            return None
+
         return {
             "geo": geo, "L": L, "di": di, "do": do,
             "D_shell": D_shell, "N_tubes": N_tubes,
             "N_pass": N_pass, "pitch_type": pitch_type,
             "material": material, "baffle_spacing": baffle_spacing,
             "baffle_cut": baffle_cut, "n_baffles": n_baffles,
-            "pitch": pitch, "hot": hot, "cold": cold,
+            "pitch": pitch, "D_bundle": D_bundle,
+            "D_bundle_available": D_bundle_available,
+            "hot": hot, "cold": cold,
             "wall": wall, "mech": mech,
         }
 
@@ -288,7 +367,7 @@ class HeatExchangerSimulator:
     # ═════════════════════════════════════════════════════════════════
 
     @staticmethod
-    def _calc_tube_side(di, do, L, N_tubes, N_pass, hot, wall, mech):
+    def _calc_tube_side(geo, di, do, L, N_tubes, N_pass, hot, wall, mech):
         """
         Tube-side heat transfer and pressure drop.
 
@@ -303,7 +382,8 @@ class HeatExchangerSimulator:
         m_dot = hot["m_dot"]
 
         # ── Flow area and velocity ────────────────────────────────
-        A_tube_in_total = N_tubes * math.pi * (di / 2) ** 2
+        tubes_per_pass = N_tubes / N_pass
+        A_tube_in_total = tubes_per_pass * math.pi * (di / 2) ** 2
         v = m_dot / (rho * A_tube_in_total)
         G = rho * v  # mass velocity
         Re = rho * v * di / mu
@@ -331,8 +411,10 @@ class HeatExchangerSimulator:
         # (a) Friction in all tube passes
         dp_friction = f_D * (L * N_pass / di) * (rho * v ** 2 / 2)
 
-        # (b) Header / return losses (4 velocity heads per pass, Kern)
-        dp_header = 4.0 * N_pass * (rho * v ** 2 / 2)
+        # (b) Header / return losses (Kern). A straight concentric tube has
+        # no pass partition or return header.
+        dp_header = (4.0 * N_pass * (rho * v ** 2 / 2)
+                     if geo == "shell_and_tube" else 0.0)
 
         # (c) Nozzle losses (inlet K=1.5, outlet K=0.5)
         v_nozzle = m_dot / (rho * math.pi * (mech["D_nozzle_hot"] / 2) ** 2)
@@ -342,6 +424,7 @@ class HeatExchangerSimulator:
 
         return {
             "v": v, "G": G, "Re": Re, "Nu": Nu,
+            "tubes_per_pass": tubes_per_pass,
             "h_i": h_i, "St": St, "j_h": j_h, "f_D": f_D,
             "v_nozzle": v_nozzle,
             "dp_friction": dp_friction,
@@ -407,19 +490,21 @@ class HeatExchangerSimulator:
         else:
             f_D = f_D_pipe
 
-        dp_total = f_D * (L / D_h) * (rho * v ** 2 / 2)
+        dp_friction = f_D * (L / D_h) * (rho * v ** 2 / 2)
 
-        # Nozzle
+        # Inlet and outlet nozzle losses (K=1.5 and K=0.5).
         v_nozzle = m_dot / (rho * math.pi * (mech["D_nozzle_cold"] / 2) ** 2)
+        dp_nozzle = (1.5 + 0.5) * (rho * v_nozzle ** 2 / 2)
+        dp_total = dp_friction + dp_nozzle
 
         return {
             "v": v, "G": G, "Re": Re, "Nu": Nu,
             "h_o": h_o, "St": St, "j_h": j_h,
             "D_h": D_h, "D_e": D_h,
             "v_nozzle": v_nozzle,
-            "dp_friction": dp_total,
+            "dp_friction": dp_friction,
             "dp_header": 0.0,
-            "dp_nozzle": 0.0,
+            "dp_nozzle": dp_nozzle,
             "dp_total": dp_total,
             "dp_per_m": dp_total / L if L > 0 else 0,
             "flow_regime": ("turbulent" if Re > 4000
@@ -450,7 +535,7 @@ class HeatExchangerSimulator:
 
         # ── Equivalent diameter (pitch-type aware) ────────────────
         if pitch_type in ("triangular", "30deg", "60deg"):
-            D_e = 4.0 * (0.866 * pitch ** 2 / 2.0
+            D_e = 4.0 * (0.866 * pitch ** 2
                          - math.pi * do ** 2 / 4.0) / (math.pi * do)
         else:  # square (90°) pitch
             D_e = 4.0 * (pitch ** 2
@@ -487,14 +572,26 @@ class HeatExchangerSimulator:
         else:
             j_f = 1.0 * Re ** (-0.50)
 
-        # Cross-flow ΔP between baffles
-        dp_cross = (8.0 * j_f * (D_shell / D_e) * n_baffles
+        # Cross-flow ΔP. There is one more cross-flow section than there are
+        # internal baffles.
+        crossflow_sections = n_baffles + 1
+        dp_cross = (8.0 * j_f * (D_shell / D_e) * crossflow_sections
                     * (rho * v ** 2 / 2.0))
 
-        # Baffle-window ΔP (≈ 1 velocity head per pass through window)
-        A_window = (math.pi / 4.0) * D_shell ** 2 * baffle_cut
-            # Subtract tubes in window
-        A_tubes_win = (N_tubes * baffle_cut * (math.pi / 4.0) * do ** 2)
+        # Baffle-window ΔP (≈ 1 velocity head per pass through window).
+        # ``baffle_cut`` is a segment height fraction, not an area fraction.
+        radius = D_shell / 2.0
+        cut_height = baffle_cut * D_shell
+        segment_root = math.sqrt(max(2.0 * radius * cut_height - cut_height ** 2, 0.0))
+        A_window = (
+            radius ** 2 * math.acos((radius - cut_height) / radius)
+            - (radius - cut_height) * segment_root
+        )
+        window_fraction = A_window / (math.pi * radius ** 2)
+        # Subtract the proportional tube area in the window.
+        A_tubes_win = (
+            N_tubes * window_fraction * (math.pi / 4.0) * do ** 2
+        )
         A_window_net = max(A_window - A_tubes_win, 1e-10)
         v_window = m_dot / (rho * A_window_net)
         dp_window = n_baffles * (rho * v_window ** 2 / 2.0)
@@ -573,19 +670,19 @@ class HeatExchangerSimulator:
         C_r = C_min / C_max
         NTU = UA / C_min
 
-        # ── Use ht library for ε-NTU ✅ ──────────────────────────
-        # ht.heat_exchanger module provides effectiveness calculations
-        # for various flow arrangements
+        # ── Use ht library for ε-NTU ─────────────────────────────
         try:
             if geo == "concentric_tube":
-                epsilon = ht.heat_exchanger.effectiveness_counterflow(
-                    NTU=NTU, C_r=C_r)
+                epsilon = ht.effectiveness_from_NTU(
+                    NTU=NTU, Cr=C_r, subtype="counterflow",
+                )
             else:
-                # 1-shell-pass, 2-tube-pass
-                epsilon = ht.heat_exchanger.effectiveness_shell_and_tube(
-                    NTU=NTU, C_r=C_r, shells=1)
-        except (AttributeError, NotImplementedError):
-            # Fallback if ht doesn't have these exact functions
+                # TEMA E, one shell pass and an even number of tube passes.
+                epsilon = ht.effectiveness_from_NTU(
+                    NTU=NTU, Cr=C_r, subtype="S&T", n_shell_tube=1,
+                )
+        except (AttributeError, NotImplementedError, TypeError):
+            # Compatibility fallback for older ht releases.
             if geo == "concentric_tube":
                 if abs(C_r - 1.0) < 1e-10:
                     epsilon = NTU / (1.0 + NTU)
@@ -620,6 +717,9 @@ class HeatExchangerSimulator:
         dt1 = T_hot_in - T_cold_out    # hot-end ΔT
         dt2 = T_hot_out - T_cold_in    # cold-end ΔT
 
+        if dt1 <= 0 or dt2 <= 0:
+            raise ValueError("Terminal temperature differences must be positive")
+
         if abs(dt1 - dt2) < 0.01:
             LMTD = (dt1 + dt2) / 2.0
         else:
@@ -629,33 +729,16 @@ class HeatExchangerSimulator:
         if geo == "concentric_tube":
             F = 1.0  # counterflow
         else:
-            # Bowman-Mueller-Nagle for 1-2 exchanger
-            delta_T = T_hot_in - T_cold_in
-            if abs(delta_T) < 0.01:
-                F = 1.0
-            else:
-                P = (T_cold_out - T_cold_in) / delta_T
-                R = (T_hot_in - T_hot_out) / (T_cold_out - T_cold_in) \
-                    if abs(T_cold_out - T_cold_in) > 0.01 else 1.0
-
-                if abs(R - 1.0) < 1e-6:
-                    denom = math.sqrt(2.0) * P + (1.0 - P)
-                    F = 2.0 * P / denom if abs(denom) > 1e-10 else 1.0
-                else:
-                    try:
-                        sqrt_R2_1 = math.sqrt(R ** 2 + 1.0)
-                        num = sqrt_R2_1 * math.log(
-                            (2.0 - P * (R + 1 - sqrt_R2_1))
-                            / (2.0 - P * (R + 1 + sqrt_R2_1))
-                        )
-                        den = (R - 1.0) * math.log(
-                            (2.0 / P - 1.0 - R + sqrt_R2_1)
-                            / (2.0 / P - 1.0 - R - sqrt_R2_1)
-                        )
-                        F = num / den if abs(den) > 1e-10 else 1.0
-                    except (ValueError, ZeroDivisionError):
-                        F = 1.0
-                F = max(0.0, min(F, 1.0))
+            F = ht.F_LMTD_Fakheri(
+                Thi=T_hot_in,
+                Tho=T_hot_out,
+                Tci=T_cold_in,
+                Tco=T_cold_out,
+                shells=1,
+            )
+            if not math.isfinite(F) or F <= 0:
+                raise ValueError("Invalid LMTD correction factor")
+            F = min(F, 1.0)
 
         # Approach and temperature cross
         T_hot_out_C = T_hot_out - 273.15
@@ -681,14 +764,15 @@ class HeatExchangerSimulator:
     # ═════════════════════════════════════════════════════════════════
 
     @staticmethod
-    def _calc_wall_temperature(h_i, h_o, U, T_hot_out, T_cold_out,
+    def _calc_wall_temperature(h_i, h_o, U, di, do, T_hot_out, T_cold_out,
                                 T_hot_in, T_cold_in):
         T_bulk_hot = (T_hot_in + T_hot_out) / 2.0
         T_bulk_cold = (T_cold_in + T_cold_out) / 2.0
-        q_local = U * (T_bulk_hot - T_bulk_cold)
+        q_outer = U * (T_bulk_hot - T_bulk_cold)
+        q_inner = q_outer * do / di
 
-        T_wall_inner = (T_bulk_hot - q_local / h_i) if h_i > 0 else T_bulk_hot
-        T_wall_outer = (T_bulk_cold + q_local / h_o) if h_o > 0 else T_bulk_cold
+        T_wall_inner = (T_bulk_hot - q_inner / h_i) if h_i > 0 else T_bulk_hot
+        T_wall_outer = (T_bulk_cold + q_outer / h_o) if h_o > 0 else T_bulk_cold
 
         return {
             "T_wall_inner": T_wall_inner,
@@ -702,8 +786,9 @@ class HeatExchangerSimulator:
     # ═════════════════════════════════════════════════════════════════
 
     @staticmethod
-    def _calc_mechanical(di, do, D_shell, L, baffle_spacing,
-                          N_tubes, v_shell, rho_shell, mech):
+    def _calc_mechanical(geo, di, do, D_shell, L, baffle_spacing,
+                          N_tubes, v_shell, rho_tube_fluid, rho_shell,
+                          material, mech):
         P_design = mech["P_design"]
         S = mech["allowable_stress"]
 
@@ -716,15 +801,43 @@ class HeatExchangerSimulator:
         tube_thickness_ok = tube_t >= t_tube_min
         shell_thickness_ok = t_shell_actual >= t_shell_min
 
-        # ── Vibration: Connors' criterion (simplified) ────────────
+        # ── Vibration: simplified Connors fluid-elastic criterion ─
+        # Vcrit = K*f_n*Do*sqrt(m*delta/(rho*Do^2)).  Unlike the old
+        # expression, this is dimensionally a velocity and includes the
+        # strong effect of the unsupported span through the beam frequency.
         rho_tube = 7850.0
         m_t_per_m = rho_tube * math.pi * (do ** 2 - di ** 2) / 4.0
-        # v_crit ≈ C × sqrt(m_t × δ / (ρ_shell × D_o))
-        # C ≈ 4.0, damping δ ≈ 0.01 (conservative)
-        v_critical = 4.0 * math.sqrt(m_t_per_m * 0.01 / (rho_shell * do)) \
-                     if do > 0 else 999.0
-        vibration_ok = v_shell < v_critical * 0.8
-        span_ok = baffle_spacing <= 1.5
+        if geo == "shell_and_tube":
+            span = baffle_spacing
+            I_tube = math.pi * (do ** 4 - di ** 4) / 64.0
+            E_tube = HeatExchangerSimulator.YOUNGS_MODULUS[material]
+            m_internal = rho_tube_fluid * math.pi * di ** 2 / 4.0
+            m_added = rho_shell * math.pi * do ** 2 / 4.0
+            m_effective = m_t_per_m + m_internal + m_added
+            natural_frequency = (
+                math.pi / (2.0 * span ** 2)
+                * math.sqrt(E_tube * I_tube / m_effective)
+            )
+            log_decrement = 0.01
+            connors_constant = 4.0
+            mass_damping = (
+                m_effective * log_decrement / (rho_shell * do ** 2)
+            )
+            v_critical = (
+                connors_constant * natural_frequency * do
+                * math.sqrt(mass_damping)
+            )
+            vibration_ok = v_shell < v_critical * 0.8
+            span_ok = span <= HeatExchangerSimulator.MAX_UNSUPPORTED_SPAN
+            vibration_applicable = True
+        else:
+            span = L
+            natural_frequency = 0.0
+            mass_damping = 0.0
+            v_critical = 0.0
+            vibration_ok = True
+            span_ok = True
+            vibration_applicable = False
 
         # ── Weights ───────────────────────────────────────────────
         # (shell + tubes, simplified)
@@ -749,9 +862,12 @@ class HeatExchangerSimulator:
             "shell_thickness_min_mm": t_shell_min * 1000,
             "shell_thickness_ok": shell_thickness_ok,
             "v_critical_vibration": v_critical,
+            "natural_frequency_Hz": natural_frequency,
+            "mass_damping_parameter": mass_damping,
+            "vibration_applicable": vibration_applicable,
             "vibration_ok": vibration_ok,
             "span_ok": span_ok,
-            "unsupported_span_m": baffle_spacing,
+            "unsupported_span_m": span,
             "dry_weight_kg": dry_weight,
             "wet_weight_kg": wet_weight,
         }
@@ -765,9 +881,14 @@ class HeatExchangerSimulator:
                          pitch_type, pitch, baffle_spacing, baffle_cut,
                          n_baffles):
         pitch_ratio = pitch / do
-        # Bundle diameter (Phadke approximation for square pitch)
-        N_tpp = N_tubes / N_pass if N_pass > 0 else N_tubes
-        D_bundle = do * (N_tpp / 0.215) ** (1.0 / 2.207) if N_tpp > 0 else do
+        if geo == "shell_and_tube":
+            D_bundle = bundle_diameter(
+                N_tubes, do, pitch, N_pass, pitch_type,
+            )
+            D_bundle_available = available_bundle_diameter(D_shell)
+        else:
+            D_bundle = do
+            D_bundle_available = D_shell
         t_tubesheet = max(0.025, do * 1.5)
         D_tubesheet = D_shell + 2 * max(0.006, D_shell / 200.0)
         V_exchanger = (math.pi / 4.0) * D_shell ** 2 * L
@@ -777,6 +898,9 @@ class HeatExchangerSimulator:
             "pitch_ratio": pitch_ratio,
             "pitch_m": pitch,
             "D_bundle_m": D_bundle,
+            "D_bundle_available_m": D_bundle_available,
+            "bundle_clearance_m": D_shell - D_bundle,
+            "bundle_fit_ok": D_bundle <= D_bundle_available,
             "D_tubesheet_m": D_tubesheet,
             "tube_passes": N_pass,
             "baffle_count": n_baffles,
@@ -791,7 +915,7 @@ class HeatExchangerSimulator:
     #  9. COST MODEL
     # ═════════════════════════════════════════════════════════════════
 
-    def _calc_cost(self, L, di, do, D_shell, N_tubes, N_pass, n_baffles,
+    def _calc_cost(self, geo, L, di, do, D_shell, N_tubes, N_pass, n_baffles,
                    dp_tube, dp_shell, m_dot_hot, m_dot_cold,
                    rho_hot, rho_cold, material, Q, A_o_total):
         # Material mass
@@ -801,10 +925,12 @@ class HeatExchangerSimulator:
         m_shell = V_shell_wall * self.STEEL_DENSITY
         V_tubes = N_tubes * (math.pi / 4.0) * (do**2 - di**2) * L
         m_tubes = V_tubes * self.STEEL_DENSITY
-        V_baffles = n_baffles * (math.pi / 4.0) * D_shell**2 * 0.004 * 0.85
+        V_baffles = (n_baffles * (math.pi / 4.0) * D_shell**2 * 0.004 * 0.85
+                     if geo == "shell_and_tube" else 0.0)
         m_baffles = V_baffles * self.STEEL_DENSITY
         t_ts = max(0.025, do * 1.5)
-        V_tubesheets = 2 * (math.pi / 4.0) * D_shell**2 * t_ts
+        V_tubesheets = (2 * (math.pi / 4.0) * D_shell**2 * t_ts
+                        if geo == "shell_and_tube" else 0.0)
         m_tubesheets = V_tubesheets * self.STEEL_DENSITY
         m_total = m_shell + m_tubes + m_baffles + m_tubesheets
 
@@ -812,7 +938,8 @@ class HeatExchangerSimulator:
         mat_factor = self.MATERIAL_FACTORS.get(material, 1.0)
         raw_cost = m_total * self.CARBON_STEEL_COST * mat_factor
         fab_cost = raw_cost * (self.FABRICATION_FACTOR - 1.0)
-        baffle_cost = n_baffles * self.BAFFLE_COST_EACH * mat_factor
+        baffle_cost = (n_baffles * self.BAFFLE_COST_EACH * mat_factor
+                       if geo == "shell_and_tube" else 0.0)
         C_capital = raw_cost + fab_cost + baffle_cost
 
         # Operating cost
@@ -875,15 +1002,9 @@ class HeatExchangerSimulator:
         if lmtd["min_approach"] < self.MIN_APPROACH_TEMP:
             warnings.append(
                 f"Min approach {lmtd['min_approach']:.1f}°C < pinch limit {self.MIN_APPROACH_TEMP}°C")
-        if lmtd["temp_cross"] > 0 and geo != "shell_and_tube":
-            warnings.append(
-                f"Temperature cross {lmtd['temp_cross']:.1f}°C (check F factor)")
         if lmtd["F"] < self.MIN_F_LMTD and geo != "concentric_tube":
             warnings.append(
                 f"F = {lmtd['F']:.3f} < {self.MIN_F_LMTD} (poor design — reconsider configuration)")
-        if ntu["epsilon"] > 0.90:
-            warnings.append(
-                f"Effectiveness {ntu['epsilon']:.1%} > 90% — diminishing returns, consider series arrangement")
 
         # Mechanical checks
         if not mech["tube_thickness_ok"]:
@@ -892,10 +1013,10 @@ class HeatExchangerSimulator:
         if not mech["shell_thickness_ok"]:
             warnings.append(
                 f"Shell wall {mech['shell_thickness_mm']:.1f}mm < min {mech['shell_thickness_min_mm']:.1f}mm (ASME)")
-        if not mech["vibration_ok"]:
+        if geo == "shell_and_tube" and not mech["vibration_ok"]:
             warnings.append(
                 f"Shell velocity > 80% of critical — flow-induced vibration risk")
-        if not mech["span_ok"]:
+        if geo == "shell_and_tube" and not mech["span_ok"]:
             warnings.append(
                 f"Unsupported span {mech['unsupported_span_m']:.2f}m > {self.MAX_UNSUPPORTED_SPAN}m")
 
@@ -906,7 +1027,7 @@ class HeatExchangerSimulator:
         if geom["L_D_ratio"] < self.MIN_L_D_RATIO:
             warnings.append(
                 f"L/D = {geom['L_D_ratio']:.1f} < {self.MIN_L_D_RATIO} (poor distribution)")
-        if geom["pitch_ratio"] < 1.25:
+        if geo == "shell_and_tube" and geom["pitch_ratio"] < 1.25:
             warnings.append(
                 f"Pitch ratio {geom['pitch_ratio']:.2f} < 1.25 (TEMA minimum)")
 
@@ -961,6 +1082,7 @@ class HeatExchangerSimulator:
             "v_nozzle_cold_m_s": shell["v_nozzle"],
             "G_tube_kg_m2s": tube["G"],
             "G_shell_kg_m2s": shell["G"],
+            "tubes_per_pass": tube["tubes_per_pass"],
             "Re_tube": tube["Re"],
             "Re_shell": shell["Re"],
             "flow_regime_tube": tube["flow_regime"],
@@ -1003,6 +1125,9 @@ class HeatExchangerSimulator:
             "shell_thickness_min_mm": mech["shell_thickness_min_mm"],
             "shell_thickness_ok": 1.0 if mech["shell_thickness_ok"] else 0.0,
             "v_critical_vibration_m_s": mech["v_critical_vibration"],
+            "natural_frequency_Hz": mech["natural_frequency_Hz"],
+            "mass_damping_parameter": mech["mass_damping_parameter"],
+            "vibration_applicable": 1.0 if mech["vibration_applicable"] else 0.0,
             "vibration_ok": 1.0 if mech["vibration_ok"] else 0.0,
             "span_ok": 1.0 if mech["span_ok"] else 0.0,
             "unsupported_span_m": mech["unsupported_span_m"],
@@ -1016,6 +1141,9 @@ class HeatExchangerSimulator:
             "pitch_ratio": geom["pitch_ratio"],
             "pitch_m": geom["pitch_m"],
             "D_bundle_m": geom["D_bundle_m"],
+            "D_bundle_available_m": geom["D_bundle_available_m"],
+            "bundle_clearance_m": geom["bundle_clearance_m"],
+            "bundle_fit_ok": 1.0 if geom["bundle_fit_ok"] else 0.0,
             "D_tubesheet_m": geom["D_tubesheet_m"],
             "tube_passes": geom["tube_passes"],
             "baffle_count": float(geom["baffle_count"]),

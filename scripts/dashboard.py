@@ -97,7 +97,7 @@ def aggregate_runs(df: pd.DataFrame) -> pd.DataFrame:
             "DP Tube (kPa)", "DP Shell (kPa)", "Warnings", "Area (m2)"]
     return pd.DataFrame(out)[cols]
 
-def render_charts(df_raw: pd.DataFrame, df_agg: pd.DataFrame):
+def render_charts(df_raw: pd.DataFrame, df_agg: pd.DataFrame, target_heat_w=None):
     st.subheader("📈 Visual Comparison")
     col1, col2 = st.columns(2)
     with col1:
@@ -108,8 +108,9 @@ def render_charts(df_raw: pd.DataFrame, df_agg: pd.DataFrame):
         
         fig_heat = px.bar(df_agg, x="Model", y="Heat Duty (kW)", color="Model",
                           title="Average Heat Duty (kW)")
-        fig_heat.add_hline(y=150, line_dash="dash", line_color="red",
-                           annotation_text="Target Example (150kW)")
+        if target_heat_w is not None:
+            fig_heat.add_hline(y=target_heat_w / 1000, line_dash="dash", line_color="red",
+                               annotation_text=f"Target ({target_heat_w / 1000:g} kW)")
         st.plotly_chart(fig_heat, width='stretch')
     with col2:
         st.plotly_chart(px.bar(df_agg, x="Model", y="Cost ($/y)", color="Model",
@@ -177,7 +178,7 @@ filtered_by_task = filtered_by_prompt[filtered_by_prompt["Task ID"] == selected_
 # Score version filter
 score_versions = sorted(filtered_by_task["Score Version"].unique().tolist())
 if "current_score_version" not in st.session_state:
-    st.session_state.current_score_version = score_versions[-1] if score_versions else None
+    st.session_state.current_score_version = score_versions[0] if score_versions else None
 selected_score = st.sidebar.selectbox("Score Version", score_versions, index=score_versions.index(st.session_state.current_score_version) if st.session_state.current_score_version in score_versions else 0)
 st.session_state.current_score_version = selected_score
 
@@ -186,7 +187,7 @@ agg_df = aggregate_runs(sub_df).sort_values("Mean Score", ascending=False)
 
 st.subheader(f"📊 Average Results")
 st.markdown(f"**Task ID**: `{selected_task}` | **Prompt**: `{selected_prompt}` | **Score Version**: `{selected_score}`")
-st.caption("Score statistics cover all runs (including failures), whereas engineering metrics are the average of 'success' runs only.")
+st.caption("Score statistics and engineering metrics cover successful runs only; Success % excludes client errors.")
 st.dataframe(
     agg_df.style
        .highlight_max(subset=["Mean Score", "Heat Duty (kW)", "Success %"], color="lightgreen")
@@ -195,7 +196,12 @@ st.dataframe(
     width='stretch',
 )
 
-render_charts(sub_df, agg_df)
+task_path = os.path.join(RESULTS_ROOT, selected_prompt, "task.json")
+target_heat_w = None
+if os.path.isfile(task_path):
+    with open(task_path, encoding="utf-8-sig") as f:
+        target_heat_w = json.load(f).get("target_heat_duty")
+render_charts(sub_df, agg_df, target_heat_w)
 
 csv = agg_df.to_csv(index=False).encode("utf-8")
 st.sidebar.download_button("Download as CSV (average)", data=csv,

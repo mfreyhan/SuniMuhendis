@@ -3,7 +3,6 @@ import json
 import os
 import sys
 import uuid
-import glob
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
@@ -59,11 +58,9 @@ def multi_client_factory(spec: Dict[str, Any]) -> BaseModelClient:
 
 def run_benchmark(
     prompt_slug: str,
-    task_path: str,
     model_specs: List[Dict[str, Any]],
     client_factory: ClientFactory,
     repeats: int = 1,
-    score_version_override: Optional[str] = None,
     results_root: Optional[str] = None,
     logger=None,
 ) -> List[str]:
@@ -71,6 +68,7 @@ def run_benchmark(
     results_root = results_root or os.path.join(_REPO_ROOT, "results")
     prompt_dir = os.path.join(results_root, prompt_slug)
     prompt_path = os.path.join(prompt_dir, "prompt.txt")
+    task_path = os.path.join(prompt_dir, "task.json")
     
     if not os.path.exists(prompt_path):
         raise FileNotFoundError(f"prompt.txt not found: {prompt_path}")
@@ -82,10 +80,7 @@ def run_benchmark(
         
     task_params = _load_json(task_path)
     
-    if score_version_override:
-        task_params["score_version"] = score_version_override
-        
-    task_id = task_params.get("task_id", os.path.basename(task_path).replace('.json',''))
+    task_id = task_params.get("task_id", prompt_slug)
     task_set_version = task_params.get("task_set_version", "v1")
     used_score_version = task_params.get("score_version", "heat_exchanger_score_v1")
     
@@ -96,8 +91,7 @@ def run_benchmark(
 
     written: List[str] = []
     done = 0
-    # Save results in prompt_dir / api_runs / task_id /
-    out_dir = os.path.join(prompt_dir, "api_runs", task_id)
+    out_dir = os.path.join(prompt_dir, "api_runs")
     os.makedirs(out_dir, exist_ok=True)
     
     for model in model_specs:
@@ -123,10 +117,12 @@ def run_benchmark(
                 "task_id": task_id,
                 "task_set_version": task_set_version,
                 "score_version": used_score_version,
-                "simulator_version": "v2", 
+                "simulator_version": HeatExchangerSimulator.VERSION,
                 "timestamp": _utcnow_iso(),
                 "status": "client_error",
                 "weights": weights,
+                "task_params": dict(task_params),
+                "prompt_text": prompt_text,
                 "total_reward": 0.0,
                 "reward_components": {},
                 "metrics": {},
@@ -145,6 +141,7 @@ def run_benchmark(
                     record["latency_ms"] = getattr(client, "last_latency_ms", 0.0)
                     record["prompt_tokens"] = getattr(client, "last_prompt_tokens", None)
                     record["completion_tokens"] = getattr(client, "last_completion_tokens", None)
+                    record["model_id"] = getattr(client, "model", model_id)
 
                     design = None
                     try:
@@ -186,7 +183,7 @@ def _select_models(all_models: List[dict], selection: Optional[List[str]], provi
         if missing:
             raise SystemExit(f"No model matching the criteria in models.json was found: {sorted(missing)}")
             
-    # Deduplicate by name, preferring free models
+    # Deduplicate by name, preferring standard/paid models over :free to avoid stale free endpoints
     deduped = {}
     for m in filtered_models:
         name = m.get("name") or m.get("model")
@@ -195,17 +192,15 @@ def _select_models(all_models: List[dict], selection: Optional[List[str]], provi
             deduped[name] = m
         else:
             existing_model_id = deduped[name].get("model", "")
-            if ":free" in model_id.lower() and ":free" not in existing_model_id.lower():
+            if ":free" in existing_model_id.lower() and ":free" not in model_id.lower():
                 deduped[name] = m
                 
     return list(deduped.values())
 
+
 def main():
     parser = argparse.ArgumentParser(description="Automated benchmark for prompt x model using LLM APIs.")
     parser.add_argument("--prompt", required=True, help="results/<slug> folder name (contains prompt.txt).")
-    parser.add_argument("--task", type=str, default=None, help="Path to a specific task JSON file (e.g. results/heat_exchanger_taskset_v2/task_balanced.json)")
-    parser.add_argument("--task-set", type=str, default=None, help="Name of the task set folder in results/ (e.g. heat_exchanger_taskset_v2). If omitted, falls back to prompt_slug/task.json")
-    parser.add_argument("--score-version", type=str, default=None, help="Override score version (e.g. heat_exchanger_score_v2)")
     parser.add_argument("--models", type=str, default=None, help="Comma-separated model 'name' list.")
     parser.add_argument("--model", type=str, default=None, help="A single model 'name' (shortcut for --models).")
     parser.add_argument("--provider", type=str, default=None, help="Provider name to filter models.")
@@ -236,34 +231,13 @@ def main():
     prompt_slugs = [p.strip() for p in args.prompt.split(",") if p.strip()]
     
     for prompt_slug in prompt_slugs:
-        task_paths = []
-        if args.task:
-            if not os.path.isfile(args.task):
-                # Try relative to repo root if absolute fails
-                repo_task = os.path.join(_REPO_ROOT, args.task)
-                if os.path.isfile(repo_task):
-                    args.task = repo_task
-                else:
-                    raise FileNotFoundError(f"Task file not found: {args.task}")
-            task_paths = [args.task]
-        elif args.task_set:
-            ts_dir = os.path.join(_REPO_ROOT, "results", args.task_set)
-            if not os.path.isdir(ts_dir):
-                raise NotADirectoryError(f"Task set directory not found: {ts_dir}")
-            task_paths = glob.glob(os.path.join(ts_dir, "*.json"))
-        else:
-            task_paths = [os.path.join(_REPO_ROOT, "results", prompt_slug, "task.json")]
-            
-        for tp in task_paths:
-            run_benchmark(
-                prompt_slug=prompt_slug,
-                task_path=tp,
-                model_specs=model_specs,
-                client_factory=multi_client_factory,
-                repeats=args.repeats,
-                score_version_override=args.score_version,
-                logger=logger,
-            )
+        run_benchmark(
+            prompt_slug=prompt_slug,
+            model_specs=model_specs,
+            client_factory=multi_client_factory,
+            repeats=args.repeats,
+            logger=logger,
+        )
 
 if __name__ == "__main__":
     main()

@@ -9,7 +9,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from sunimuhendis.environments.heat_exchanger.env import HeatExchangerEnv
 from sunimuhendis.environments.heat_exchanger.simulator import HeatExchangerSimulator
 from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScore
-from sunimuhendis.prompts.templates import build_heat_exchanger_prompt
 from sunimuhendis.parsing.json_parser import parse_llm_json
 from sunimuhendis.model_clients.dummy_random import DummyRandomClient
 from sunimuhendis.model_clients.interactive_browser import InteractiveBrowserClient
@@ -45,7 +44,9 @@ def main():
     logger.info(f"Running LLM Evaluation with {client.model_name}")
     
     # 4. Generate Prompt
-    prompt = build_heat_exchanger_prompt(task_params)
+    prompt_path = os.path.join(os.path.dirname(task_path), "prompt.txt")
+    with open(prompt_path, encoding="utf-8-sig") as f:
+        prompt = f.read()
     
     # 5. Get Model Response
     logger.info("Waiting for model response...")
@@ -62,7 +63,7 @@ def main():
         return
         
     # 7. Evaluate in Simulator
-    res = env.evaluate("he_task_001", task_params, "llm_design_001", design)
+    res = env.evaluate(task_params.get("task_id", args.prompt), task_params, "llm_design_001", design)
     
     # 8. Report Results
     logger.info(f"Evaluation Status: {res.status}")

@@ -84,12 +84,58 @@ def is_cost_under(m, max_prompt, max_comp):
             return False
     return True
 
+def prune_openrouter_models(existing_models, api_models):
+    """
+    Validates existing OpenRouter models against the live OpenRouter API model list.
+    Removes models that no longer exist.
+    If a :free model no longer exists on OpenRouter, converts it to its base model
+    if the base model is live and not already present; otherwise removes it.
+    """
+    live_ids = {m.get("id") for m in api_models if m.get("id")}
+    pruned = []
+    converted = []
+    kept_models = []
+    seen_model_ids = set()
+
+    for item in existing_models:
+        m_id = item.get("model")
+        if not m_id:
+            continue
+
+        if m_id in live_ids:
+            if m_id not in seen_model_ids:
+                kept_models.append(item)
+                seen_model_ids.add(m_id)
+            continue
+
+        # Model is not in live_ids!
+        if ":free" in m_id:
+            base_id = m_id.replace(":free", "")
+            if base_id in live_ids:
+                if base_id not in seen_model_ids:
+                    item["model"] = base_id
+                    item["name"] = base_id.split("/")[-1]
+                    kept_models.append(item)
+                    seen_model_ids.add(base_id)
+                    converted.append((m_id, base_id))
+                else:
+                    # Base model is already in list, drop this dead free duplicate
+                    pruned.append(f"{m_id} (redundant, {base_id} already exists)")
+            else:
+                pruned.append(m_id)
+        else:
+            pruned.append(m_id)
+
+    return kept_models, pruned, converted
+
 def main():
-    parser = argparse.ArgumentParser(description="Automatically appends models from OpenRouter to models.json.")
+    parser = argparse.ArgumentParser(description="Syncs models from OpenRouter to models.json and cleans dead models.")
     parser.add_argument("--free-only", action="store_true", help="Only adds free models.")
     parser.add_argument("--text-only", action="store_true", help="Only adds text-to-text models.")
     parser.add_argument("--max-prompt-cost", type=float, default=None, help="Max prompt (input) token cost (USD)")
     parser.add_argument("--max-comp-cost", type=float, default=None, help="Max completion (output) token cost (USD)")
+    parser.add_argument("--prune", action="store_true", help="Remove or update models in models.json that no longer exist on OpenRouter.")
+    parser.add_argument("--no-sync", action="store_true", help="Only prune without adding new models.")
     args = parser.parse_args()
 
     config_data = load_models_json()
@@ -101,50 +147,70 @@ def main():
         config_data["providers"]["openrouter"] = []
         
     existing_models = config_data["providers"]["openrouter"]
-    # Put existing model IDs into a set to avoid duplicates
-    existing_ids = {item.get("model") for item in existing_models if item.get("model")}
 
     api_models = fetch_openrouter_models()
     if not api_models:
         return
 
-    added_count = 0
-    for m in api_models:
-        m_id = m.get("id")
-        m_name = m.get("name", m_id.split("/")[-1] if m_id else "Unknown")
-        
-        if not m_id:
-            continue
-            
-        if args.free_only and not is_model_free(m):
-            continue
-            
-        if args.text_only and not is_text_only(m):
-            continue
-            
-        if not is_cost_under(m, args.max_prompt_cost, args.max_comp_cost):
-            continue
-            
-        if m_id not in existing_ids:
-            # Add default parameters to the model
-            new_entry = {
-                "name": m_id.split("/")[-1].replace(":free", ""), # Short name
-                "model": m_id,
-                "params": {
-                    "temperature": 0.7,
-                    "max_tokens": 8192
-                }
-            }
-            existing_models.append(new_entry)
-            existing_ids.add(m_id)
-            added_count += 1
-            print(f"Added: {new_entry['name']} ({m_id})")
+    modified = False
 
-    if added_count > 0:
+    if args.prune:
+        print("\nPruning dead models from models.json...")
+        kept_models, pruned, converted = prune_openrouter_models(existing_models, api_models)
+        
+        for old_id, new_id in converted:
+            print(f"  [Converted dead :free] {old_id} -> {new_id}")
+        for p in pruned:
+            print(f"  [Pruned dead model] {p}")
+            
+        print(f"Prune summary: {len(pruned)} dead models removed, {len(converted)} dead :free models converted to standard.")
+        config_data["providers"]["openrouter"] = kept_models
+        existing_models = kept_models
+        if pruned or converted:
+            modified = True
+
+    if not args.no_sync:
+        existing_ids = {item.get("model") for item in existing_models if item.get("model")}
+        added_count = 0
+        for m in api_models:
+            m_id = m.get("id")
+            if not m_id:
+                continue
+
+            if args.free_only and not is_model_free(m):
+                continue
+
+            if args.text_only and not is_text_only(m):
+                continue
+
+            if not is_cost_under(m, args.max_prompt_cost, args.max_comp_cost):
+                continue
+
+            if m_id not in existing_ids:
+                new_entry = {
+                    "name": m_id.split("/")[-1].replace(":free", ""),
+                    "model": m_id,
+                    "params": {
+                        "temperature": 0.7,
+                        "max_tokens": 8192
+                    }
+                }
+                existing_models.append(new_entry)
+                existing_ids.add(m_id)
+                added_count += 1
+                print(f"Added: {new_entry['name']} ({m_id})")
+
+        if added_count > 0:
+            modified = True
+            print(f"\nSuccess! A total of {added_count} new models were added to 'models.json'.")
+        else:
+            print("\nNo new models to add.")
+
+    if modified:
         save_models_json(config_data)
-        print(f"\nSuccess! A total of {added_count} new models were added to 'models.json'.")
+        print("\nSaved updated models to 'models.json'.")
     else:
-        print("\nNo new models to add (All may already exist or none fit the filter).")
+        print("\n'models.json' is already up to date. No changes made.")
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,8 @@
 import json
 import os
+from pathlib import Path
+
+import pytest
 
 from scripts.run_api_benchmark import _safe_name, _select_models, run_benchmark
 from sunimuhendis.model_clients.dummy_random import DummyRandomClient
@@ -32,7 +35,6 @@ def test_run_benchmark_offline(tmp_path):
 
     written = run_benchmark(
         prompt_slug=slug,
-        task_path=os.path.join(str(tmp_path), slug, "task.json"),
         model_specs=specs,
         client_factory=lambda spec: DummyRandomClient(),
         repeats=2,
@@ -62,7 +64,6 @@ def test_run_benchmark_client_error_isolated(tmp_path):
 
     written = run_benchmark(
         prompt_slug=slug,
-        task_path=os.path.join(str(tmp_path), slug, "task.json"),
         model_specs=[{"name": "broken"}],
         client_factory=boom_factory,
         repeats=1,
@@ -83,3 +84,48 @@ def test_select_models():
 def test_safe_name():
     assert _safe_name("Claude Opus 4.8") == "Claude Opus 4.8"
     assert _safe_name("a/b") == "a_b"
+
+
+@pytest.mark.parametrize(
+    ("slug", "score_version"),
+    [
+        ("heat_exchanger_v1", "heat_exchanger_score_v1"),
+        ("heat_exchanger_v2", "heat_exchanger_score_v1"),
+        ("heat_exchanger_v3", "heat_exchanger_score_v1"),
+        ("heat_exchanger_v4", "heat_exchanger_score_v1"),
+        ("heat_exchanger_hard_v1", "heat_exchanger_score_v1"),
+        ("heat_exchanger_hard_v2", "heat_exchanger_score_v3"),
+    ],
+)
+def test_active_prompt_targets_match_task(slug, score_version):
+    root = Path(__file__).resolve().parents[1]
+    unit = root / "results" / slug
+    prompt = (unit / "prompt.txt").read_text(encoding="utf-8-sig")
+    task = json.loads((unit / "task.json").read_text(encoding="utf-8-sig"))
+    details = prompt.split("Task Details:", 1)[1].lstrip()
+    stated, _ = json.JSONDecoder().raw_decode(details)
+    for key, value in stated.items():
+        assert task[key] == value
+    assert task.get("score_version", "heat_exchanger_score_v1") == score_version
+
+
+def test_benchmark_sends_and_records_paired_prompt(tmp_path):
+    slug = _make_prompt_unit(str(tmp_path))
+    expected = (tmp_path / slug / "prompt.txt").read_text()
+    received = []
+
+    class CapturingClient:
+        def generate_design(self, prompt):
+            received.append(prompt)
+            return "{}"
+
+    paths = run_benchmark(
+        prompt_slug=slug, model_specs=[{"name": "capture"}],
+        client_factory=lambda spec: CapturingClient(), results_root=str(tmp_path),
+    )
+    assert received == [expected]
+    assert Path(paths[0]).parent == tmp_path / slug / "api_runs"
+    record = json.loads(Path(paths[0]).read_text())
+    assert record["prompt_text"] == expected
+    assert record["task_params"]["target_heat_duty"] == 150000.0
+    assert record["score_version"] == "heat_exchanger_score_v1"

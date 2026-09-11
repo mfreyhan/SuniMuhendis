@@ -1,5 +1,13 @@
 from typing import Dict, Any, Tuple, Optional
 
+from .geometry import (
+    DEFAULT_PITCH_RATIO,
+    DEFAULT_PITCH_TYPE,
+    DEFAULT_TUBE_PASSES,
+    available_bundle_diameter,
+    bundle_diameter,
+)
+
 def run_heat_exchanger_drc(design_params: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
     """
     Simülasyon öncesi geometrik kuralları kontrol eder (DRC).
@@ -25,18 +33,33 @@ def run_heat_exchanger_drc(design_params: Dict[str, Any]) -> Tuple[bool, Optiona
     elif geo_type == "shell_and_tube":
         if num_tubes < 2:
             return False, "DRC Error: Number of tubes must be at least 2 for shell and tube type."
+        if num_tubes % DEFAULT_TUBE_PASSES != 0:
+            return False, "DRC Error: Number of tubes must be divisible by the number of tube passes (2)."
         
         if do >= shell_di:
             return False, "DRC Error: Tube outer diameter cannot be greater than or equal to shell inner diameter."
-            
-        import math
-        total_tube_area = num_tubes * (math.pi * (do / 2)**2)
-        shell_area = math.pi * (shell_di / 2)**2
-        
-        if total_tube_area > shell_area * 0.6:
-            return False, "DRC Error: The area occupied by tubes cannot exceed 60% of the shell area."
-            
-        if baffle_spacing > length:
-            return False, "DRC Error: Baffle spacing cannot exceed the total length."
+        if baffle_spacing <= 0:
+            return False, "DRC Error: Baffle spacing must be positive for shell and tube type."
+        if baffle_spacing >= length:
+            return False, "DRC Error: Baffle spacing must be smaller than the total length."
+
+        pitch = do * DEFAULT_PITCH_RATIO
+        try:
+            required_bundle = bundle_diameter(
+                num_tubes,
+                do,
+                pitch,
+                DEFAULT_TUBE_PASSES,
+                DEFAULT_PITCH_TYPE,
+            )
+            available_bundle = available_bundle_diameter(shell_di)
+        except (ValueError, ZeroDivisionError) as exc:
+            return False, "DRC Error: Tube bundle geometry could not be evaluated: {}".format(exc)
+
+        if required_bundle > available_bundle:
+            return False, (
+                "DRC Error: Tube bundle diameter {:.4f} m exceeds the available "
+                "shell diameter {:.4f} m after clearance."
+            ).format(required_bundle, available_bundle)
             
     return True, None

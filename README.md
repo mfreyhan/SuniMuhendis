@@ -1,4 +1,4 @@
-﻿# SuniMuhendis (AI-Driven Engineering Design)
+# SuniMuhendis (AI-Driven Engineering Design)
 
 SuniMuhendis is an AI agent-based framework designed to explore whether Large Language Models (LLMs) can learn to generate valid and performant engineering designs using physics-based simulation feedback.
 
@@ -53,47 +53,57 @@ python scripts/run_heat_exchanger.py
 ### 2. Automated HF Model Benchmark
 Send **one prompt to many Hugging Face models in a single command**, run every response through the same `schema â†’ DRC â†’ simulation â†’ score` pipeline, and store the results. (Requires `HF_TOKEN` in `.env` â€” see Installation.)
 
-A **prompt unit** is a folder under `results/`:
+A **prompt unit** is a self-contained folder under `results/`:
 
-```
+```text
 results/<prompt-slug>/
-  prompt.txt    # the exact text sent to the model (committed)
-  task.json     # benchmark score weights + targets used for scoring (committed)
-  benchmark/    # generated results â€” one JSON per run (git-ignored)
-    <model-name>/<timestamp>.json
+  prompt.txt                # exact text sent to the model, including numerical requirements
+  task.json                 # matching targets and weights for evaluation
+  api_runs/<model>.jsonl     # API runs, appended per model
+  manual_runs/<model>.jsonl  # manual runs
 ```
 
-The models to test are listed in `configs/benchmarks/models.json`
-(`name` = label/folder shown in the dashboard, `model` = HF model id).
+The benchmarks include `heat_exchanger_v1` through `heat_exchanger_v4`, the
+thermal/hydraulic `heat_exchanger_hard_v1`, and `heat_exchanger_hard_v2` using
+Score V3 with specification-miss penalties and a calibrated cost objective.
+See the hard task's README for calibration and scoring limitations.
+Each prompt uses its own adjacent `task.json`. Separate
+`--task`, `--task-set`, and `--score-version` overrides are no longer supported.
+When adding a new task, create a new prompt unit and keep the numerical
+requirements in `prompt.txt` consistent with `task.json`.
 
 ```bash
-# All models in models.json, 5 runs each:
-python scripts/run_api_benchmark.py --prompt heat_exchanger_v1 --repeats 5
+# A single prompt:
+python scripts/run_api_benchmark.py --prompt heat_exchanger_v4 --model claude-sonnet-5 --repeats 20
 
-# A single model (use the "name" from models.json, not the HF id):
-python scripts/run_api_benchmark.py --prompt heat_exchanger_v1 --model Qwen3.5-27B
+# Score V3 hard task:
+python scripts/run_api_benchmark.py --prompt heat_exchanger_hard_v2 --model claude-sonnet-5 --repeats 20
 
-# A subset:
-python scripts/run_api_benchmark.py --prompt heat_exchanger_v1 --models Qwen3.5-27B,gpt-oss-20b
-```
+# Multiple self-contained prompts:
+python scripts/run_api_benchmark.py --prompt heat_exchanger_v1,heat_exchanger_v2,heat_exchanger_v3,heat_exchanger_v4 --model claude-sonnet-5 --repeats 20
 
-- **Add a new prompt:** create `results/<new-slug>/prompt.txt` + `task.json` (copy `heat_exchanger_v1` as a template).
-- **Add a model:** add a line to `configs/benchmarks/models.json`. A model that isn't served on HF Inference Providers just records `client_error` for that row; the run continues.
-
-View the results in the dashboard â€” the **"HF Benchmark (results/)"** source shows one row per model (the **average** of all its runs for the selected prompt):
-
-```bash
+# Dashboard (API, manual, or combined results):
 streamlit run scripts/dashboard.py
 ```
 
+Models and provider settings are listed in `configs/benchmarks/models.json`.
+Use the configured `name` with `--model`. New API records include the exact
+prompt and full task parameters for reproducibility.
+
+The v5 canonical experiment, its separate task set, and V2-rescored copies of
+older results are preserved in `archive/score_v2_experiment/`. They are excluded
+from the active dashboard. Original v1–v4 results are unchanged. Score V2 is
+still available explicitly through the library for research.
+
 ### 3. Manual LLM Evaluation (cloud models, by hand)
-For cloud models tested one-by-one (ChatGPT, Claude, etc.): the interactive evaluator prints the prompt, you paste the model's response back, and the result is appended to `reports/benchmark_results.json`.
+
+The manual evaluator reads the same `prompt.txt` and `task.json` pair as the API
+runner. Paste the model response when prompted; successful results are appended
+to the prompt unit's `manual_runs/` folder.
 
 ```bash
-python scripts/run_llm_eval.py --client interactive
+python scripts/run_llm_eval.py --client interactive --prompt heat_exchanger_v4
 ```
-
-These manual results are viewable under the dashboard's **"Manuel (reports/)"** source.
 
 ### 4. Running Tests
 To run the unit and smoke tests:

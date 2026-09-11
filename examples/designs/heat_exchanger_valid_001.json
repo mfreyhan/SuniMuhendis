@@ -3,7 +3,7 @@
   "length": 6.0,
   "inner_tube_di": 0.02,
   "inner_tube_do": 0.025,
-  "outer_shell_di": 0.4,
+  "outer_shell_di": 0.42,
   "number_of_tubes": 100,
   "baffle_spacing": 0.5
 }
