@@ -1,5 +1,7 @@
 import argparse
+import copy
 import json
+import math
 import os
 import sys
 import uuid
@@ -26,6 +28,11 @@ _WEIGHT_KEYS = ("w_heat", "w_cost", "w_drop_tube", "w_drop_shell", "w_eff")
 
 ClientFactory = Callable[[Dict[str, Any]], BaseModelClient]
 
+_REASONING_EFFORTS = ("default", "none", "minimal", "low", "medium", "high", "xhigh", "max")
+_DEFAULT_MAX_OUTPUT_TOKENS = 8192
+_DEFAULT_TEMPERATURE = 0.7
+_CONTEXT_SAFETY_MARGIN = 256
+
 def _load_json(path: str) -> dict:
     with open(path, "r", encoding="utf-8-sig") as f:
         return json.load(f)
@@ -35,6 +42,213 @@ def _safe_name(name: str) -> str:
     if os.altsep:
         cleaned = cleaned.replace(os.altsep, "_")
     return cleaned or "unknown"
+
+
+def _estimate_prompt_tokens(prompt: str) -> int:
+    """Conservative tokenizer-independent estimate used only for preflight."""
+    return max(1, int(math.ceil(len(prompt.encode("utf-8")) / 3.0)))
+
+
+def _preflight_model(
+    model_spec: Dict[str, Any],
+    prompt: str,
+    max_output_tokens: int = _DEFAULT_MAX_OUTPUT_TOKENS,
+    temperature: Optional[float] = _DEFAULT_TEMPERATURE,
+):
+    """Build safe effective parameters from synced capabilities."""
+    if max_output_tokens <= 0:
+        raise ValueError("max_output_tokens must be positive")
+
+    spec = copy.deepcopy(model_spec)
+    metadata = spec.get("metadata") or {}
+    supported = set(metadata.get("supported_parameters") or [])
+    has_metadata = bool(metadata)
+    estimated_prompt_tokens = _estimate_prompt_tokens(prompt)
+    requested_params = {"max_tokens": max_output_tokens}
+    if temperature is not None:
+        requested_params["temperature"] = temperature
+
+    effective_params = {}
+    adjustments = []
+    errors = []
+
+    effective_max = max_output_tokens
+    model_max = metadata.get("max_completion_tokens")
+    if isinstance(model_max, int) and model_max > 0 and effective_max > model_max:
+        adjustments.append(
+            f"max_tokens clamped from {effective_max} to model maximum {model_max}"
+        )
+        effective_max = model_max
+
+    context_length = metadata.get("context_length")
+    if isinstance(context_length, int) and context_length > 0:
+        context_budget = context_length - estimated_prompt_tokens - _CONTEXT_SAFETY_MARGIN
+        if context_budget <= 0:
+            errors.append(
+                "estimated prompt plus safety margin exceeds the model context length"
+            )
+        elif effective_max > context_budget:
+            adjustments.append(
+                f"max_tokens clamped from {effective_max} to context budget {context_budget}"
+            )
+            effective_max = context_budget
+
+    if not has_metadata or "max_tokens" in supported:
+        effective_params["max_tokens"] = effective_max
+    elif "max_completion_tokens" in supported:
+        effective_params["max_completion_tokens"] = effective_max
+        adjustments.append("using max_completion_tokens instead of max_tokens")
+    else:
+        errors.append(
+            "model does not advertise an output-token limit parameter; "
+            "fixed-budget run is unsafe"
+        )
+
+    if temperature is not None:
+        if has_metadata and "temperature" not in supported:
+            adjustments.append("temperature omitted; model uses provider default")
+        else:
+            effective_params["temperature"] = temperature
+
+    params = spec.setdefault("params", {})
+    params.pop("max_tokens", None)
+    params.pop("max_completion_tokens", None)
+    params.pop("temperature", None)
+    params.update(effective_params)
+    report = {
+        "status": "error" if errors else "ready",
+        "estimated_prompt_tokens": estimated_prompt_tokens,
+        "requested_params": requested_params,
+        "effective_params": effective_params,
+        "adjustments": adjustments,
+        "errors": errors,
+    }
+    return spec, report
+
+
+def _format_preflight(model_name: str, report: Dict[str, Any]) -> str:
+    effective = report.get("effective_params", {})
+    summary = (
+        f"[preflight] {model_name}: {report['status'].upper()} | "
+        f"prompt~{report['estimated_prompt_tokens']} tokens | effective={effective}"
+    )
+    details = report.get("errors") or report.get("adjustments") or []
+    if details:
+        summary += " | " + "; ".join(details)
+    return summary
+
+
+def _apply_reasoning_effort(
+    model_specs: List[Dict[str, Any]],
+    reasoning_effort: Optional[str],
+) -> List[Dict[str, Any]]:
+    """Return run-specific model specs without mutating the model registry."""
+    specs = copy.deepcopy(model_specs)
+    if reasoning_effort is None:
+        return specs
+
+    for spec in specs:
+        base_name = spec.get("name") or spec.get("model")
+        spec["name"] = f"{base_name}__reasoning-{reasoning_effort}"
+        spec["reasoning_mode"] = reasoning_effort
+        if reasoning_effort == "default":
+            continue
+
+        params = spec.setdefault("params", {})
+        if spec.get("provider") == "openrouter":
+            extra_body = params.setdefault("extra_body", {})
+            extra_body["reasoning"] = {"effort": reasoning_effort}
+            provider_options = extra_body.setdefault("provider", {})
+            provider_options["require_parameters"] = True
+        else:
+            params["reasoning_effort"] = reasoning_effort
+    return specs
+
+
+def _reasoning_choices(model_spec: Dict[str, Any]) -> List[str]:
+    """Return reasoning modes that the synced model metadata can justify."""
+    metadata = model_spec.get("metadata") or {}
+    supported_parameters = set(metadata.get("supported_parameters") or [])
+    reasoning = metadata.get("reasoning")
+    supports_reasoning = (
+        reasoning is not None
+        or "reasoning" in supported_parameters
+        or "reasoning_effort" in supported_parameters
+    )
+    if not supports_reasoning:
+        return []
+
+    choices = ["default"]
+    if reasoning:
+        choices.extend(reasoning.get("supported_efforts") or [])
+        if not reasoning.get("mandatory", False):
+            choices.append("none")
+
+    # Some models expose the reasoning parameter without publishing effort
+    # levels. In that case only default/on and off are reliable choices.
+    if reasoning is None and "reasoning" in supported_parameters:
+        choices.append("none")
+
+    return list(dict.fromkeys(choice for choice in choices if choice in _REASONING_EFFORTS))
+
+
+def _reasoning_label(model_spec: Dict[str, Any], choice: str) -> str:
+    reasoning = (model_spec.get("metadata") or {}).get("reasoning") or {}
+    if choice == "default":
+        default_effort = reasoning.get("default_effort")
+        if default_effort:
+            return f"default (provider default: {default_effort})"
+        return "default (provider default)"
+    if choice == "none":
+        return "none (reasoning disabled)"
+    return choice
+
+
+def _prompt_reasoning_effort(
+    model_spec: Dict[str, Any],
+    input_func=input,
+    print_func=print,
+) -> Optional[str]:
+    choices = _reasoning_choices(model_spec)
+    if not choices:
+        return None
+
+    model_name = model_spec.get("name") or model_spec.get("model")
+    print_func(f"\nReasoning mode for {model_name}:")
+    for index, choice in enumerate(choices, start=1):
+        print_func(f"  {index}) {_reasoning_label(model_spec, choice)}")
+
+    while True:
+        answer = input_func(f"Select [1-{len(choices)}]: ").strip()
+        if answer.isdigit() and 1 <= int(answer) <= len(choices):
+            return choices[int(answer) - 1]
+        print_func("Invalid selection.")
+
+
+def _configure_reasoning(
+    model_specs: List[Dict[str, Any]],
+    requested_effort: Optional[str],
+    interactive: bool,
+) -> List[Dict[str, Any]]:
+    configured = []
+    for spec in model_specs:
+        effort = requested_effort
+        choices = _reasoning_choices(spec)
+
+        if effort is not None and choices and effort not in choices:
+            model_name = spec.get("name") or spec.get("model")
+            raise SystemExit(
+                f"Reasoning mode '{effort}' is not advertised for {model_name}. "
+                f"Available modes: {', '.join(choices)}"
+            )
+        if effort is None and interactive:
+            effort = _prompt_reasoning_effort(spec)
+
+        if effort is None:
+            configured.append(copy.deepcopy(spec))
+        else:
+            configured.extend(_apply_reasoning_effort([spec], effort))
+    return configured
 
 def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -63,6 +277,9 @@ def run_benchmark(
     repeats: int = 1,
     results_root: Optional[str] = None,
     logger=None,
+    max_output_tokens: int = _DEFAULT_MAX_OUTPUT_TOKENS,
+    temperature: Optional[float] = _DEFAULT_TEMPERATURE,
+    preflight_only: bool = False,
 ) -> List[str]:
     logger = logger or setup_logger("hf_benchmark")
     results_root = results_root or os.path.join(_REPO_ROOT, "results")
@@ -94,9 +311,23 @@ def run_benchmark(
     out_dir = os.path.join(prompt_dir, "api_runs")
     os.makedirs(out_dir, exist_ok=True)
     
-    for model in model_specs:
+    for original_model in model_specs:
+        model, preflight = _preflight_model(
+            original_model,
+            prompt_text,
+            max_output_tokens=max_output_tokens,
+            temperature=temperature,
+        )
         model_name = model.get("name") or model.get("model")
         model_id = model.get("model", model_name)
+        preflight_message = _format_preflight(model_name, preflight)
+        if preflight["status"] == "error":
+            logger.error(preflight_message)
+            continue
+        logger.info(preflight_message)
+        if preflight_only:
+            continue
+
         fpath = os.path.join(out_dir, f"{_safe_name(model_name)}.jsonl")
 
         client = None
@@ -113,6 +344,13 @@ def run_benchmark(
             record: Dict[str, Any] = {
                 "model_name": model_name,
                 "model_id": model_id,
+                "provider": model.get("provider"),
+                "reasoning_mode": model.get("reasoning_mode"),
+                "requested_params": copy.deepcopy(preflight["requested_params"]),
+                "inference_params": copy.deepcopy(model.get("params", {})),
+                "effective_params": copy.deepcopy(preflight["effective_params"]),
+                "parameter_adjustments": list(preflight["adjustments"]),
+                "model_metadata": copy.deepcopy(model.get("metadata", {})),
                 "prompt_slug": prompt_slug,
                 "task_id": task_id,
                 "task_set_version": task_set_version,
@@ -205,6 +443,32 @@ def main():
     parser.add_argument("--model", type=str, default=None, help="A single model 'name' (shortcut for --models).")
     parser.add_argument("--provider", type=str, default=None, help="Provider name to filter models.")
     parser.add_argument("--repeats", type=int, default=1, help="How many runs per model in this execution.")
+    parser.add_argument(
+        "--max-output-tokens",
+        type=int,
+        default=_DEFAULT_MAX_OUTPUT_TOKENS,
+        help="Shared output-token budget before model-specific safety clamping.",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=_DEFAULT_TEMPERATURE,
+        help="Shared sampling temperature; omitted automatically when unsupported.",
+    )
+    parser.add_argument(
+        "--preflight-only",
+        action="store_true",
+        help="Validate and print effective model parameters without making API calls.",
+    )
+    parser.add_argument(
+        "--reasoning-effort",
+        choices=_REASONING_EFFORTS,
+        default=None,
+        help=(
+            "Set reasoning effort at run time. When provided, result model names "
+            "receive a '__reasoning-<effort>' suffix."
+        ),
+    )
     parser.add_argument("--models-config", type=str, default=os.path.join(_REPO_ROOT, "configs", "benchmarks", "models.json"))
     args = parser.parse_args()
 
@@ -227,6 +491,11 @@ def main():
     if args.model: selection = [args.model]
     elif args.models: selection = [s for s in args.models.split(",") if s.strip()]
     model_specs = _select_models(all_models, selection, args.provider)
+    model_specs = _configure_reasoning(
+        model_specs,
+        requested_effort=args.reasoning_effort,
+        interactive=sys.stdin.isatty() and args.reasoning_effort is None,
+    )
 
     prompt_slugs = [p.strip() for p in args.prompt.split(",") if p.strip()]
     
@@ -237,6 +506,9 @@ def main():
             client_factory=multi_client_factory,
             repeats=args.repeats,
             logger=logger,
+            max_output_tokens=args.max_output_tokens,
+            temperature=args.temperature,
+            preflight_only=args.preflight_only,
         )
 
 if __name__ == "__main__":

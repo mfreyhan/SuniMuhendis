@@ -84,6 +84,50 @@ def is_cost_under(m, max_prompt, max_comp):
             return False
     return True
 
+
+def build_model_metadata(model):
+    """Keep the live API fields that affect benchmark execution."""
+    architecture = model.get("architecture") or {}
+    top_provider = model.get("top_provider") or {}
+    reasoning = model.get("reasoning")
+
+    metadata = {
+        "context_length": model.get("context_length"),
+        "max_completion_tokens": top_provider.get("max_completion_tokens"),
+        "supported_parameters": sorted(model.get("supported_parameters") or []),
+        "input_modalities": architecture.get("input_modalities") or [],
+        "output_modalities": architecture.get("output_modalities") or [],
+        "pricing": model.get("pricing") or {},
+    }
+    if reasoning is not None:
+        metadata["reasoning"] = {
+            key: reasoning[key]
+            for key in (
+                "mandatory",
+                "default_enabled",
+                "supported_efforts",
+                "default_effort",
+                "supports_max_tokens",
+            )
+            if key in reasoning
+        }
+    return metadata
+
+
+def refresh_model_metadata(existing_models, api_models):
+    """Refresh live capabilities for registry entries already in models.json."""
+    api_by_id = {m.get("id"): m for m in api_models if m.get("id")}
+    updated = 0
+    for item in existing_models:
+        api_model = api_by_id.get(item.get("model"))
+        if api_model is None:
+            continue
+        metadata = build_model_metadata(api_model)
+        if item.get("metadata") != metadata:
+            item["metadata"] = metadata
+            updated += 1
+    return updated
+
 def prune_openrouter_models(existing_models, api_models):
     """
     Validates existing OpenRouter models against the live OpenRouter API model list.
@@ -129,13 +173,19 @@ def prune_openrouter_models(existing_models, api_models):
     return kept_models, pruned, converted
 
 def main():
-    parser = argparse.ArgumentParser(description="Syncs models from OpenRouter to models.json and cleans dead models.")
+    parser = argparse.ArgumentParser(
+        description="Syncs OpenRouter models and live capability metadata to models.json."
+    )
     parser.add_argument("--free-only", action="store_true", help="Only adds free models.")
     parser.add_argument("--text-only", action="store_true", help="Only adds text-to-text models.")
     parser.add_argument("--max-prompt-cost", type=float, default=None, help="Max prompt (input) token cost (USD)")
     parser.add_argument("--max-comp-cost", type=float, default=None, help="Max completion (output) token cost (USD)")
     parser.add_argument("--prune", action="store_true", help="Remove or update models in models.json that no longer exist on OpenRouter.")
-    parser.add_argument("--no-sync", action="store_true", help="Only prune without adding new models.")
+    parser.add_argument(
+        "--no-sync",
+        action="store_true",
+        help="Refresh metadata (and optionally prune) without adding new models.",
+    )
     args = parser.parse_args()
 
     config_data = load_models_json()
@@ -169,6 +219,11 @@ def main():
         if pruned or converted:
             modified = True
 
+    metadata_count = refresh_model_metadata(existing_models, api_models)
+    if metadata_count:
+        modified = True
+    print(f"\nMetadata refreshed for {metadata_count} existing models.")
+
     if not args.no_sync:
         existing_ids = {item.get("model") for item in existing_models if item.get("model")}
         added_count = 0
@@ -190,10 +245,8 @@ def main():
                 new_entry = {
                     "name": m_id.split("/")[-1].replace(":free", ""),
                     "model": m_id,
-                    "params": {
-                        "temperature": 0.7,
-                        "max_tokens": 8192
-                    }
+                    "params": {},
+                    "metadata": build_model_metadata(m),
                 }
                 existing_models.append(new_entry)
                 existing_ids.add(m_id)

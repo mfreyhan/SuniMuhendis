@@ -29,3 +29,17 @@ Run a model with:
 ```bash
 python scripts/run_api_benchmark.py --prompt heat_exchanger_hard_v2 --provider openrouter --model gpt-oss-20b --repeats 20
 ```
+
+Reasoning effort is selected per execution and becomes part of the result model
+name and filename. Omit `--reasoning-effort` in an interactive terminal to select
+from the modes advertised by the synced OpenRouter metadata:
+
+```bash
+python scripts/run_api_benchmark.py --prompt heat_exchanger_hard_v2 --provider openrouter --model kimi-k2.6 --reasoning-effort none --repeats 20
+```
+
+Check the effective parameters without spending API credits:
+
+```bash
+python scripts/run_api_benchmark.py --prompt heat_exchanger_hard_v2 --provider openrouter --model llama-3.3-70b-instruct --preflight-only
+```

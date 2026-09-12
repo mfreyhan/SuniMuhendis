@@ -3,7 +3,11 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from sunimuhendis.model_clients.openrouter_client import OpenRouterClient
-from scripts.sync_openrouter import prune_openrouter_models
+from scripts.sync_openrouter import (
+    build_model_metadata,
+    prune_openrouter_models,
+    refresh_model_metadata,
+)
 
 
 def test_prune_openrouter_models():
@@ -38,6 +42,29 @@ def test_prune_openrouter_models():
     assert "openai/gpt-oss-20b" in kept_ids
     assert kept_ids.count("openai/gpt-oss-20b") == 1
     assert "some/dead-model:free" not in kept_ids
+
+
+def test_refresh_model_metadata_records_reasoning_capabilities():
+    existing = [{"name": "kimi", "model": "moonshotai/kimi-k2.6", "params": {}}]
+    api_models = [{
+        "id": "moonshotai/kimi-k2.6",
+        "context_length": 262144,
+        "top_provider": {"max_completion_tokens": 65535},
+        "supported_parameters": ["reasoning", "max_tokens", "response_format"],
+        "architecture": {
+            "input_modalities": ["text", "image"],
+            "output_modalities": ["text"],
+        },
+        "pricing": {"prompt": "0.1", "completion": "0.2"},
+        "reasoning": {"mandatory": False, "default_enabled": True},
+    }]
+
+    assert refresh_model_metadata(existing, api_models) == 1
+    metadata = existing[0]["metadata"]
+    assert metadata == build_model_metadata(api_models[0])
+    assert metadata["reasoning"]["default_enabled"] is True
+    assert metadata["max_completion_tokens"] == 65535
+    assert refresh_model_metadata(existing, api_models) == 0
 
 
 @patch.dict(os.environ, {"OPENROUTER_API_KEY": "fake_test_key"})

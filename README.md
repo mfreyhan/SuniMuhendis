@@ -79,6 +79,12 @@ python scripts/run_api_benchmark.py --prompt heat_exchanger_v4 --model claude-so
 # Score V3 hard task:
 python scripts/run_api_benchmark.py --prompt heat_exchanger_hard_v2 --model claude-sonnet-5 --repeats 20
 
+# Run-specific reasoning mode (recorded as kimi-k2.6__reasoning-none):
+python scripts/run_api_benchmark.py --prompt heat_exchanger_hard_v2 --model kimi-k2.6 --reasoning-effort none --repeats 20
+
+# Validate effective limits and parameters without making API calls:
+python scripts/run_api_benchmark.py --prompt heat_exchanger_hard_v2 --model llama-3.3-70b-instruct --preflight-only
+
 # Multiple self-contained prompts:
 python scripts/run_api_benchmark.py --prompt heat_exchanger_v1,heat_exchanger_v2,heat_exchanger_v3,heat_exchanger_v4 --model claude-sonnet-5 --repeats 20
 
@@ -86,9 +92,17 @@ python scripts/run_api_benchmark.py --prompt heat_exchanger_v1,heat_exchanger_v2
 streamlit run scripts/dashboard.py
 ```
 
-Models and provider settings are listed in `configs/benchmarks/models.json`.
-Use the configured `name` with `--model`. New API records include the exact
-prompt and full task parameters for reproducibility.
+Models and live capability metadata are listed in `configs/benchmarks/models.json`.
+Refresh OpenRouter model capabilities (including supported reasoning modes) with
+`python scripts/sync_openrouter.py --no-sync`. Use the configured `name` with
+`--model`. In an interactive terminal, reasoning-capable models show a numbered
+mode menu. `--reasoning-effort` bypasses that menu for automated runs. The selected
+mode is appended to the result model name and filename. New API records include
+the exact prompt, full task parameters, and inference parameters for reproducibility.
+Every run uses a shared output budget (`--max-output-tokens`, default 8192) and
+temperature (`--temperature`, default 0.7). Preflight clamps the output budget to
+the live model/context limits, omits unsupported temperature settings, and blocks
+models that cannot guarantee an output-token bound.
 
 The v5 canonical experiment, its separate task set, and V2-rescored copies of
 older results are preserved in `archive/score_v2_experiment/`. They are excluded
