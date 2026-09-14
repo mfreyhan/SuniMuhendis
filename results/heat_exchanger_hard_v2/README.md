@@ -4,6 +4,11 @@ This prompt unit uses simulator V3 and `heat_exchanger_score_v3`. It is separate
 from `heat_exchanger_hard_v1`; results from different simulator or score versions
 must not be pooled.
 
+Results in this prompt unit belong to the zero-shot track: one prompt, one model
+response, and no simulator feedback or score-guided retry. Optional reasoning is
+disabled for standard comparisons; explicitly enabled reasoning runs are separate
+diagnostic variants and carry a `__reasoning-<mode>` suffix.
+
 The task rewards heat duty (50%), tube pressure drop (17.5%), shell pressure drop
 (17.5%), effectiveness (5%), and annualised cost (10%). Cost receives full raw
 reward at or below 5,000 USD/year, decreases linearly, and reaches zero at 15,000

@@ -311,6 +311,7 @@ def test_benchmark_sends_and_records_paired_prompt(tmp_path):
     assert received == [expected]
     assert Path(paths[0]).parent == tmp_path / slug / "api_runs"
     record = json.loads(Path(paths[0]).read_text())
+    assert record["evaluation_mode"] == "zero_shot"
     assert record["prompt_text"] == expected
     assert record["task_params"]["target_heat_duty"] == 150000.0
     assert record["score_version"] == "heat_exchanger_score_v1"

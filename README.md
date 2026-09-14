@@ -97,12 +97,26 @@ Refresh OpenRouter model capabilities (including supported reasoning modes) with
 `python scripts/sync_openrouter.py --no-sync`. Use the configured `name` with
 `--model`. In an interactive terminal, reasoning-capable models show a numbered
 mode menu. `--reasoning-effort` bypasses that menu for automated runs. The selected
-mode is appended to the result model name and filename. New API records include
+reasoning mode is appended to the result model name and filename. New API records include
 the exact prompt, full task parameters, and inference parameters for reproducibility.
-Every run uses a shared output budget (`--max-output-tokens`, default 8192) and
-temperature (`--temperature`, default 0.7). Preflight clamps the output budget to
+Every run uses a shared output budget (`--max-output-tokens`, default 8192).
+Preflight clamps the output budget to
 the live model/context limits, omits unsupported temperature settings, and blocks
 models that cannot guarantee an output-token bound.
+
+### Evaluation modes
+
+The active API benchmark is the **zero-shot track**: one task prompt produces one
+design, with no examples, simulator feedback, retries based on score, or iterative
+optimization. Optional reasoning should normally be disabled for this track.
+Reasoning runs remain available as explicitly named diagnostic variants through
+`--reasoning-effort`.
+
+A future non-zero-shot track should be kept separate. The planned approach is to
+generate several short candidates, rank them with the real simulator, and then
+optionally iterate on simulator feedback for a small number of rounds. That track
+should report model calls, tokens, latency, and cost, and use an early-stop rule
+when repeated calls exhaust their output budget without producing a design.
 
 The v5 canonical experiment, its separate task set, and V2-rescored copies of
 older results are preserved in `archive/score_v2_experiment/`. They are excluded

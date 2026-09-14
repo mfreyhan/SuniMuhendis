@@ -342,6 +342,7 @@ def run_benchmark(
             done += 1
             progress = f"[{done}/{total}]"
             record: Dict[str, Any] = {
+                "evaluation_mode": "zero_shot",
                 "model_name": model_name,
                 "model_id": model_id,
                 "provider": model.get("provider"),
@@ -496,6 +497,9 @@ def main():
         requested_effort=args.reasoning_effort,
         interactive=sys.stdin.isatty() and args.reasoning_effort is None,
     )
+
+    if args.max_output_tokens <= 0:
+        parser.error("--max-output-tokens must be positive")
 
     prompt_slugs = [p.strip() for p in args.prompt.split(",") if p.strip()]
     
