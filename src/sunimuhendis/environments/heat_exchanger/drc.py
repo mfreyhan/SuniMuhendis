@@ -8,6 +8,13 @@ from .geometry import (
     available_bundle_diameter,
     bundle_diameter,
 )
+from .simulator import HeatExchangerSimulator
+
+
+def _optional(design_params, key, default):
+    """An absent key and an explicit null both mean 'not chosen'."""
+    value = design_params.get(key, None)
+    return default if value is None else value
 
 def run_heat_exchanger_drc(design_params: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
     """
@@ -28,12 +35,16 @@ def run_heat_exchanger_drc(design_params: Dict[str, Any]) -> Tuple[bool, Optiona
     num_tubes = design_params.get("number_of_tubes", 1)
     baffle_spacing = design_params.get("baffle_spacing", 0)
 
-    tube_passes = design_params.get(
-        "tube_passes",
+    tube_passes = _optional(
+        design_params, "tube_passes",
         1 if geo_type == "concentric_tube" else DEFAULT_TUBE_PASSES,
     )
-    pitch_type = design_params.get("pitch_type", DEFAULT_PITCH_TYPE)
-    pitch_ratio = design_params.get("pitch_ratio", DEFAULT_PITCH_RATIO)
+    pitch_type = _optional(design_params, "pitch_type", DEFAULT_PITCH_TYPE)
+    pitch_ratio = _optional(design_params, "pitch_ratio", DEFAULT_PITCH_RATIO)
+    nozzle_hot = _optional(
+        design_params, "D_nozzle_hot", HeatExchangerSimulator.DEFAULT_D_NOZZLE_HOT)
+    nozzle_cold = _optional(
+        design_params, "D_nozzle_cold", HeatExchangerSimulator.DEFAULT_D_NOZZLE_COLD)
 
     if di >= do:
         return False, "DRC Error: Inner tube inner diameter cannot be greater than or equal to its outer diameter."
@@ -92,5 +103,29 @@ def run_heat_exchanger_drc(design_params: Dict[str, Any]) -> Tuple[bool, Optiona
                 "DRC Error: Tube bundle diameter {:.4f} m exceeds the available "
                 "shell diameter {:.4f} m after clearance."
             ).format(required_bundle, available_bundle)
+
+    # A nozzle bore has to be bounded by what it is welded into, or driving
+    # nozzle loss to nothing would be free and the pressure-drop requirement
+    # would stop constraining the exchanger at all. The bound differs by
+    # geometry: a shell-and-tube nozzle is a branch in a large cylindrical
+    # shell, where a bore approaching the shell diameter is not a nozzle but a
+    # hole; a concentric tube is simply a pipe, and a branch cannot exceed the
+    # pipe it comes off.
+    if geo_type == "shell_and_tube":
+        bore_limit = HeatExchangerSimulator.MAX_NOZZLE_SHELL_RATIO * shell_di
+        limit_text = "{:.0%} of the shell inside diameter".format(
+            HeatExchangerSimulator.MAX_NOZZLE_SHELL_RATIO)
+    else:
+        bore_limit = shell_di
+        limit_text = "the outer pipe inside diameter"
+
+    for label, bore in (("hot", nozzle_hot), ("cold", nozzle_cold)):
+        if (not isinstance(bore, (int, float)) or isinstance(bore, bool)
+                or not bore > 0):
+            return False, "DRC Error: {} nozzle bore must be a positive number.".format(label)
+        if bore > bore_limit:
+            return False, (
+                "DRC Error: {} nozzle bore {:.4f} m exceeds {} ({:.4f} m)."
+            ).format(label, bore, limit_text, bore_limit)
 
     return True, None

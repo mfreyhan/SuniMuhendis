@@ -93,7 +93,11 @@ class HeatExchangerSimulator:
     MAX_TUBE_VELOCITY = 3.0       # m/s (liquid service)
     MIN_TUBE_VELOCITY = 0.5       # m/s (below this → fouling risk)
     MAX_SHELL_VELOCITY = 2.0      # m/s (liquid, cross-flow)
-    MAX_NOZZLE_VELOCITY = 5.0     # m/s (liquid)
+    MAX_NOZZLE_VELOCITY = 5.0     # m/s (liquid, erosion limit)
+    MIN_NOZZLE_VELOCITY = 1.0     # m/s (below this the nozzle is oversized:
+                                  # the stream spreads too slowly to distribute
+                                  # evenly across the bundle or annulus)
+    MAX_NOZZLE_SHELL_RATIO = 0.35 # nozzle bore as a fraction of shell ID
     MAX_DP_TUBE = 10000.0         # Pa
     MAX_DP_SHELL = 10000.0        # Pa
     MIN_APPROACH_TEMP = 5.0       # °C (pinch limit)
@@ -256,7 +260,7 @@ class HeatExchangerSimulator:
                 tube["dp_total"], shell["dp_total"],
                 hot["m_dot"], cold["m_dot"],
                 hot["rho"], cold["rho"], material,
-                ntu["Q"], thermal["A_o_total"],
+                ntu["Q"], thermal["A_o_total"], mech,
             )
 
             # ═════════════════════════════════════════════════════════
@@ -306,6 +310,19 @@ class HeatExchangerSimulator:
     # ═════════════════════════════════════════════════════════════════
 
     @staticmethod
+    def _opt(dp, key, default):
+        """
+        Read an optional design parameter.
+
+        A key that is absent and a key explicitly written as ``null`` mean the
+        same thing — the designer did not choose — so both fall back to the
+        default. Without this, a model that emits ``"tube_passes": null``
+        would fail to simulate for what is really a stylistic choice.
+        """
+        value = dp.get(key, None)
+        return default if value is None else value
+
+    @staticmethod
     def _extract_and_validate_params(dp):
         """Extract, default, and validate all design parameters."""
         try:
@@ -331,12 +348,13 @@ class HeatExchangerSimulator:
         if L <= 0 or N_tubes <= 0:
             return None
 
-        N_pass = dp.get(
-            "tube_passes",
+        cls = HeatExchangerSimulator
+        N_pass = cls._opt(
+            dp, "tube_passes",
             1 if geo == "concentric_tube" else DEFAULT_TUBE_PASSES,
         )
-        pitch_type = dp.get("pitch_type", DEFAULT_PITCH_TYPE)
-        material = dp.get("material", "carbon_steel")
+        pitch_type = cls._opt(dp, "pitch_type", DEFAULT_PITCH_TYPE)
+        material = cls._opt(dp, "material", "carbon_steel")
         if geo not in ("concentric_tube", "shell_and_tube"):
             return None
         if not isinstance(N_pass, int) or isinstance(N_pass, bool) or N_pass <= 0:
@@ -349,15 +367,15 @@ class HeatExchangerSimulator:
         if pitch_type not in PITCH_ANGLES or material not in HeatExchangerSimulator.MATERIAL_FACTORS:
             return None
 
-        baffle_spacing = dp.get("baffle_spacing", L / 5)
+        baffle_spacing = cls._opt(dp, "baffle_spacing", L / 5)
         if not isinstance(baffle_spacing, (int, float)) or isinstance(baffle_spacing, bool):
             return None
         if geo == "shell_and_tube" and (baffle_spacing <= 0 or baffle_spacing >= L):
             return None
         if geo == "concentric_tube":
             baffle_spacing = L
-        baffle_cut = dp.get("baffle_cut", 0.25)
-        pitch_ratio = dp.get("pitch_ratio", DEFAULT_PITCH_RATIO)
+        baffle_cut = cls._opt(dp, "baffle_cut", 0.25)
+        pitch_ratio = cls._opt(dp, "pitch_ratio", DEFAULT_PITCH_RATIO)
         if (not isinstance(baffle_cut, (int, float)) or isinstance(baffle_cut, bool)
                 or not 0.15 <= baffle_cut <= 0.45):
             return None
@@ -382,33 +400,32 @@ class HeatExchangerSimulator:
             D_bundle = do
             D_bundle_available = D_shell
 
-        cls = HeatExchangerSimulator
         hot = {
-            "m_dot": dp.get("m_dot_hot", cls.DEFAULT_M_DOT_HOT),
-            "T_in": dp.get("T_hot_in", cls.DEFAULT_T_HOT_IN_C) + 273.15,
-            "T_in_C": dp.get("T_hot_in", cls.DEFAULT_T_HOT_IN_C),
+            "m_dot": cls._opt(dp, "m_dot_hot", cls.DEFAULT_M_DOT_HOT),
+            "T_in": cls._opt(dp, "T_hot_in", cls.DEFAULT_T_HOT_IN_C) + 273.15,
+            "T_in_C": cls._opt(dp, "T_hot_in", cls.DEFAULT_T_HOT_IN_C),
         }
         hot.update(cls.HOT_FLUID)
 
         cold = {
-            "m_dot": dp.get("m_dot_cold", cls.DEFAULT_M_DOT_COLD),
-            "T_in": dp.get("T_cold_in", cls.DEFAULT_T_COLD_IN_C) + 273.15,
-            "T_in_C": dp.get("T_cold_in", cls.DEFAULT_T_COLD_IN_C),
+            "m_dot": cls._opt(dp, "m_dot_cold", cls.DEFAULT_M_DOT_COLD),
+            "T_in": cls._opt(dp, "T_cold_in", cls.DEFAULT_T_COLD_IN_C) + 273.15,
+            "T_in_C": cls._opt(dp, "T_cold_in", cls.DEFAULT_T_COLD_IN_C),
         }
         cold.update(cls.COLD_FLUID)
 
         wall = {
-            "k_wall": dp.get("k_wall", 50.0),
-            "R_fi": dp.get("R_fi", 1.76e-4),
-            "R_fo": dp.get("R_fo", 1.76e-4),
+            "k_wall": cls._opt(dp, "k_wall", 50.0),
+            "R_fi": cls._opt(dp, "R_fi", 1.76e-4),
+            "R_fo": cls._opt(dp, "R_fo", 1.76e-4),
         }
 
         mech = {
-            "P_design": dp.get("P_design", 101325.0),
-            "allowable_stress": dp.get("allowable_stress", 137e6),
-            "D_nozzle_hot": dp.get("D_nozzle_hot", cls.DEFAULT_D_NOZZLE_HOT),
-            "D_nozzle_cold": dp.get("D_nozzle_cold", cls.DEFAULT_D_NOZZLE_COLD),
-            "joint_efficiency": dp.get("joint_efficiency", cls.DEFAULT_JOINT_EFFICIENCY),
+            "P_design": cls._opt(dp, "P_design", 101325.0),
+            "allowable_stress": cls._opt(dp, "allowable_stress", 137e6),
+            "D_nozzle_hot": cls._opt(dp, "D_nozzle_hot", cls.DEFAULT_D_NOZZLE_HOT),
+            "D_nozzle_cold": cls._opt(dp, "D_nozzle_cold", cls.DEFAULT_D_NOZZLE_COLD),
+            "joint_efficiency": cls._opt(dp, "joint_efficiency", cls.DEFAULT_JOINT_EFFICIENCY),
         }
 
         fluid_values = tuple(hot.values()) + tuple(cold.values())
@@ -1007,7 +1024,7 @@ class HeatExchangerSimulator:
 
     def _calc_cost(self, geo, L, di, do, D_shell, N_tubes, N_pass, n_baffles,
                    dp_tube, dp_shell, m_dot_hot, m_dot_cold,
-                   rho_hot, rho_cold, material, Q, A_o_total):
+                   rho_hot, rho_cold, material, Q, A_o_total, mech):
         # Material mass
         t_shell = max(0.006, D_shell / 200.0)
         V_shell_wall = (math.pi / 4.0) * ((D_shell + 2*t_shell)**2
@@ -1022,7 +1039,18 @@ class HeatExchangerSimulator:
         V_tubesheets = (2 * (math.pi / 4.0) * D_shell**2 * t_ts
                         if geo == "shell_and_tube" else 0.0)
         m_tubesheets = V_tubesheets * self.STEEL_DENSITY
-        m_total = m_shell + m_tubes + m_baffles + m_tubesheets
+
+        # Nozzles. Each is a short stub plus a flange, and both grow with bore,
+        # so an oversized nozzle is not free. The stub is taken as two bore
+        # diameters long at the shell's wall thickness, and the flange as twice
+        # the stub mass — a coarse model, but enough that bore has a price.
+        m_nozzles = 0.0
+        for bore in (mech["D_nozzle_hot"], mech["D_nozzle_cold"]):
+            t_nozzle = max(0.006, bore / 200.0)
+            V_stub = math.pi * bore * t_nozzle * (2.0 * bore)
+            m_nozzles += 3.0 * V_stub * self.STEEL_DENSITY
+
+        m_total = m_shell + m_tubes + m_baffles + m_tubesheets + m_nozzles
 
         # Capital cost
         mat_factor = self.MATERIAL_FACTORS.get(material, 1.0)
@@ -1044,6 +1072,7 @@ class HeatExchangerSimulator:
 
         return {
             "mass_total_kg": m_total,
+            "mass_nozzles_kg": m_nozzles,
             "cost_capital_USD": C_capital,
             "pump_power_hot_W": P_hot,
             "pump_power_cold_W": P_cold,
@@ -1133,6 +1162,14 @@ class HeatExchangerSimulator:
         if shell["v_nozzle"] > self.MAX_NOZZLE_VELOCITY:
             warnings.append(
                 f"Cold nozzle velocity {shell['v_nozzle']:.2f} m/s > max {self.MAX_NOZZLE_VELOCITY} m/s")
+        if tube["v_nozzle"] < self.MIN_NOZZLE_VELOCITY:
+            warnings.append(
+                f"Hot nozzle velocity {tube['v_nozzle']:.2f} m/s < min {self.MIN_NOZZLE_VELOCITY} m/s "
+                f"(oversized nozzle, poor distribution)")
+        if shell["v_nozzle"] < self.MIN_NOZZLE_VELOCITY:
+            warnings.append(
+                f"Cold nozzle velocity {shell['v_nozzle']:.2f} m/s < min {self.MIN_NOZZLE_VELOCITY} m/s "
+                f"(oversized nozzle, poor distribution)")
 
         # Pressure drop checks
         if tube["dp_total"] > self.MAX_DP_TUBE:
@@ -1304,6 +1341,7 @@ class HeatExchangerSimulator:
     def _format_cost(cost):
         return {
             "mass_total_kg": cost["mass_total_kg"],
+            "mass_nozzles_kg": cost["mass_nozzles_kg"],
             "cost_capital_USD": cost["cost_capital_USD"],
             "pump_power_hot_W": cost["pump_power_hot_W"],
             "pump_power_cold_W": cost["pump_power_cold_W"],

@@ -1,0 +1,12 @@
+{
+  "task_id": "he_hard_v3_001",
+  "task_set_version": "v3",
+  "score_version": "heat_exchanger_score_v4",
+  "target_heat_duty": 250000.0,
+  "max_dp_tube": 10000.0,
+  "max_dp_shell": 10000.0,
+  "gate_share": 0.3,
+  "cost_good": 2000.0,
+  "cost_bad": 20000.0,
+  "warning_penalty_per_warning": 0.1
+}

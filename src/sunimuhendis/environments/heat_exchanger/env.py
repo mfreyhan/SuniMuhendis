@@ -78,15 +78,33 @@ class HeatExchangerEnv(BaseEnvironment):
 
             do = rng.choice(self.TUBE_OD_SERIES)
             length = rng.uniform(0.5, 15.0)
-            designs.append({
+            shell = rng.uniform(0.1, 1.5)
+            passes = rng.choice((2, 2, 2, 4, 6))
+            count = rng.choice(self.TUBE_COUNT_SERIES)
+            design = {
                 "geometry_type": "shell_and_tube",
                 "length": length,
                 "inner_tube_di": do * rng.uniform(0.55, 0.94),
                 "inner_tube_do": do,
-                "outer_shell_di": rng.uniform(0.1, 1.5),
-                "number_of_tubes": rng.choice(self.TUBE_COUNT_SERIES),
+                "outer_shell_di": shell,
+                "number_of_tubes": count - (count % passes),
                 "baffle_spacing": rng.uniform(0.05, min(length * 0.95, 2.0)),
-            })
+            }
+            # Half the designs also exercise the optional fields. A sampler that
+            # only ever emitted the seven required ones would leave the audit
+            # blind to the levers it is there to evaluate — the nozzle and
+            # layout checks would look dead simply because nothing ever moved
+            # them.
+            if rng.random() < 0.5:
+                design.update({
+                    "tube_passes": passes,
+                    "pitch_ratio": rng.uniform(1.25, 1.60),
+                    "pitch_type": rng.choice(("square", "triangular")),
+                    "baffle_cut": rng.uniform(0.15, 0.45),
+                    "D_nozzle_hot": rng.uniform(0.015, 0.35 * shell),
+                    "D_nozzle_cold": rng.uniform(0.015, 0.35 * shell),
+                })
+            designs.append(design)
         return designs
 
     def get_requirements(self, task_params: Dict[str, Any]) -> List[Requirement]:

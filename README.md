@@ -73,7 +73,7 @@ The environments are packaged so that another project — a training pipeline, a
 ### Install
 
 ```bash
-pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@envs-v0.3.2"
+pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@envs-v0.4.0"
 ```
 
 Pin the tag. Simulator and score behaviour is versioned deliberately, and installing from a moving branch means your results stop being comparable without warning.

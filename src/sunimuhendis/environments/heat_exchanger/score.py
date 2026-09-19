@@ -305,10 +305,160 @@ class HeatExchangerScoreV3(BaseScoreFunction):
 # Original public name used by demos and manual evaluation.
 HeatExchangerScore = HeatExchangerScoreV1
 
+
+
+class HeatExchangerScoreV4(BaseScoreFunction):
+    """Gated optimisation score: requirements are the gate, quality is the score.
+
+    V1-V3 spread most of their weight across the task requirements themselves,
+    so a design earned roughly 85% of the available raw score the moment it met
+    the duty target and both pressure-drop limits. Everything a good engineer
+    does beyond that — making it cheaper, making it clean — competed for the
+    remaining 15%. Measured across sixteen parameter settings, the score for
+    merely reaching a feasible design never moved off 0.439, whatever the
+    targets were. That is a structural property of the weighting, not a
+    calibration that better numbers could fix.
+
+    V4 separates the two questions engineering actually asks:
+
+      1. *Does it meet spec?*  The duty target and both pressure-drop limits
+         are a gate. Passing it is worth ``gate_share`` (0.30 by default) and
+         no more; a design that falls short earns the same share scaled by how
+         close it came, so the boundary is continuous rather than a cliff.
+
+      2. *How good is it?*  The remaining 0.70 is earned only by designs that
+         pass, and only through things that can always be improved: annualised
+         cost, thermal effectiveness, and freedom from design warnings.
+
+    Effectiveness is deliberately *not* part of the quality term, even though
+    every earlier version rewards it. With the flows and inlet temperatures
+    fixed, ``Q_max = C_min * dT`` is a constant, so effectiveness is exactly
+    ``heat_duty / 627300`` — measured across 4,353 designs the correlation
+    with duty is 1.0000000000 and the ratio never varies. Rewarding both means
+    paying twice for one quantity, and because the gate already forces a
+    minimum duty it hands the quality term a free floor: at a 250 kW target,
+    effectiveness cannot fall below 0.3985, which is 72% of a 0.55 goal before
+    the design has done anything. Quality is therefore carried by cost, which
+    is genuinely unbounded, and by warning-freedom, which across the same
+    sample is uncorrelated with cost (r = 0.007) and so is a second, separate
+    thing to be good at rather than something tradeable against the first.
+    """
+
+    def calculate_score(
+        self,
+        task_params: Dict[str, Any],
+        metrics: Dict[str, Any],
+        is_valid: bool = True,
+        error_message: Optional[str] = None,
+    ) -> ScoreResult:
+        if not is_valid:
+            return ScoreResult(
+                normalized_total=0.0,
+                is_valid=False,
+                error_message=error_message,
+            )
+
+        gate_share = task_params.get("gate_share", 0.30)
+        target_heat = task_params.get("target_heat_duty", 250000.0)
+        max_dp_tube = task_params.get("max_dp_tube", 10000.0)
+        max_dp_shell = task_params.get("max_dp_shell", 10000.0)
+
+        cost_good = task_params.get("cost_good", 2000.0)
+        cost_bad = task_params.get("cost_bad", 20000.0)
+        warning_penalty = task_params.get("warning_penalty_per_warning", 0.10)
+
+        if not 0.0 <= gate_share <= 1.0:
+            raise ValueError("Score V4 requires 0 <= gate_share <= 1")
+        if target_heat <= 0 or max_dp_tube <= 0 or max_dp_shell <= 0:
+            raise ValueError("Score V4 heat and pressure-drop targets must be positive")
+        if cost_good < 0 or cost_bad <= cost_good:
+            raise ValueError("Score V4 requires 0 <= cost_good < cost_bad")
+        if warning_penalty < 0:
+            raise ValueError("Score V4 penalty rate must be non-negative")
+
+        heat_duty = metrics.get("heat_duty_W", metrics.get("heat_duty", 0.0))
+        dp_tube = metrics.get(
+            "dp_tube_Pa", metrics.get("pressure_drop_tube", max_dp_tube * 2)
+        )
+        dp_shell = metrics.get(
+            "dp_shell_Pa", metrics.get("pressure_drop_shell", max_dp_shell * 2)
+        )
+        effectiveness = metrics.get("effectiveness", 0.0)
+        cost_annualised = metrics.get("cost_annualised_USD_per_yr", cost_bad)
+        num_warnings = max(float(metrics.get("num_warnings", 0.0)), 0.0)
+
+        # ── 1. The gate ───────────────────────────────────────────────
+        duty_progress = min(max(heat_duty / target_heat, 0.0), 1.0)
+        tube_progress = _limit_progress(dp_tube, max_dp_tube)
+        shell_progress = _limit_progress(dp_shell, max_dp_shell)
+
+        duty_met = heat_duty >= target_heat
+        tube_met = dp_tube <= max_dp_tube
+        shell_met = dp_shell <= max_dp_shell
+        unmet = [name for name, met in (
+            ("heat duty", duty_met),
+            ("tube pressure drop", tube_met),
+            ("shell pressure drop", shell_met),
+        ) if not met]
+
+        gate_progress = (duty_progress + tube_progress + shell_progress) / 3.0
+
+        # ── 2. Quality, earned only past the gate ─────────────────────
+        cost_reward = _band_reward(cost_annualised, cost_good, cost_bad)
+        quality = cost_reward
+        penalty_factor = max(1.0 - num_warnings * warning_penalty, 0.0)
+
+        if unmet:
+            total = gate_share * gate_progress
+        else:
+            total = gate_share + (1.0 - gate_share) * quality * penalty_factor
+
+        components = {
+            "gate_passed": 0.0 if unmet else 1.0,
+            "gate_progress": gate_progress,
+            "duty_progress": duty_progress,
+            "tube_drop_progress": tube_progress,
+            "shell_drop_progress": shell_progress,
+            "num_unmet_requirements": float(len(unmet)),
+            "cost_reward": cost_reward,
+            "effectiveness": effectiveness,
+            "quality": quality,
+            "penalty_factor": penalty_factor,
+            "gate_component": gate_share * (gate_progress if unmet else 1.0),
+            "quality_component": 0.0 if unmet else (1.0 - gate_share) * quality * penalty_factor,
+        }
+
+        return ScoreResult(
+            normalized_total=min(max(total, 0.0), 1.0),
+            components=components,
+            is_valid=True,
+            error_message=(
+                "Unmet requirement(s): {}".format(", ".join(unmet)) if unmet else None
+            ),
+        )
+
+
+def _limit_progress(value: float, limit: float) -> float:
+    """How close a not-to-exceed quantity is to its limit, as a 0-1 reward."""
+    if value <= limit:
+        return 1.0
+    return max(1.0 - ((value - limit) / limit), 0.0)
+
+
+def _band_reward(value: float, good: float, bad: float) -> float:
+    """Linear reward: 1.0 at or below ``good``, 0.0 at or above ``bad``."""
+    if value <= good:
+        return 1.0
+    if value >= bad:
+        return 0.0
+    return (bad - value) / (bad - good)
+
+
 SCORE_REGISTRY = {
     "heat_exchanger_score_v1": HeatExchangerScoreV1,
     "heat_exchanger_score_v2": HeatExchangerScoreV2,
     "heat_exchanger_score_v3": HeatExchangerScoreV3,
+    "heat_exchanger_score_v4": HeatExchangerScoreV4,
 }
 
 def get_score_function(version: str) -> BaseScoreFunction:

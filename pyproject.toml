@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sunimuhendis"
-version = "0.3.2"
+version = "0.4.0"
 description = "Physics-simulation evaluation environments (DRC + simulator + score) for engineering-design LLM benchmarking."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 # Per-environment extras: install only the simulator deps you actually use,
-# e.g.  pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@envs-v0.3.2"
+# e.g.  pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@envs-v0.4.0"
 # Pin a tag, not a branch: simulator and score behaviour is versioned deliberately.
 [project.optional-dependencies]
 heat_exchanger = ["ht", "fluids"]

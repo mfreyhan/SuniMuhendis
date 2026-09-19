@@ -11,5 +11,5 @@ Public API for consumers (e.g. a training repo) that only need the
 """
 from .environments import make_env, list_environments
 
-__version__ = "0.3.2"
+__version__ = "0.4.0"
 __all__ = ["make_env", "list_environments", "__version__"]
