@@ -261,6 +261,8 @@ Useful entry points:
 
 ---
 
-## License and citation
+## Feedback
 
 If this framework or its benchmark results are useful in your work, please open an issue — we are interested in how the referee holds up outside our own use of it.
+
+No license has been chosen yet, so default copyright applies: the code is readable here but not yet licensed for reuse.
