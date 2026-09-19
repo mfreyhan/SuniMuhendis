@@ -19,7 +19,7 @@ class OpenCodeClient(BaseModelClient):
         params: Optional[Dict[str, Any]] = None,
         api_key_env: str = "OPENCODE_API_KEY",
         base_url: str = OPENCODE_BASE_URL,
-        timeout: float = 600.0,
+        timeout: float = 180.0,
     ):
         super().__init__(name or model)
         self.model = model

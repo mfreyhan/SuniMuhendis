@@ -27,9 +27,12 @@ def main():
     env = HeatExchangerEnv(HeatExchangerSimulator(), HeatExchangerScore())
     
     # 2. Load Task
-    task_path = os.path.join(os.path.dirname(__file__), f'../results/{args.prompt}/task.json')
+    task_path = os.path.join(
+        os.path.dirname(__file__),
+        f'../results/zero_shot/{args.prompt}/task.json',
+    )
     if not os.path.exists(task_path):
-        logger.error(f"Task file not found: {task_path}. Lütfen önce 'python scripts/build_task.py' çalıştırın.")
+        logger.error(f"Zero-shot task file not found: {task_path}.")
         return
         
     with open(task_path, 'r', encoding='utf-8') as f:
@@ -80,12 +83,16 @@ def main():
         if model_name.lower() != 'skip' and model_name != '':
             # Safe model name for filename
             safe_model = "".join(c if c.isalnum() else "_" for c in model_name).lower()
-            out_dir = os.path.join(os.path.dirname(__file__), f'../results/{args.prompt}/manual_runs')
+            out_dir = os.path.join(
+                os.path.dirname(__file__),
+                f'../results/zero_shot/{args.prompt}/manual_runs',
+            )
             os.makedirs(out_dir, exist_ok=True)
             db_path = os.path.join(out_dir, f"{safe_model}.jsonl")
             
             # Kaydedilecek veri paketi
             record = {
+                "evaluation_mode": "zero_shot",
                 "model_name": model_name,
                 "timestamp": datetime.now().isoformat(),
                 "prompt_slug": args.prompt,

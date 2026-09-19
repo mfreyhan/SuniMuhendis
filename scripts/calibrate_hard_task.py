@@ -25,7 +25,7 @@ def main():
     rng = random.Random(args.seed)
     env = make_env("heat_exchanger")
     root = Path(__file__).resolve().parents[1]
-    task_path = root / "results" / args.prompt / "task.json"
+    task_path = root / "results" / "zero_shot" / args.prompt / "task.json"
     task = json.loads(task_path.read_text(encoding="utf-8"))
     rows = []
     for i in range(args.samples):

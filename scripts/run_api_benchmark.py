@@ -21,6 +21,15 @@ from sunimuhendis.environments.heat_exchanger.env import HeatExchangerEnv
 from sunimuhendis.environments.heat_exchanger.score import HeatExchangerScoreV1
 from sunimuhendis.environments.heat_exchanger.simulator import HeatExchangerSimulator
 from sunimuhendis.model_clients.base import BaseModelClient
+from sunimuhendis.model_clients.pricing import (
+    live_price_book,
+    snapshot_from_live,
+)
+from sunimuhendis.model_clients.usage import (
+    empty_usage,
+    estimate_cost,
+    price_snapshot,
+)
 from sunimuhendis.parsing.json_parser import parse_llm_json
 
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -270,6 +279,66 @@ def multi_client_factory(spec: Dict[str, Any]) -> BaseModelClient:
         from sunimuhendis.model_clients.hf_client import HFInferenceClient
         return HFInferenceClient(model=spec["model"], name=spec.get("name"), params=spec.get("params"))
 
+def _load_live_prices(
+    enabled: bool,
+    fetcher: Optional[Callable[[], Dict[str, Any]]],
+    logger,
+) -> Optional[Dict[str, Any]]:
+    """Read the live price list, or explain why the run falls back to metadata."""
+    if not enabled and fetcher is None:
+        return None
+    try:
+        book = live_price_book(fetcher, refresh=True)
+    except Exception as exc:
+        logger.warning(
+            f"[pricing] live OpenRouter prices unavailable ({type(exc).__name__}: {exc}); "
+            "falling back to the prices stored in configs/benchmarks/models.json"
+        )
+        return None
+    logger.info(
+        f"[pricing] live prices for {len(book.get('prices') or {})} models "
+        f"read at {book.get('fetched_at')}"
+    )
+    return book
+
+
+def _persist_price_book(book: Dict[str, Any], logger) -> None:
+    """Archive the live price list this benchmark priced its runs against.
+
+    Every benchmark therefore leaves behind the dated price book it used, so the
+    history needed to reprice old runs accumulates without anyone remembering to
+    run a sync.
+    """
+    fetched_at = str(book.get("fetched_at") or "")
+    day = fetched_at[:10] or datetime.now(timezone.utc).date().isoformat()
+    directory = os.path.join(_REPO_ROOT, "configs", "benchmarks", "pricing_history")
+    path = os.path.join(directory, f"openrouter-{day}.json")
+    if os.path.exists(path):
+        return
+    try:
+        os.makedirs(directory, exist_ok=True)
+        payload = {
+            "provider": "openrouter",
+            "synced_at": day,
+            "fetched_at": fetched_at,
+            "source": "openrouter_api",
+            "currency": "USD_per_token",
+            "models": {
+                model_id: {
+                    "prompt": rates.get("prompt"),
+                    "completion": rates.get("completion"),
+                }
+                for model_id, rates in sorted((book.get("prices") or {}).items())
+            },
+        }
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2, ensure_ascii=False)
+            handle.write("\n")
+        logger.info(f"[pricing] archived today's price book to {path}")
+    except OSError as exc:
+        logger.warning(f"[pricing] could not archive the price book: {exc}")
+
+
 def run_benchmark(
     prompt_slug: str,
     model_specs: List[Dict[str, Any]],
@@ -280,10 +349,12 @@ def run_benchmark(
     max_output_tokens: int = _DEFAULT_MAX_OUTPUT_TOKENS,
     temperature: Optional[float] = _DEFAULT_TEMPERATURE,
     preflight_only: bool = False,
+    price_fetcher: Optional[Callable[[], Dict[str, Any]]] = None,
+    use_live_prices: bool = True,
 ) -> List[str]:
     logger = logger or setup_logger("hf_benchmark")
     results_root = results_root or os.path.join(_REPO_ROOT, "results")
-    prompt_dir = os.path.join(results_root, prompt_slug)
+    prompt_dir = os.path.join(results_root, "zero_shot", prompt_slug)
     prompt_path = os.path.join(prompt_dir, "prompt.txt")
     task_path = os.path.join(prompt_dir, "task.json")
     
@@ -305,6 +376,13 @@ def run_benchmark(
     env = _build_environment()
     total = len(model_specs) * repeats
     logger.info(f"Task '{task_id}' (Prompt '{prompt_slug}'): {len(model_specs)} models x {repeats} repeats = {total} runs.")
+
+    # Prices are read live, once, at the start of the benchmark. Pricing a run
+    # from the locally synced registry would attribute it to whatever rate was
+    # true at the last manual sync, which can be weeks stale.
+    live_prices = _load_live_prices(use_live_prices, price_fetcher, logger)
+    if live_prices:
+        _persist_price_book(live_prices, logger)
 
     written: List[str] = []
     done = 0
@@ -370,6 +448,16 @@ def run_benchmark(
                 "latency_ms": 0.0,
                 "prompt_tokens": None,
                 "completion_tokens": None,
+                # Full token accounting plus the price list that was in force
+                # for this call, so the cost of a historical run stays
+                # reconstructible after prices move.
+                "usage": empty_usage(),
+                "pricing_snapshot": (
+                    snapshot_from_live(live_prices, model_id, model_name)
+                    or price_snapshot(model.get("metadata"))
+                ),
+                "cost_usd": None,
+                "cost_basis": None,
                 "error": client_err,
             }
 
@@ -378,17 +466,34 @@ def run_benchmark(
                     raw = client.generate_design(prompt_text)
                     record["raw_response"] = raw
                     record["latency_ms"] = getattr(client, "last_latency_ms", 0.0)
-                    record["prompt_tokens"] = getattr(client, "last_prompt_tokens", None)
-                    record["completion_tokens"] = getattr(client, "last_completion_tokens", None)
+                    usage = getattr(client, "last_usage", None) or empty_usage()
+                    record["usage"] = dict(usage)
+                    # Legacy flat fields stay populated: older tooling reads them.
+                    record["prompt_tokens"] = usage.get("prompt_tokens")
+                    record["completion_tokens"] = usage.get("completion_tokens")
+                    charged = usage.get("charged_cost_usd")
+                    if charged is not None:
+                        record["cost_usd"] = charged
+                        record["cost_basis"] = "provider_charged"
+                    else:
+                        estimated = estimate_cost(usage, record["pricing_snapshot"])
+                        record["cost_usd"] = estimated
+                        record["cost_basis"] = (
+                            "price_snapshot" if estimated is not None else None
+                        )
                     record["model_id"] = getattr(client, "model", model_id)
 
                     design = None
-                    try:
-                        design = parse_llm_json(raw)
-                        record["design"] = design
-                    except Exception as e:
-                        record["status"] = "parse_error"
-                        record["error"] = f"{type(e).__name__}: {e}"
+                    if not raw or not raw.strip():
+                        record["status"] = "empty_response"
+                        record["error"] = "Model returned an empty response."
+                    else:
+                        try:
+                            design = parse_llm_json(raw)
+                            record["design"] = design
+                        except Exception as e:
+                            record["status"] = "parse_error"
+                            record["error"] = f"{type(e).__name__}: {e}"
 
                     if design is not None:
                         design_id = f"{model_name}_{r}_{uuid.uuid4().hex[:6]}"
@@ -439,7 +544,11 @@ def _select_models(all_models: List[dict], selection: Optional[List[str]], provi
 
 def main():
     parser = argparse.ArgumentParser(description="Automated benchmark for prompt x model using LLM APIs.")
-    parser.add_argument("--prompt", required=True, help="results/<slug> folder name (contains prompt.txt).")
+    parser.add_argument(
+        "--prompt",
+        required=True,
+        help="results/zero_shot/<slug> folder name (contains prompt.txt).",
+    )
     parser.add_argument("--models", type=str, default=None, help="Comma-separated model 'name' list.")
     parser.add_argument("--model", type=str, default=None, help="A single model 'name' (shortcut for --models).")
     parser.add_argument("--provider", type=str, default=None, help="Provider name to filter models.")
@@ -460,6 +569,14 @@ def main():
         "--preflight-only",
         action="store_true",
         help="Validate and print effective model parameters without making API calls.",
+    )
+    parser.add_argument(
+        "--offline-prices",
+        action="store_true",
+        help=(
+            "Do not read live prices from the OpenRouter API; price runs from "
+            "configs/benchmarks/models.json instead."
+        ),
     )
     parser.add_argument(
         "--reasoning-effort",
@@ -513,6 +630,7 @@ def main():
             max_output_tokens=args.max_output_tokens,
             temperature=args.temperature,
             preflight_only=args.preflight_only,
+            use_live_prices=not args.offline_prices,
         )
 
 if __name__ == "__main__":

@@ -5,9 +5,12 @@ from `heat_exchanger_hard_v1`; results from different simulator or score version
 must not be pooled.
 
 Results in this prompt unit belong to the zero-shot track: one prompt, one model
-response, and no simulator feedback or score-guided retry. Optional reasoning is
-disabled for standard comparisons; explicitly enabled reasoning runs are separate
-diagnostic variants and carry a `__reasoning-<mode>` suffix.
+response, and no simulator feedback or score-guided retry. Reasoning is treated as
+an inference setting rather than a different evaluation mode. Explicitly selected
+reasoning levels carry a `__reasoning-<mode>` suffix for reproducibility.
+This task and its results live exclusively under the top-level `zero_shot/`
+track. Feedback-driven experiments will use independent task folders under
+`results/feedback_driven/`; no feedback task or runner is implemented yet.
 
 The task rewards heat duty (50%), tube pressure drop (17.5%), shell pressure drop
 (17.5%), effectiveness (5%), and annualised cost (10%). Cost receives full raw

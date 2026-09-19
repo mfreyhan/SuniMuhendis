@@ -3,6 +3,7 @@ import time
 from typing import Any, Dict, Optional
 
 from sunimuhendis.model_clients.base import BaseModelClient
+from sunimuhendis.model_clients.usage import empty_usage, extract_usage
 
 # Hugging Face Inference Providers — OpenAI-compatible router (chat-completions).
 HF_ROUTER_BASE_URL = "https://router.huggingface.co/v1"
@@ -20,7 +21,7 @@ class HFInferenceClient(BaseModelClient):
 
     `generate_design()` maintains the existing BaseModelClient contract; additional metadata
     can be read as attributes after the call:
-      last_latency_ms, last_prompt_tokens, last_completion_tokens
+      last_latency_ms, last_prompt_tokens, last_completion_tokens, last_usage
     """
 
     def __init__(
@@ -30,7 +31,7 @@ class HFInferenceClient(BaseModelClient):
         params: Optional[Dict[str, Any]] = None,
         api_key_env: str = "HF_TOKEN",
         base_url: str = HF_ROUTER_BASE_URL,
-        timeout: float = 600.0,
+        timeout: float = 180.0,
     ):
         super().__init__(name or model)
         self.model = model
@@ -39,6 +40,7 @@ class HFInferenceClient(BaseModelClient):
         self.last_latency_ms: float = 0.0
         self.last_prompt_tokens: Optional[int] = None
         self.last_completion_tokens: Optional[int] = None
+        self.last_usage: Dict[str, Any] = empty_usage()
 
         api_key = os.environ.get(api_key_env)
         if not api_key:
@@ -65,8 +67,8 @@ class HFInferenceClient(BaseModelClient):
         )
         self.last_latency_ms = (time.perf_counter() - start) * 1000.0
 
-        usage = getattr(resp, "usage", None)
-        self.last_prompt_tokens = getattr(usage, "prompt_tokens", None)
-        self.last_completion_tokens = getattr(usage, "completion_tokens", None)
+        self.last_usage = extract_usage(resp)
+        self.last_prompt_tokens = self.last_usage["prompt_tokens"]
+        self.last_completion_tokens = self.last_usage["completion_tokens"]
 
         return resp.choices[0].message.content or ""

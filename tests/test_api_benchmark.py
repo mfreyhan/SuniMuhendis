@@ -1,4 +1,5 @@
 import json
+import inspect
 import os
 from pathlib import Path
 
@@ -15,15 +16,18 @@ from scripts.run_api_benchmark import (
     run_benchmark,
 )
 from sunimuhendis.model_clients.dummy_random import DummyRandomClient
+from sunimuhendis.model_clients.hf_client import HFInferenceClient
+from sunimuhendis.model_clients.opencode_client import OpenCodeClient
+from sunimuhendis.model_clients.openrouter_client import OpenRouterClient
 
 _VALID_STATUS = {
     "success", "schema_error", "drc_error", "simulation_error",
-    "parse_error", "client_error",
+    "parse_error", "empty_response", "client_error",
 }
 
 
 def _make_prompt_unit(root, slug="he_test"):
-    prompt_dir = os.path.join(root, slug)
+    prompt_dir = os.path.join(root, "zero_shot", slug)
     os.makedirs(prompt_dir, exist_ok=True)
     with open(os.path.join(prompt_dir, "prompt.txt"), "w", encoding="utf-8") as f:
         f.write("Design a heat exchanger. Output ONLY valid JSON.")
@@ -82,6 +86,37 @@ def test_run_benchmark_client_error_isolated(tmp_path):
     rec = json.loads(open(written[0], encoding="utf-8").read())
     assert rec["status"] == "client_error"
     assert rec["error"]
+
+
+@pytest.mark.parametrize("raw", ["", "   \n\t"])
+def test_run_benchmark_records_empty_response_separately(tmp_path, raw):
+    slug = _make_prompt_unit(str(tmp_path))
+
+    class EmptyClient:
+        def generate_design(self, prompt):
+            return raw
+
+    written = run_benchmark(
+        prompt_slug=slug,
+        model_specs=[{"name": "empty"}],
+        client_factory=lambda spec: EmptyClient(),
+        repeats=1,
+        results_root=str(tmp_path),
+    )
+
+    rec = json.loads(open(written[0], encoding="utf-8").read())
+    assert rec["status"] == "empty_response"
+    assert rec["raw_response"] == raw
+    assert rec["error"] == "Model returned an empty response."
+
+
+@pytest.mark.parametrize(
+    "client_class",
+    [HFInferenceClient, OpenCodeClient, OpenRouterClient],
+)
+def test_api_clients_default_to_three_minute_timeout(client_class):
+    timeout = inspect.signature(client_class.__init__).parameters["timeout"].default
+    assert timeout == 180.0
 
 
 def test_run_benchmark_preflight_failure_makes_no_client_calls(tmp_path):
@@ -284,7 +319,7 @@ def test_preflight_clamps_to_context_budget():
 )
 def test_active_prompt_targets_match_task(slug, score_version):
     root = Path(__file__).resolve().parents[1]
-    unit = root / "results" / slug
+    unit = root / "results" / "zero_shot" / slug
     prompt = (unit / "prompt.txt").read_text(encoding="utf-8-sig")
     task = json.loads((unit / "task.json").read_text(encoding="utf-8-sig"))
     details = prompt.split("Task Details:", 1)[1].lstrip()
@@ -296,7 +331,7 @@ def test_active_prompt_targets_match_task(slug, score_version):
 
 def test_benchmark_sends_and_records_paired_prompt(tmp_path):
     slug = _make_prompt_unit(str(tmp_path))
-    expected = (tmp_path / slug / "prompt.txt").read_text()
+    expected = (tmp_path / "zero_shot" / slug / "prompt.txt").read_text()
     received = []
 
     class CapturingClient:
@@ -309,7 +344,7 @@ def test_benchmark_sends_and_records_paired_prompt(tmp_path):
         client_factory=lambda spec: CapturingClient(), results_root=str(tmp_path),
     )
     assert received == [expected]
-    assert Path(paths[0]).parent == tmp_path / slug / "api_runs"
+    assert Path(paths[0]).parent == tmp_path / "zero_shot" / slug / "api_runs"
     record = json.loads(Path(paths[0]).read_text())
     assert record["evaluation_mode"] == "zero_shot"
     assert record["prompt_text"] == expected
@@ -321,3 +356,224 @@ def test_benchmark_sends_and_records_paired_prompt(tmp_path):
     assert record["parameter_adjustments"] == []
     assert record["model_metadata"] == {}
     assert record["reasoning_mode"] is None
+
+
+def test_run_benchmark_records_token_accounting_and_frozen_prices(tmp_path):
+    """Every run is a receipt: tokens, the price list used, and the cost."""
+    slug = _make_prompt_unit(str(tmp_path))
+
+    class _PricedClient(DummyRandomClient):
+        def __init__(self):
+            super().__init__()
+            self.last_latency_ms = 1234.0
+            self.last_usage = {
+                "prompt_tokens": 1000,
+                "completion_tokens": 400,
+                "reasoning_tokens": 250,
+                "cached_prompt_tokens": 32,
+                "total_tokens": 1400,
+                "charged_cost_usd": None,
+            }
+
+    spec = {
+        "name": "priced-model",
+        "model": "vendor/m",
+        "metadata": {
+            "context_length": 32000,
+            "max_completion_tokens": 4096,
+            "supported_parameters": ["max_tokens", "temperature"],
+            "pricing": {"prompt": "0.000001", "completion": "0.000003"},
+            "pricing_source": "openrouter",
+            "pricing_synced_at": "2026-09-18",
+        },
+    }
+
+    written = run_benchmark(
+        prompt_slug=slug,
+        model_specs=[spec],
+        client_factory=lambda _spec: _PricedClient(),
+        repeats=1,
+        results_root=str(tmp_path),
+    )
+
+    with open(written[0], "r", encoding="utf-8") as handle:
+        record = json.loads(handle.readline())
+
+    assert record["usage"]["reasoning_tokens"] == 250
+    assert record["usage"]["total_tokens"] == 1400
+    # Legacy flat fields stay populated for older tooling.
+    assert record["prompt_tokens"] == 1000
+    assert record["completion_tokens"] == 400
+    assert record["pricing_snapshot"]["prompt_usd_per_token"] == 1e-6
+    assert record["pricing_snapshot"]["synced_at"] == "2026-09-18"
+    assert record["cost_usd"] == pytest.approx(1000 * 1e-6 + 400 * 3e-6)
+    assert record["cost_basis"] == "price_snapshot"
+
+
+def test_run_benchmark_prefers_the_cost_the_provider_charged(tmp_path):
+    slug = _make_prompt_unit(str(tmp_path), slug="he_charged")
+
+    class _ChargedClient(DummyRandomClient):
+        def __init__(self):
+            super().__init__()
+            self.last_usage = {
+                "prompt_tokens": 10,
+                "completion_tokens": 10,
+                "reasoning_tokens": None,
+                "cached_prompt_tokens": None,
+                "total_tokens": 20,
+                "charged_cost_usd": 0.99,
+            }
+
+    written = run_benchmark(
+        prompt_slug=slug,
+        model_specs=[{"name": "charged", "model": "vendor/m"}],
+        client_factory=lambda _spec: _ChargedClient(),
+        repeats=1,
+        results_root=str(tmp_path),
+    )
+
+    with open(written[0], "r", encoding="utf-8") as handle:
+        record = json.loads(handle.readline())
+
+    assert record["cost_usd"] == 0.99
+    assert record["cost_basis"] == "provider_charged"
+
+
+def test_run_benchmark_keeps_accounting_for_a_failed_client(tmp_path):
+    """A client that never answered still produces an auditable zero-usage line."""
+    slug = _make_prompt_unit(str(tmp_path), slug="he_broken")
+
+    def _explode(_spec):
+        raise RuntimeError("no credentials")
+
+    written = run_benchmark(
+        prompt_slug=slug,
+        model_specs=[{"name": "broken", "model": "vendor/m"}],
+        client_factory=_explode,
+        repeats=1,
+        results_root=str(tmp_path),
+    )
+
+    with open(written[0], "r", encoding="utf-8") as handle:
+        record = json.loads(handle.readline())
+
+    assert record["status"] == "client_error"
+    assert record["usage"]["prompt_tokens"] is None
+    assert record["cost_usd"] is None
+
+
+def test_run_benchmark_freezes_the_live_price_not_the_local_registry(tmp_path):
+    """The rate a run records must be the one the provider quoted at run time."""
+    slug = _make_prompt_unit(str(tmp_path), slug="he_live_price")
+
+    class _PricedClient(DummyRandomClient):
+        def __init__(self):
+            super().__init__()
+            self.last_usage = {
+                "prompt_tokens": 1000,
+                "completion_tokens": 1000,
+                "reasoning_tokens": None,
+                "cached_prompt_tokens": None,
+                "total_tokens": 2000,
+                "charged_cost_usd": None,
+            }
+
+    def _live_prices():
+        return {
+            "source": "openrouter_api",
+            "fetched_at": "2026-09-18T10:00:00Z",
+            "prices": {"vendor/m": {"prompt": 5e-6, "completion": 5e-6}},
+        }
+
+    spec = {
+        "name": "live-priced",
+        "model": "vendor/m",
+        "metadata": {
+            "context_length": 32000,
+            "supported_parameters": ["max_tokens", "temperature"],
+            # Deliberately stale local prices: the live list must win.
+            "pricing": {"prompt": "0.000001", "completion": "0.000001"},
+            "pricing_synced_at": "2026-01-01",
+        },
+    }
+
+    written = run_benchmark(
+        prompt_slug=slug,
+        model_specs=[spec],
+        client_factory=lambda _spec: _PricedClient(),
+        repeats=1,
+        results_root=str(tmp_path),
+        price_fetcher=_live_prices,
+    )
+
+    with open(written[0], "r", encoding="utf-8") as handle:
+        record = json.loads(handle.readline())
+
+    snapshot = record["pricing_snapshot"]
+    assert snapshot["source"] == "openrouter_api"
+    assert snapshot["prompt_usd_per_token"] == 5e-6
+    assert snapshot["synced_at"] == "2026-09-18T10:00:00Z"
+    assert record["cost_usd"] == pytest.approx(0.01)
+
+
+def test_run_benchmark_falls_back_to_local_prices_when_the_api_is_unreachable(tmp_path):
+    slug = _make_prompt_unit(str(tmp_path), slug="he_offline_price")
+
+    def _offline():
+        raise OSError("network unreachable")
+
+    spec = {
+        "name": "offline",
+        "model": "vendor/m",
+        "metadata": {
+            "context_length": 32000,
+            "supported_parameters": ["max_tokens", "temperature"],
+            "pricing": {"prompt": "0.000002", "completion": "0.000002"},
+            "pricing_source": "openrouter",
+            "pricing_synced_at": "2026-01-01",
+        },
+    }
+
+    written = run_benchmark(
+        prompt_slug=slug,
+        model_specs=[spec],
+        client_factory=lambda _spec: DummyRandomClient(),
+        repeats=1,
+        results_root=str(tmp_path),
+        price_fetcher=_offline,
+    )
+
+    with open(written[0], "r", encoding="utf-8") as handle:
+        record = json.loads(handle.readline())
+
+    # The run still records a defensible price, clearly attributed to the sync.
+    assert record["pricing_snapshot"]["prompt_usd_per_token"] == 2e-6
+    assert record["pricing_snapshot"]["synced_at"] == "2026-01-01"
+
+
+def test_run_benchmark_archives_the_price_book_it_used(tmp_path, monkeypatch):
+    """Each benchmark leaves behind the dated price list it priced runs against."""
+    import scripts.run_api_benchmark as runner
+
+    monkeypatch.setattr(runner, "_REPO_ROOT", str(tmp_path))
+    slug = _make_prompt_unit(str(tmp_path), slug="he_archive")
+
+    run_benchmark(
+        prompt_slug=slug,
+        model_specs=[{"name": "m", "model": "vendor/m"}],
+        client_factory=lambda _spec: DummyRandomClient(),
+        repeats=1,
+        results_root=str(tmp_path),
+        price_fetcher=lambda: {
+            "source": "openrouter_api",
+            "fetched_at": "2026-09-18T10:00:00Z",
+            "prices": {"vendor/m": {"prompt": 1e-6, "completion": 2e-6}},
+        },
+    )
+
+    archived = tmp_path / "configs" / "benchmarks" / "pricing_history" / "openrouter-2026-09-18.json"
+    assert archived.exists()
+    payload = json.loads(archived.read_text(encoding="utf-8"))
+    assert payload["fetched_at"] == "2026-09-18T10:00:00Z"
+    assert payload["models"]["vendor/m"]["completion"] == 2e-6

@@ -53,15 +53,30 @@ python scripts/run_heat_exchanger.py
 ### 2. Automated HF Model Benchmark
 Send **one prompt to many Hugging Face models in a single command**, run every response through the same `schema â†’ DRC â†’ simulation â†’ score` pipeline, and store the results. (Requires `HF_TOKEN` in `.env` â€” see Installation.)
 
-A **prompt unit** is a self-contained folder under `results/`:
+A **prompt unit** belongs to exactly one experiment track. Tracks are the
+top-level boundary under `results/`, so zero-shot and feedback-driven tasks have
+independent catalogs:
 
 ```text
-results/<prompt-slug>/
-  prompt.txt                # exact text sent to the model, including numerical requirements
-  task.json                 # matching targets and weights for evaluation
-  api_runs/<model>.jsonl     # API runs, appended per model
-  manual_runs/<model>.jsonl  # manual runs
+results/
+  zero_shot/
+    <prompt-slug>/
+      prompt.txt                # exact text sent to the model
+      task.json                 # matching targets and weights
+      notes.md                  # research notes rendered in the dashboard
+      api_runs/<model>.jsonl     # independent API attempts, appended per model
+      manual_runs/<model>.jsonl  # independent manual attempts
+  feedback_driven/
+    <feedback-task-slug>/       # reserved; no tasks or runner exist yet
+      prompt.txt
+      task.json
+      notes.md
+      episodes/<model>.jsonl
 ```
+
+See `results/EXPERIMENT_TRACKS.md` for the track boundary and the reserved
+episode-level metadata contract. The dashboard keeps these experiment protocols
+separate before applying source, task, model, or status filters.
 
 The benchmarks include `heat_exchanger_v1` through `heat_exchanger_v4`, the
 thermal/hydraulic `heat_exchanger_hard_v1`, and `heat_exchanger_hard_v2` using
@@ -92,6 +107,12 @@ python scripts/run_api_benchmark.py --prompt heat_exchanger_v1,heat_exchanger_v2
 streamlit run scripts/dashboard.py
 ```
 
+The dashboard provides prompt/task/version-safe filtering, reliability-aware
+leaderboards, engineering target plots, token/latency/cost analysis, error
+grouping, and a run explorer for inspecting every raw response, design, metric,
+score component, request parameter, and source record. Filtered data can be
+exported as CSV or JSONL.
+
 Models and live capability metadata are listed in `configs/benchmarks/models.json`.
 Refresh OpenRouter model capabilities (including supported reasoning modes) with
 `python scripts/sync_openrouter.py --no-sync`. Use the configured `name` with
@@ -108,15 +129,17 @@ models that cannot guarantee an output-token bound.
 
 The active API benchmark is the **zero-shot track**: one task prompt produces one
 design, with no examples, simulator feedback, retries based on score, or iterative
-optimization. Optional reasoning should normally be disabled for this track.
-Reasoning runs remain available as explicitly named diagnostic variants through
-`--reasoning-effort`.
+optimization. Reasoning is an inference setting and does not change the zero-shot
+classification. When explicitly selected, it is recorded as a named variant through
+`--reasoning-effort` so runs remain reproducible and directly inspectable.
 
-A future non-zero-shot track should be kept separate. The planned approach is to
-generate several short candidates, rank them with the real simulator, and then
-optionally iterate on simulator feedback for a small number of rounds. That track
-should report model calls, tokens, latency, and cost, and use an early-stop rule
-when repeated calls exhaust their output budget without producing a design.
+A future feedback-driven track has its own top-level task catalog and dashboard
+workspace, but no tasks or execution code yet. Its prompts and task definitions
+will live under `results/feedback_driven/`; zero-shot definitions are not reused
+implicitly. The planned approach is to generate an initial design and then
+iterate on structured simulator feedback for a bounded number of rounds. Episodes
+will report score gain, stop reason, model and simulator calls, tokens, latency,
+and cost.
 
 The v5 canonical experiment, its separate task set, and V2-rescored copies of
 older results are preserved in `archive/score_v2_experiment/`. They are excluded
@@ -127,7 +150,7 @@ still available explicitly through the library for research.
 
 The manual evaluator reads the same `prompt.txt` and `task.json` pair as the API
 runner. Paste the model response when prompted; successful results are appended
-to the prompt unit's `manual_runs/` folder.
+to `results/zero_shot/<prompt-slug>/manual_runs/`.
 
 ```bash
 python scripts/run_llm_eval.py --client interactive --prompt heat_exchanger_v4

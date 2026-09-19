@@ -2,9 +2,11 @@ import os
 import json
 import urllib.request
 import argparse
+from datetime import datetime, timezone
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MODELS_JSON_PATH = os.path.join(REPO_ROOT, "configs", "benchmarks", "models.json")
+PRICING_HISTORY_DIR = os.path.join(REPO_ROOT, "configs", "benchmarks", "pricing_history")
 
 def load_models_json():
     with open(MODELS_JSON_PATH, "r", encoding="utf-8") as f:
@@ -85,7 +87,11 @@ def is_cost_under(m, max_prompt, max_comp):
     return True
 
 
-def build_model_metadata(model):
+def _today():
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+def build_model_metadata(model, synced_at=None):
     """Keep the live API fields that affect benchmark execution."""
     architecture = model.get("architecture") or {}
     top_provider = model.get("top_provider") or {}
@@ -98,6 +104,10 @@ def build_model_metadata(model):
         "input_modalities": architecture.get("input_modalities") or [],
         "output_modalities": architecture.get("output_modalities") or [],
         "pricing": model.get("pricing") or {},
+        # Prices move. A run record copies this stamp so that months later the
+        # cost it reports can be attributed to a dated price list.
+        "pricing_source": "openrouter",
+        "pricing_synced_at": synced_at or _today(),
     }
     if reasoning is not None:
         metadata["reasoning"] = {
@@ -114,19 +124,63 @@ def build_model_metadata(model):
     return metadata
 
 
-def refresh_model_metadata(existing_models, api_models):
+def refresh_model_metadata(existing_models, api_models, synced_at=None):
     """Refresh live capabilities for registry entries already in models.json."""
+    synced_at = synced_at or _today()
     api_by_id = {m.get("id"): m for m in api_models if m.get("id")}
     updated = 0
     for item in existing_models:
         api_model = api_by_id.get(item.get("model"))
         if api_model is None:
             continue
-        metadata = build_model_metadata(api_model)
-        if item.get("metadata") != metadata:
+        metadata = build_model_metadata(api_model, synced_at)
+        previous = item.get("metadata") or {}
+        drop = lambda block: {
+            key: value for key, value in block.items() if key != "pricing_synced_at"
+        }
+        if drop(previous) != drop(metadata):
             item["metadata"] = metadata
             updated += 1
+        elif previous.get("pricing_synced_at") != synced_at:
+            # Same prices, newer confirmation date: refresh the stamp without
+            # counting it as a capability change.
+            item["metadata"] = metadata
     return updated
+
+
+def write_pricing_snapshot(api_models, synced_at=None):
+    """Append a dated, immutable price list for every model in this sync.
+
+    Run records already freeze the price they were charged under, but a dated
+    price book lets any run - including ones written before that freezing
+    existed - be repriced against the rates of any other date.
+    """
+    synced_at = synced_at or _today()
+    prices = {}
+    for model in api_models:
+        model_id = model.get("id")
+        pricing = model.get("pricing") or {}
+        if not model_id or not pricing:
+            continue
+        prices[model_id] = {
+            "prompt": pricing.get("prompt"),
+            "completion": pricing.get("completion"),
+        }
+    if not prices:
+        return None
+
+    os.makedirs(PRICING_HISTORY_DIR, exist_ok=True)
+    path = os.path.join(PRICING_HISTORY_DIR, "openrouter-" + synced_at + ".json")
+    payload = {
+        "provider": "openrouter",
+        "synced_at": synced_at,
+        "currency": "USD_per_token",
+        "models": dict(sorted(prices.items())),
+    }
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2, ensure_ascii=False)
+        handle.write("\n")
+    return path
 
 def prune_openrouter_models(existing_models, api_models):
     """
@@ -219,10 +273,19 @@ def main():
         if pruned or converted:
             modified = True
 
-    metadata_count = refresh_model_metadata(existing_models, api_models)
+    synced_at = _today()
+    metadata_count = refresh_model_metadata(existing_models, api_models, synced_at)
     if metadata_count:
         modified = True
     print(f"\nMetadata refreshed for {metadata_count} existing models.")
+
+    snapshot_path = write_pricing_snapshot(api_models, synced_at)
+    if snapshot_path:
+        modified = True
+        print(
+            "Priced " + str(len(api_models)) + " models into "
+            + os.path.relpath(snapshot_path, REPO_ROOT)
+        )
 
     if not args.no_sync:
         existing_ids = {item.get("model") for item in existing_models if item.get("model")}
@@ -246,7 +309,7 @@ def main():
                     "name": m_id.split("/")[-1].replace(":free", ""),
                     "model": m_id,
                     "params": {},
-                    "metadata": build_model_metadata(m),
+                    "metadata": build_model_metadata(m, synced_at),
                 }
                 existing_models.append(new_entry)
                 existing_ids.add(m_id)
