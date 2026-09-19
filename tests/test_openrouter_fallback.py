@@ -112,3 +112,81 @@ def test_openrouter_client_429_retry():
 
     assert result == '{"geometry_type": "shell_and_tube"}'
     assert client._client.chat.completions.create.call_count == 2
+
+
+# ── extra_body must be merged, never passed twice ────────────────────
+#
+# The benchmark runner puts reasoning effort and provider routing into
+# params["extra_body"], and the client adds usage accounting. Passing both to
+# create() raised "got multiple values for keyword argument 'extra_body'" and
+# failed every run of a reasoning model. The dummy-client tests could not see
+# it, because the collision only happens at the real call signature.
+
+class _RecordingCompletions:
+    def __init__(self):
+        self.kwargs = None
+
+    def create(self, **kwargs):
+        self.kwargs = kwargs
+        raise RuntimeError("stop before the network")
+
+
+def _client_with_params(params):
+    os.environ.setdefault("OPENROUTER_API_KEY", "test-key")
+    client = OpenRouterClient(model="test/model", params=params, max_retries=1)
+    completions = _RecordingCompletions()
+    fake = MagicMock()
+    fake.chat.completions = completions
+    client._client = fake
+    try:
+        client.generate_design("prompt")
+    except Exception:
+        pass
+    return completions.kwargs
+
+
+def test_caller_extra_body_and_usage_accounting_are_merged():
+    kwargs = _client_with_params({
+        "max_tokens": 8192,
+        "temperature": 0.7,
+        "extra_body": {
+            "reasoning": {"effort": "low"},
+            "provider": {"require_parameters": True},
+        },
+    })
+    assert kwargs is not None, "create() was never reached"
+    assert kwargs["extra_body"] == {
+        "reasoning": {"effort": "low"},
+        "provider": {"require_parameters": True},
+        "usage": {"include": True},
+    }
+    assert kwargs["max_tokens"] == 8192
+    assert kwargs["temperature"] == 0.7
+
+
+def test_usage_accounting_alone_still_reaches_the_request():
+    kwargs = _client_with_params({"max_tokens": 4096})
+    assert kwargs["extra_body"] == {"usage": {"include": True}}
+
+
+def test_caller_may_override_usage_accounting():
+    kwargs = _client_with_params({"extra_body": {"usage": {"include": False}}})
+    assert kwargs["extra_body"] == {"usage": {"include": False}}
+
+
+def test_client_params_are_not_mutated_between_calls():
+    """A popped extra_body must not disappear from the client's own params."""
+    os.environ.setdefault("OPENROUTER_API_KEY", "test-key")
+    params = {"extra_body": {"reasoning": {"effort": "high"}}}
+    client = OpenRouterClient(model="test/model", params=params, max_retries=1)
+    completions = _RecordingCompletions()
+    fake = MagicMock()
+    fake.chat.completions = completions
+    client._client = fake
+    for _ in range(2):
+        try:
+            client.generate_design("prompt")
+        except Exception:
+            pass
+    assert completions.kwargs["extra_body"]["reasoning"] == {"effort": "high"}
+    assert client.params["extra_body"] == {"reasoning": {"effort": "high"}}

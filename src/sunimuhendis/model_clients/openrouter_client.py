@@ -68,15 +68,21 @@ class OpenRouterClient(BaseModelClient):
     def generate_design(self, prompt: str) -> str:
         for attempt in range(self.max_retries):
             try:
-                extra_body = (
-                    {"usage": {"include": True}} if self.usage_accounting else {}
-                )
+                # The caller may already be sending an extra_body of its own —
+                # reasoning effort and provider routing both travel that way —
+                # so merge into it rather than passing a second one, which
+                # collides as a duplicate keyword argument.
+                params = dict(self.params)
+                extra_body = dict(params.pop("extra_body", None) or {})
+                if self.usage_accounting:
+                    extra_body.setdefault("usage", {"include": True})
+
                 start = time.perf_counter()
                 resp = self._client.chat.completions.create(
                     model=self.model,
                     messages=[{"role": "user", "content": prompt}],
                     extra_body=extra_body,
-                    **self.params,
+                    **params,
                 )
                 self.last_latency_ms = (time.perf_counter() - start) * 1000
 
