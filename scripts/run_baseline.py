@@ -54,7 +54,7 @@ def main():
                 r = res.score.normalized_total
                 rewards.append(r)
                 
-                # Check threshold for SFT dataset
+                # Check threshold for the training dataset
                 if r >= REWARD_THRESHOLD:
                     all_successful_designs.append({
                         "sampler": sampler.name,
@@ -79,13 +79,13 @@ def main():
         logger.info(f"Rewards - Mean: {mean_r:.4f}, Median: {median_r:.4f}, Max: {max_r:.4f}")
         logger.info("-" * 40)
         
-    # Save SFT Dataset
+    # Save the training dataset
     sft_path = os.path.join(os.path.dirname(__file__), '../datasets/sft/heat_exchanger_initial.jsonl')
     with open(sft_path, 'w', encoding='utf-8') as f:
         for item in all_successful_designs:
             f.write(json.dumps(item) + "\n")
             
-    logger.info(f"Total SFT Samples generated (Score >= {REWARD_THRESHOLD}): {len(all_successful_designs)}")
+    logger.info(f"Total samples generated (Score >= {REWARD_THRESHOLD}): {len(all_successful_designs)}")
     logger.info(f"Dataset saved to: {sft_path}")
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ SuniMuhendis is a framework researching whether an LLM can learn to produce **va
 ### Run targets (all from repo root, venv activated)
 - `python scripts/run_heat_exchanger.py` â€” simulate the sample design end-to-end (demo).
 - `python scripts/run_simulation.py` â€” core pipeline demo that exercises every failure path (schema/DRC/sim/crash) with dummy components.
-- `python scripts/run_baseline.py` â€” generate ~10k designs via samplers, simulate all, and write the SFT dataset `datasets/sft/heat_exchanger_initial.jsonl` (designs with score > threshold).
+- `python scripts/run_baseline.py` â€” generate ~10k designs via samplers, simulate all, and write the training dataset `datasets/sft/heat_exchanger_initial.jsonl` (designs with score > threshold).
 - `python scripts/run_api_benchmark.py --prompt <slug> [--model NAME | --models a,b] [--repeats N]` â€” **automated zero-shot** benchmark: send `results/zero_shot/<slug>/prompt.txt` (scored by the adjacent `task.json`) to configured models, run each response through schemaâ†’DRCâ†’simâ†’score, and append results under that task's `api_runs/`. Core loop `run_benchmark(...)` takes an injectable `client_factory` (offline-testable with `DummyRandomClient`).
 - `python scripts/run_llm_eval.py --client [dummy|interactive] --prompt <slug>` â€” **manual zero-shot** single-model chain; on success prompts for a model name and appends to `results/zero_shot/<slug>/manual_runs/`.
 - `python scripts/token_report.py [--by model|month|task] [--as-of YYYY-MM-DD] [--csv out.csv]` — all-time token and spend ledger over every recorded run. Each run is priced twice: at the rate frozen into the record when it ran, and at a current or dated price list, so historical spend and today-equivalent spend are both reportable.

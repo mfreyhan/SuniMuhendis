@@ -1123,7 +1123,7 @@ def _render_design_diversity(successful: pd.DataFrame) -> None:
     """Are models exploring the design space or repeating one answer?
 
     Repeated identical geometry means extra sampling buys nothing, which
-    matters directly for building an SFT or RL dataset out of these runs.
+    matters directly for building a training dataset out of these runs.
     """
     diversity = (
         successful.groupby("model_label")
