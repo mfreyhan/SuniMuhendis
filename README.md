@@ -261,8 +261,16 @@ Useful entry points:
 
 ---
 
+## License
+
+Copyright 2026 Mehmet Fatih Reyhan and Ertuğrul Şahin.
+
+**Source code** is licensed under the [Apache License 2.0](LICENSE). It carries an explicit patent grant, and it asks that modified files say they were modified — which matters here, because the credibility of a referee rests on knowing which version produced a number.
+
+**Benchmark data** — task definitions, prompts, scores, metrics, research notes and reports — is licensed under [CC BY 4.0](results/LICENSE.md).
+
+One exception is worth reading before you reuse the data: each run record also stores the **raw response text a third-party model returned**. We did not write that text and claim no copyright in it; it is kept as the factual evidence the benchmark rests on, and its use stays subject to the terms of the provider that generated it. Some open-weight model licenses attach conditions to outputs, including conditions on training other models with them. Every record names its `model_id` and `provider`, so the applicable terms are identifiable per row. See [`results/LICENSE.md`](results/LICENSE.md).
+
 ## Feedback
 
 If this framework or its benchmark results are useful in your work, please open an issue — we are interested in how the referee holds up outside our own use of it.
-
-No license has been chosen yet, so default copyright applies: the code is readable here but not yet licensed for reuse.

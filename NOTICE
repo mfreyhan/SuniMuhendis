@@ -1,0 +1,22 @@
+SuniMuhendis
+Copyright 2026 Mehmet Fatih Reyhan and Ertuğrul Şahin
+
+This product includes software developed by the SuniMuhendis project.
+
+Licensing summary
+-----------------
+Source code in this repository is licensed under the Apache License,
+Version 2.0. See LICENSE.
+
+Benchmark data, task definitions, research notes and reports are covered
+separately. See results/LICENSE.md.
+
+Third-party components
+----------------------
+This software builds on the following libraries, used under their own
+licenses and not redistributed here:
+
+  ht           - MIT License
+  fluids       - BSD License
+  pydantic     - MIT License
+  json-repair  - MIT License
