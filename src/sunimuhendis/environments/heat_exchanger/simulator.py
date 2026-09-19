@@ -41,7 +41,28 @@ class HeatExchangerSimulator:
     tube-bundle correlations.
     """
 
-    VERSION = "v3"
+    VERSION = "v4"
+
+    # ── Default operating point ─────────────────────────────────────
+    # A design may override these, but the benchmark schema forbids extra
+    # fields, so in practice every benchmarked design runs at this point.
+    # They live here (rather than as literals inside the extractor) so that
+    # analysis code — notably the task feasibility audit — reads the same
+    # numbers the simulation does, instead of a drifting copy.
+    DEFAULT_M_DOT_HOT = 2.5       # kg/s
+    DEFAULT_M_DOT_COLD = 2.5      # kg/s
+    DEFAULT_T_HOT_IN_C = 80.0     # °C
+    DEFAULT_T_COLD_IN_C = 20.0    # °C
+    DEFAULT_D_NOZZLE_HOT = 0.05   # m
+    DEFAULT_D_NOZZLE_COLD = 0.05  # m
+
+    # Hot/cold fluid thermophysical properties (water, hardcoded to keep the
+    # evaluation path deterministic — see ARCHITECTURE_DECISIONS.md).
+    HOT_FLUID = {"rho": 971.8, "mu": 3.55e-4, "k": 0.67, "Cp": 4190, "Pr": 2.2}
+    COLD_FLUID = {"rho": 998.2, "mu": 10.02e-4, "k": 0.598, "Cp": 4182, "Pr": 7.0}
+
+    # Nozzle loss coefficients: inlet K=1.5, outlet K=0.5.
+    NOZZLE_K_TOTAL = 2.0
 
     # ── Material cost multipliers (relative to carbon steel) ────────
     MATERIAL_FACTORS = {
@@ -77,9 +98,55 @@ class HeatExchangerSimulator:
     MAX_DP_SHELL = 10000.0        # Pa
     MIN_APPROACH_TEMP = 5.0       # °C (pinch limit)
     MIN_F_LMTD = 0.75             # below this → poor design
-    MAX_UNSUPPORTED_SPAN = 1.5    # m (vibration limit, carbon steel)
     MAX_L_D_RATIO = 15.0
     MIN_L_D_RATIO = 3.0
+
+    # Maximum unsupported straight-tube span, by tube outside diameter, for
+    # carbon steel and high-alloy tubes in liquid service (TEMA RCB-4.52).
+    # The limit rises with diameter because a stiffer tube sags less, so a
+    # single flat value is wrong for every size but one.
+    #
+    # NOTE: transcribed from the TEMA table; verify against the standard
+    # before relying on these for a real design.
+    TEMA_MAX_UNSUPPORTED_SPAN = (
+        (0.00635, 0.660),   # 1/4"
+        (0.00953, 0.889),   # 3/8"
+        (0.01270, 1.118),   # 1/2"
+        (0.01588, 1.321),   # 5/8"
+        (0.01905, 1.524),   # 3/4"
+        (0.02223, 1.753),   # 7/8"
+        (0.02540, 1.880),   # 1"
+        (0.03175, 2.235),   # 1-1/4"
+        (0.03810, 2.540),   # 1-1/2"
+        (0.05080, 3.175),   # 2"
+    )
+
+    #: Weld joint efficiency used in the ASME wall-thickness check. 1.0 is a
+    #: seamless or fully radiographed joint.
+    DEFAULT_JOINT_EFFICIENCY = 1.0
+
+    #: Kern's shell-side correlations are validated for 2e3 < Re < 1e6. Below
+    #: that they are extrapolation, so the simulator flags the result rather
+    #: than reporting it as if it were trustworthy.
+    KERN_RE_VALID_MIN = 2.0e3
+    KERN_RE_VALID_MAX = 1.0e6
+
+    @classmethod
+    def max_unsupported_span(cls, tube_od: float) -> float:
+        """
+        TEMA maximum unsupported span for a tube of this outside diameter.
+
+        Diameters between table entries take the next smaller entry's (more
+        conservative) limit; anything below the smallest entry takes that
+        entry, and anything above the largest takes the largest.
+        """
+        limit = cls.TEMA_MAX_UNSUPPORTED_SPAN[0][1]
+        for diameter, span in cls.TEMA_MAX_UNSUPPORTED_SPAN:
+            if tube_od >= diameter:
+                limit = span
+            else:
+                break
+        return limit
 
     def simulate(
         self, design_params: Dict[str, Any]
@@ -198,6 +265,9 @@ class HeatExchangerSimulator:
             warnings = self._check_design_limits(
                 geo, tube, shell, ntu, lmtd, mechanical, geometric,
             )
+            fidelity = self._check_correlation_fidelity(
+                geo, shell, geometric, D_shell,
+            )
 
             # ═════════════════════════════════════════════════════════
             #  11. ASSEMBLE ALL OUTPUTS
@@ -211,6 +281,7 @@ class HeatExchangerSimulator:
             metrics.update(self._format_geometric(geometric))
             metrics.update(self._format_cost(cost))
             metrics["num_warnings"] = float(len(warnings))
+            metrics.update(fidelity["metrics"])
 
             raw_data = {
                 "C_hot_W_K": hot["m_dot"] * hot["Cp"],
@@ -218,6 +289,7 @@ class HeatExchangerSimulator:
                 "C_r": ntu["C_r"],
                 "R_total_K_W": thermal["R_total"],
                 "warnings": warnings,
+                "fidelity_notes": fidelity["notes"],
             }
 
             for k, v in metrics.items():
@@ -310,21 +382,20 @@ class HeatExchangerSimulator:
             D_bundle = do
             D_bundle_available = D_shell
 
+        cls = HeatExchangerSimulator
         hot = {
-            "m_dot": dp.get("m_dot_hot", 2.5),
-            "T_in": dp.get("T_hot_in", 80.0) + 273.15,
-            "T_in_C": dp.get("T_hot_in", 80.0),
-            "rho": 971.8, "mu": 3.55e-4,
-            "k": 0.67, "Cp": 4190, "Pr": 2.2,
+            "m_dot": dp.get("m_dot_hot", cls.DEFAULT_M_DOT_HOT),
+            "T_in": dp.get("T_hot_in", cls.DEFAULT_T_HOT_IN_C) + 273.15,
+            "T_in_C": dp.get("T_hot_in", cls.DEFAULT_T_HOT_IN_C),
         }
+        hot.update(cls.HOT_FLUID)
 
         cold = {
-            "m_dot": dp.get("m_dot_cold", 2.5),
-            "T_in": dp.get("T_cold_in", 20.0) + 273.15,
-            "T_in_C": dp.get("T_cold_in", 20.0),
-            "rho": 998.2, "mu": 10.02e-4,
-            "k": 0.598, "Cp": 4182, "Pr": 7.0,
+            "m_dot": dp.get("m_dot_cold", cls.DEFAULT_M_DOT_COLD),
+            "T_in": dp.get("T_cold_in", cls.DEFAULT_T_COLD_IN_C) + 273.15,
+            "T_in_C": dp.get("T_cold_in", cls.DEFAULT_T_COLD_IN_C),
         }
+        cold.update(cls.COLD_FLUID)
 
         wall = {
             "k_wall": dp.get("k_wall", 50.0),
@@ -335,8 +406,9 @@ class HeatExchangerSimulator:
         mech = {
             "P_design": dp.get("P_design", 101325.0),
             "allowable_stress": dp.get("allowable_stress", 137e6),
-            "D_nozzle_hot": dp.get("D_nozzle_hot", 0.05),
-            "D_nozzle_cold": dp.get("D_nozzle_cold", 0.05),
+            "D_nozzle_hot": dp.get("D_nozzle_hot", cls.DEFAULT_D_NOZZLE_HOT),
+            "D_nozzle_cold": dp.get("D_nozzle_cold", cls.DEFAULT_D_NOZZLE_COLD),
+            "joint_efficiency": dp.get("joint_efficiency", cls.DEFAULT_JOINT_EFFICIENCY),
         }
 
         fluid_values = tuple(hot.values()) + tuple(cold.values())
@@ -347,7 +419,8 @@ class HeatExchangerSimulator:
             return None
         if (wall["k_wall"] <= 0 or wall["R_fi"] < 0 or wall["R_fo"] < 0
                 or mech["P_design"] <= 0 or mech["allowable_stress"] <= 0
-                or mech["D_nozzle_hot"] <= 0 or mech["D_nozzle_cold"] <= 0):
+                or mech["D_nozzle_hot"] <= 0 or mech["D_nozzle_cold"] <= 0
+                or not 0.0 < mech["joint_efficiency"] <= 1.0):
             return None
 
         return {
@@ -418,7 +491,7 @@ class HeatExchangerSimulator:
 
         # (c) Nozzle losses (inlet K=1.5, outlet K=0.5)
         v_nozzle = m_dot / (rho * math.pi * (mech["D_nozzle_hot"] / 2) ** 2)
-        dp_nozzle = (1.5 + 0.5) * (rho * v_nozzle ** 2 / 2)
+        dp_nozzle = HeatExchangerSimulator.NOZZLE_K_TOTAL * (rho * v_nozzle ** 2 / 2)
 
         dp_total = dp_friction + dp_header + dp_nozzle
 
@@ -494,7 +567,7 @@ class HeatExchangerSimulator:
 
         # Inlet and outlet nozzle losses (K=1.5 and K=0.5).
         v_nozzle = m_dot / (rho * math.pi * (mech["D_nozzle_cold"] / 2) ** 2)
-        dp_nozzle = (1.5 + 0.5) * (rho * v_nozzle ** 2 / 2)
+        dp_nozzle = HeatExchangerSimulator.NOZZLE_K_TOTAL * (rho * v_nozzle ** 2 / 2)
         dp_total = dp_friction + dp_nozzle
 
         return {
@@ -598,7 +671,7 @@ class HeatExchangerSimulator:
 
         # Nozzle losses
         v_nozzle = m_dot / (rho * math.pi * (mech["D_nozzle_cold"] / 2) ** 2)
-        dp_nozzle = (1.5 + 0.5) * (rho * v_nozzle ** 2 / 2.0)
+        dp_nozzle = HeatExchangerSimulator.NOZZLE_K_TOTAL * (rho * v_nozzle ** 2 / 2.0)
 
         dp_total = dp_cross + dp_window + dp_nozzle
 
@@ -791,12 +864,23 @@ class HeatExchangerSimulator:
                           material, mech):
         P_design = mech["P_design"]
         S = mech["allowable_stress"]
+        E_joint = mech["joint_efficiency"]
 
-        # ── Minimum wall thickness (ASME VIII, thin-wall) ─────────
+        # ── Minimum wall thickness (ASME VIII Div 1, UG-27(c)(1)) ──
+        # Circumferential stress governs a thin cylinder: t = P·R/(S·E − 0.6·P),
+        # with R the INSIDE RADIUS. The earlier form here used the inside
+        # diameter over (2S + 0.4P), which adds where the code subtracts —
+        # non-conservative, and increasingly so as design pressure rises.
+        def _t_min(inside_diameter):
+            denominator = S * E_joint - 0.6 * P_design
+            if denominator <= 0:
+                return float("inf")  # pressure beyond what this material can hold
+            return P_design * (inside_diameter / 2.0) / denominator
+
         tube_t = (do - di) / 2.0
-        t_tube_min = P_design * di / (2.0 * S + 0.4 * P_design)
+        t_tube_min = _t_min(di)
         t_shell_actual = max(0.006, D_shell / 200.0)
-        t_shell_min = P_design * D_shell / (2.0 * S + 0.4 * P_design)
+        t_shell_min = _t_min(D_shell)
 
         tube_thickness_ok = tube_t >= t_tube_min
         shell_thickness_ok = t_shell_actual >= t_shell_min
@@ -828,10 +912,15 @@ class HeatExchangerSimulator:
                 * math.sqrt(mass_damping)
             )
             vibration_ok = v_shell < v_critical * 0.8
-            span_ok = span <= HeatExchangerSimulator.MAX_UNSUPPORTED_SPAN
+            span_limit = HeatExchangerSimulator.max_unsupported_span(do)
+            span_ok = span <= span_limit
             vibration_applicable = True
         else:
+            # A concentric tube has no baffles or supports to span between, so
+            # the TEMA span rule does not apply — reported alongside
+            # vibration_applicable=False below.
             span = L
+            span_limit = L
             natural_frequency = 0.0
             mass_damping = 0.0
             v_critical = 0.0
@@ -868,6 +957,7 @@ class HeatExchangerSimulator:
             "vibration_ok": vibration_ok,
             "span_ok": span_ok,
             "unsupported_span_m": span,
+            "max_unsupported_span_m": span_limit,
             "dry_weight_kg": dry_weight,
             "wet_weight_kg": wet_weight,
         }
@@ -967,6 +1057,60 @@ class HeatExchangerSimulator:
         }
 
     # ═════════════════════════════════════════════════════════════════
+    #  10b. CORRELATION FIDELITY
+    # ═════════════════════════════════════════════════════════════════
+
+    @classmethod
+    def _check_correlation_fidelity(cls, geo, shell, geom, D_shell):
+        """
+        Flag conditions where the shell-side correlations are being used
+        outside the range they were fitted for.
+
+        These are limitations of the *simulator*, not faults in the design, so
+        they are deliberately kept out of ``warnings``: the score penalises
+        warnings, and charging a design for our correlation's blind spots would
+        be scoring the referee's ignorance. They are reported as metrics and
+        notes instead, so a result can be read with the right confidence.
+        """
+        notes: List[str] = []
+        metrics: Dict[str, float] = {}
+
+        if geo != "shell_and_tube":
+            metrics["shell_correlation_in_range"] = 1.0
+            metrics["bundle_fill_fraction"] = 1.0
+            return {"notes": notes, "metrics": metrics}
+
+        Re = shell["Re"]
+        in_range = cls.KERN_RE_VALID_MIN <= Re <= cls.KERN_RE_VALID_MAX
+        metrics["shell_correlation_in_range"] = 1.0 if in_range else 0.0
+        if Re < cls.KERN_RE_VALID_MIN:
+            notes.append(
+                "Shell-side Re {:.0f} is below the Kern correlations' validity floor "
+                "({:.0f}); h_o and shell ΔP are extrapolated and likely optimistic."
+                .format(Re, cls.KERN_RE_VALID_MIN)
+            )
+        elif Re > cls.KERN_RE_VALID_MAX:
+            notes.append(
+                "Shell-side Re {:.0f} is above the Kern correlations' validity ceiling "
+                "({:.0f}); h_o and shell ΔP are extrapolated."
+                .format(Re, cls.KERN_RE_VALID_MAX)
+            )
+
+        # Kern's crossflow area assumes the bundle spans the shell. A bundle
+        # much smaller than its shell leaves a bypass lane the method cannot
+        # see, so it overstates crossflow velocity and therefore h_o.
+        fill = geom["D_bundle_m"] / D_shell if D_shell > 0 else 0.0
+        metrics["bundle_fill_fraction"] = fill
+        if fill < 0.70:
+            notes.append(
+                "Tube bundle fills only {:.0%} of the shell diameter; Kern's crossflow area "
+                "assumes a full bundle, so h_o is overstated for this geometry."
+                .format(fill)
+            )
+
+        return {"notes": notes, "metrics": metrics}
+
+    # ═════════════════════════════════════════════════════════════════
     #  10. DESIGN LIMIT CHECKS
     # ═════════════════════════════════════════════════════════════════
 
@@ -1018,7 +1162,8 @@ class HeatExchangerSimulator:
                 f"Shell velocity > 80% of critical — flow-induced vibration risk")
         if geo == "shell_and_tube" and not mech["span_ok"]:
             warnings.append(
-                f"Unsupported span {mech['unsupported_span_m']:.2f}m > {self.MAX_UNSUPPORTED_SPAN}m")
+                f"Unsupported span {mech['unsupported_span_m']:.2f}m > "
+                f"{mech['max_unsupported_span_m']:.2f}m (TEMA limit for this tube size)")
 
         # Geometric checks
         if geom["L_D_ratio"] > self.MAX_L_D_RATIO:
@@ -1131,6 +1276,7 @@ class HeatExchangerSimulator:
             "vibration_ok": 1.0 if mech["vibration_ok"] else 0.0,
             "span_ok": 1.0 if mech["span_ok"] else 0.0,
             "unsupported_span_m": mech["unsupported_span_m"],
+            "max_unsupported_span_m": mech["max_unsupported_span_m"],
             "dry_weight_kg": mech["dry_weight_kg"],
             "wet_weight_kg": mech["wet_weight_kg"],
         }
