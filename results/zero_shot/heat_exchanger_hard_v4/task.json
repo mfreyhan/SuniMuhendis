@@ -1,0 +1,44 @@
+{
+  "task_id": "he_hard_v4_001",
+  "task_set_version": "v4",
+  "score_version": "heat_exchanger_score_v4",
+  "target_heat_duty": 250000.0,
+  "max_dp_tube": 10000.0,
+  "max_dp_shell": 10000.0,
+  "gate_share": 0.3,
+  "cost_good": 600.0,
+  "cost_bad": 1800.0,
+  "warning_penalty_per_warning": 0.1,
+  "operating_conditions": {
+    "m_dot_hot": 2.5,
+    "m_dot_cold": 2.5,
+    "T_hot_in": 80.0,
+    "T_cold_in": 20.0
+  },
+  "secondary_operating_points": [
+    {
+      "name": "turndown",
+      "operating_conditions": {
+        "m_dot_hot": 1.75,
+        "m_dot_cold": 1.75
+      }
+    }
+  ],
+  "reference_designs": [
+    {
+      "geometry_type": "shell_and_tube",
+      "length": 2.8,
+      "inner_tube_di": 0.01008,
+      "inner_tube_do": 0.0127,
+      "outer_shell_di": 0.22,
+      "number_of_tubes": 86,
+      "baffle_spacing": 0.7,
+      "tube_passes": 2,
+      "pitch_ratio": 1.28277,
+      "baffle_cut": 0.22988,
+      "pitch_type": "triangular",
+      "D_nozzle_hot": 0.046,
+      "D_nozzle_cold": 0.046
+    }
+  ]
+}

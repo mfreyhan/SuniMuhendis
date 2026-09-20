@@ -1,0 +1,112 @@
+{
+ "environment": "HeatExchangerEnv",
+ "task_id": "he_hard_v4_001",
+ "samples_requested": 20001,
+ "samples_simulated": 14009,
+ "feasible_count": 2512,
+ "requirements": [
+  {
+   "name": "heat duty",
+   "metric_key": "heat_duty_W",
+   "operator": "gte",
+   "limit": 250000.0
+  },
+  {
+   "name": "tube pressure drop",
+   "metric_key": "dp_tube_Pa",
+   "operator": "lte",
+   "limit": 10000.0
+  },
+  {
+   "name": "shell pressure drop",
+   "metric_key": "dp_shell_Pa",
+   "operator": "lte",
+   "limit": 10000.0
+  }
+ ],
+ "requirement_satisfaction": {
+  "heat duty": 0.3135127418088372,
+  "tube pressure drop": 0.35876936255264474,
+  "shell pressure drop": 0.7812120779498893
+ },
+ "forced_warnings": [],
+ "min_warning_count": 0,
+ "warning_frequency": {
+  "[turndown] Cold nozzle velocity # m/s < min # m/s (oversized nozzle, poor distribution)": 0.6929116996216718,
+  "[turndown] Hot nozzle velocity # m/s < min # m/s (oversized nozzle, poor distribution)": 0.6924120208437433,
+  "Tube \u0394P # kPa > max # kPa": 0.6412306374473553,
+  "[turndown] Tube \u0394P # kPa > max # kPa": 0.5624241558997787,
+  "L/D = # > # (tube sag risk)": 0.4437861374830466,
+  "[turndown] L/D = # > # (tube sag risk)": 0.4437861374830466,
+  "[turndown] Tube velocity # m/s < min # m/s (fouling risk)": 0.3840388321793133,
+  "Tube velocity # m/s < min # m/s (fouling risk)": 0.3243629095581412,
+  "[turndown] Unsupported span #m > #m (TEMA limit for this tube size)": 0.3104432864587051,
+  "Unsupported span #m > #m (TEMA limit for this tube size)": 0.3104432864587051,
+  "Tube velocity # m/s > max # m/s (erosion risk)": 0.2501963023770433,
+  "Cold nozzle velocity # m/s < min # m/s (oversized nozzle, poor distribution)": 0.24298665143836104,
+  "Hot nozzle velocity # m/s < min # m/s (oversized nozzle, poor distribution)": 0.24241558997787138,
+  "Shell \u0394P # kPa > max # kPa": 0.21878792205011063,
+  "[turndown] F = # < # (poor design \u2014 reconsider configuration)": 0.18523806124634165,
+  "F = # < # (poor design \u2014 reconsider configuration)": 0.16282389892212148,
+  "[turndown] Tube velocity # m/s > max # m/s (erosion risk)": 0.15375829823684775,
+  "[turndown] Shell \u0394P # kPa > max # kPa": 0.12499107716467985,
+  "L/D = # < # (poor distribution)": 0.08551645370833036,
+  "[turndown] L/D = # < # (poor distribution)": 0.08551645370833036,
+  "Cold nozzle velocity # m/s > max # m/s": 0.07088300378328218,
+  "Hot nozzle velocity # m/s > max # m/s": 0.06888428867156828,
+  "[turndown] Tube-side laminar flow \u2014 low heat transfer coefficient": 0.0569633806838461,
+  "[turndown] Tube-side transitional flow \u2014 unreliable performance": 0.040473981012206436,
+  "Tube-side laminar flow \u2014 low heat transfer coefficient": 0.03590548932828896,
+  "Tube-side transitional flow \u2014 unreliable performance": 0.033692626168891425,
+  "Shell velocity > #% of critical \u2014 flow-induced vibration risk": 0.01948747233921051,
+  "[turndown] Shell velocity > #% of critical \u2014 flow-induced vibration risk": 0.008922835320151331,
+  "[turndown] Hot nozzle velocity # m/s > max # m/s": 0.008637304589906488,
+  "[turndown] Cold nozzle velocity # m/s > max # m/s": 0.00770932971661075,
+  "Shell velocity # m/s > max # m/s": 0.0013562709686630024,
+  "[turndown] Shell velocity # m/s > max # m/s": 0.0009279748732957385
+ },
+ "dead_checks": [
+  "Min approach",
+  "Tube wall",
+  "Shell wall",
+  "TEMA minimum"
+ ],
+ "reference_count": 1,
+ "reference_scores": [
+  1.0
+ ],
+ "reference_failures": [],
+ "score_ceiling": 1.0,
+ "feasible_score_floor": 0.3,
+ "feasible_score_median": 0.3,
+ "entry_reward": 0.3,
+ "craft_reward": 0.7,
+ "physics": {
+  "operating_conditions": {
+   "m_dot_hot": 2.5,
+   "m_dot_cold": 2.5,
+   "T_hot_in": 80.0,
+   "T_cold_in": 20.0,
+   "k_wall": 50.0,
+   "R_fi": 0.000176,
+   "R_fo": 0.000176,
+   "P_design": 101325.0,
+   "allowable_stress": 137000000.0
+  },
+  "capacity_ratio_Cr": 0.99809,
+  "duty_max_thermodynamic_W": 627300.0,
+  "epsilon_ceiling_1_2_shell_and_tube": 0.586346,
+  "duty_ceiling_1_2_shell_and_tube_W": 367814.9,
+  "target_duty_W": 250000.0,
+  "target_as_fraction_of_duty_ceiling": 0.6797,
+  "duty_at_F_limit_W": 328435.6,
+  "tube_nozzle_dp_Pa": 1668.2,
+  "tube_nozzle_share_of_limit": 0.1668,
+  "shell_nozzle_dp_Pa": 1624.1,
+  "shell_nozzle_share_of_limit": 0.1624,
+  "tube_velocity_cap_m_s": 1.464
+ },
+ "findings": [
+  "INFO: 4 declared design check(s) never fired across the sample (Min approach; Tube wall; Shell wall; TEMA minimum). They protect nothing as configured."
+ ]
+}
