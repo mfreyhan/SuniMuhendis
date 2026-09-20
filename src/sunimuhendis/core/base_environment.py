@@ -52,7 +52,12 @@ class BaseEnvironment(ABC):
     # dummy ones in tests and scripts) keep working, and ``audit_task``
     # fails with a message naming exactly what is missing.
 
-    def sample_designs(self, num_samples: int, seed: int = 0) -> List[Dict[str, Any]]:
+    def sample_designs(
+        self,
+        num_samples: int,
+        seed: int = 0,
+        task_params: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Produce ``num_samples`` candidate designs spanning this environment's
         design space. Must be deterministic for a given ``seed``.
@@ -60,12 +65,40 @@ class BaseEnvironment(ABC):
         The sampler should cover the space broadly rather than aim for good
         designs: the audit asks what the task makes *possible*, so a biased
         sampler hides exactly the walls it is meant to find.
+
+        ``task_params`` is passed so the sampler can cover the space in
+        coordinates the *task* makes meaningful — a velocity, say, rather than
+        a tube count, which only becomes a velocity once the flow is known.
+        Sampling in the wrong coordinates does not bias the audit, it blinds
+        it: a region reachable only by choosing a velocity is a region a
+        tube-count sampler reports as unreachable. It is optional, so a
+        sampler that does not need it keeps the shorter signature.
         """
         raise NotImplementedError(
             "{} does not implement sample_designs(); it cannot be audited. "
             "Implement it to return a deterministic list of candidate designs."
             .format(type(self).__name__)
         )
+
+    def reference_designs(self, task_params: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Designs a task offers as *witnesses* to its own feasibility.
+
+        Sampling can show that something is reachable; it can never show that
+        something is not, so a score ceiling measured by sampling is a lower
+        bound and nothing more. When a task claims a perfect score is
+        attainable, the honest way to back the claim is to exhibit a design
+        that attains it. The audit evaluates these alongside the sample and
+        reports one that fails to do what it was offered to prove.
+
+        The default reads ``task_params['reference_designs']``, so any
+        environment gets this by writing designs into its task file.
+        """
+        designs = task_params.get("reference_designs") or []
+        if not isinstance(designs, (list, tuple)):
+            raise ValueError("reference_designs must be a list, got {}"
+                             .format(type(designs).__name__))
+        return [d for d in designs if isinstance(d, dict)]
 
     def get_requirements(self, task_params: Dict[str, Any]) -> List[Requirement]:
         """
@@ -97,6 +130,47 @@ class BaseEnvironment(ABC):
         ``AuditReport.findings``.
         """
         return {}
+
+    def prepare_simulation_inputs(
+        self,
+        design_params: Dict[str, Any],
+        task_params: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Build the dict handed to ``simulator.simulate()`` for one evaluation.
+
+        Stages 1 and 2 always see the design exactly as the model wrote it.
+        This hook exists for stage 3 only, where a task may need to fix the
+        *context* the design is simulated in — the operating point, the duty
+        specification, the fabrication allowables — none of which the designer
+        chooses and none of which belong in the design schema.
+
+        The default is the historical behaviour: simulate the design alone.
+        An environment that overrides this must let the task win over the
+        design, so a design cannot restate its own operating conditions and
+        pick an easier problem than the one it was set.
+        """
+        return design_params
+
+    def secondary_simulations(
+        self,
+        design_params: Dict[str, Any],
+        task_params: Dict[str, Any],
+    ) -> List[tuple]:
+        """
+        Further conditions the same design must also survive, as
+        ``(label, simulator_inputs)`` pairs. The default is none, so a
+        single-point task behaves exactly as before.
+
+        This is how a task asks for a design rather than a point solution.
+        A design sized for one operating point can sit comfortably inside
+        every limit at that point and violate them the moment the plant
+        turns down — real exchangers are sized for a velocity *window* for
+        exactly this reason. Warnings raised here are added to the primary
+        count, so the requirements stay a single-point gate while quality
+        becomes a property of the design across its whole operating range.
+        """
+        return []
 
     @staticmethod
     def normalise_warning(warning: str) -> str:
@@ -144,8 +218,12 @@ class BaseEnvironment(ABC):
         Requires ``sample_designs`` and ``get_requirements``.
         """
         task_id = str(task_params.get("task_id", "audit"))
-        designs = self.sample_designs(num_samples, seed)
+        designs = self.sample_designs(num_samples, seed, task_params)
+        references = self.reference_designs(task_params)
+        reference_from = len(designs)
+        designs = list(designs) + list(references)
         requirements = self.get_requirements(task_params)
+        reference_results: List[tuple] = []
 
         best_score = None
         feasible_scores: List[float] = []
@@ -158,6 +236,8 @@ class BaseEnvironment(ABC):
         for index, design in enumerate(designs):
             result = self.evaluate(task_id, task_params, "audit-{}".format(index), design)
             score = result.score.normalized_total
+            if index >= reference_from:
+                reference_results.append((index - reference_from, result))
             if best_score is None or score > best_score:
                 best_score = score
             if result.status != "success":
@@ -215,6 +295,22 @@ class BaseEnvironment(ABC):
             if best_score is not None:
                 report.craft_reward = best_score - report.feasible_score_floor
 
+        report.reference_count = len(references)
+        if reference_results:
+            report.reference_scores = [
+                result.score.normalized_total for _, result in reference_results]
+            for position, result in reference_results:
+                if result.status != "success":
+                    report.reference_failures.append(
+                        "reference design {} did not simulate ({}): {}".format(
+                            position, result.status, result.error_message))
+                    continue
+                unmet = [r.name for r in requirements if not r.satisfied_by(result.metrics)]
+                if unmet:
+                    report.reference_failures.append(
+                        "reference design {} does not meet: {}".format(
+                            position, "; ".join(unmet)))
+
         report.physics = self.analyse_physics(task_params)
         report.findings = self._derive_findings(report)
         return report
@@ -266,6 +362,14 @@ class BaseEnvironment(ABC):
             findings.append(
                 "INFO: the fewest warnings any feasible design achieved is {} — a warning-free "
                 "design may be out of reach.".format(report.min_warning_count)
+            )
+
+        if report.reference_failures:
+            findings.append(
+                "CRITICAL: {} reference design(s) do not do what the task offers them to "
+                "prove ({}). A witness that does not hold is worse than none, because the "
+                "task's feasibility claim now rests on nothing.".format(
+                    len(report.reference_failures), "; ".join(report.reference_failures))
             )
 
         if report.dead_checks:
@@ -321,8 +425,17 @@ class BaseEnvironment(ABC):
             )
             
         # 3. Simulation
+        #
+        # Building the simulator's inputs happens OUTSIDE the try below, on
+        # purpose. Everything inside it is the design's failure and scores
+        # zero; a malformed task configuration is the experimenter's failure
+        # and must raise, or a typo in a task file would be recorded as every
+        # model failing to design, indistinguishably from the real thing.
+        sim_inputs = self.prepare_simulation_inputs(design_params, task_params)
+        secondary = self.secondary_simulations(design_params, task_params)
+
         try:
-            success, metrics, raw_data, sim_err = self.simulator.simulate(design_params)
+            success, metrics, raw_data, sim_err = self.simulator.simulate(sim_inputs)
             
             if not success:
                 score = score_fn.calculate_score(task_params, {}, is_valid=False, error_message=sim_err)
@@ -334,6 +447,36 @@ class BaseEnvironment(ABC):
                     error_message=sim_err
                 )
                 
+            # 3b. The same design at every other operating point the task names.
+            if secondary:
+                metrics = dict(metrics)
+                raw_data = dict(raw_data)
+                total = float(metrics.get("num_warnings", 0.0) or 0.0)
+                merged = list(raw_data.get("warnings", []) or [])
+                points: Dict[str, Any] = {}
+
+                for label, inputs in secondary:
+                    ok, point_metrics, point_raw, point_err = self.simulator.simulate(inputs)
+                    if not ok:
+                        message = "at operating point '{}': {}".format(label, point_err)
+                        return EvaluationResult(
+                            task_id=task_id,
+                            design_id=design_id,
+                            status="simulation_error",
+                            score=score_fn.calculate_score(
+                                task_params, {}, is_valid=False, error_message=message),
+                            error_message=message,
+                        )
+                    found = self.extract_warnings(point_metrics, point_raw)
+                    total += len(found)
+                    merged.extend("[{}] {}".format(label, w) for w in found)
+                    points[label] = {"metrics": point_metrics, "warnings": found}
+                    metrics["{}_num_warnings".format(label)] = float(len(found))
+
+                metrics["num_warnings"] = total
+                raw_data["warnings"] = merged
+                raw_data["secondary_points"] = points
+
             # 4. Score Calculation (Success case)
             score = score_fn.calculate_score(task_params, metrics, is_valid=True)
             return EvaluationResult(

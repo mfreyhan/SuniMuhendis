@@ -76,7 +76,18 @@ class AuditReport(BaseModel):
         default_factory=list,
         description="Declared design checks that never fired across the whole sample.")
 
-    score_ceiling: Optional[float] = Field(None, description="Best score observed over the sample.")
+    reference_count: int = Field(
+        0, description="Designs the task offered as witnesses to its own feasibility.")
+    reference_scores: List[float] = Field(
+        default_factory=list, description="Score each reference design actually achieved.")
+    reference_failures: List[str] = Field(
+        default_factory=list,
+        description="Reference designs that failed to prove what they were offered to prove.")
+
+    score_ceiling: Optional[float] = Field(
+        None, description="Best score observed, over the sample and any reference designs. "
+                          "A lower bound: sampling can show a score is reachable, never that "
+                          "it is not.")
     feasible_score_floor: Optional[float] = Field(None, description="Worst score among feasible designs.")
     feasible_score_median: Optional[float] = Field(None, description="Median score among feasible designs.")
     entry_reward: Optional[float] = Field(
@@ -104,6 +115,12 @@ class AuditReport(BaseModel):
         ]
         if self.score_ceiling is not None:
             lines.append("  score ceiling {:.4f}".format(self.score_ceiling))
+        if self.reference_count:
+            lines.append("  {} reference design(s), best {:.4f}{}".format(
+                self.reference_count,
+                max(self.reference_scores) if self.reference_scores else float("nan"),
+                "" if not self.reference_failures
+                else " — {} FAILED".format(len(self.reference_failures))))
         if self.entry_reward is not None and self.craft_reward is not None:
             lines.append("  reward budget: entry +{:.3f} vs craft +{:.3f}".format(
                 self.entry_reward, self.craft_reward))

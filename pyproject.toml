@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sunimuhendis"
-version = "0.4.0"
+version = "0.5.0"
 description = "Physics-simulation evaluation environments (DRC + simulator + score) for engineering-design LLM benchmarking."
 readme = "README.md"
 requires-python = ">=3.9"
