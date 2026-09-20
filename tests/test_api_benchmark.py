@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from scripts.run_api_benchmark import (
+    _DEFAULT_MAX_OUTPUT_TOKENS,
     _apply_reasoning_effort,
     _configure_reasoning,
     _preflight_model,
@@ -22,7 +23,7 @@ from sunimuhendis.model_clients.openrouter_client import OpenRouterClient
 
 _VALID_STATUS = {
     "success", "schema_error", "drc_error", "simulation_error",
-    "parse_error", "empty_response", "client_error",
+    "parse_error", "empty_response", "client_error", "token_limit",
 }
 
 
@@ -288,7 +289,7 @@ def test_preflight_uses_max_completion_tokens_when_required():
     }
     configured, report = _preflight_model(spec, "prompt")
     assert report["status"] == "ready"
-    assert configured["params"]["max_completion_tokens"] == 8192
+    assert configured["params"]["max_completion_tokens"] == _DEFAULT_MAX_OUTPUT_TOKENS
     assert "max_tokens" not in configured["params"]
 
 
@@ -350,9 +351,12 @@ def test_benchmark_sends_and_records_paired_prompt(tmp_path):
     assert record["prompt_text"] == expected
     assert record["task_params"]["target_heat_duty"] == 150000.0
     assert record["score_version"] == "heat_exchanger_score_v1"
-    assert record["requested_params"] == {"max_tokens": 8192, "temperature": 0.7}
-    assert record["inference_params"] == {"max_tokens": 8192, "temperature": 0.7}
-    assert record["effective_params"] == {"max_tokens": 8192, "temperature": 0.7}
+    assert record["requested_params"] == {
+        "max_tokens": _DEFAULT_MAX_OUTPUT_TOKENS, "temperature": 0.7}
+    assert record["inference_params"] == {
+        "max_tokens": _DEFAULT_MAX_OUTPUT_TOKENS, "temperature": 0.7}
+    assert record["effective_params"] == {
+        "max_tokens": _DEFAULT_MAX_OUTPUT_TOKENS, "temperature": 0.7}
     assert record["parameter_adjustments"] == []
     assert record["model_metadata"] == {}
     assert record["reasoning_mode"] is None
@@ -577,3 +581,80 @@ def test_run_benchmark_archives_the_price_book_it_used(tmp_path, monkeypatch):
     payload = json.loads(archived.read_text(encoding="utf-8"))
     assert payload["fetched_at"] == "2026-09-18T10:00:00Z"
     assert payload["models"]["vendor/m"]["completion"] == 2e-6
+
+
+# ── Truncation is an instrument failure, not a design failure ─────────
+#
+# A reasoning model can spend the entire output budget thinking and emit no
+# answer tokens at all. Recorded as "empty_response" that reads on the
+# leaderboard as a model unable to produce a design, when in fact the run never
+# happened. Observed on qwen3.8-27b at medium effort against heat_exchanger_hard_v4:
+# 8192 completion tokens against an 8192 cap, on both of two runs.
+
+
+class _TruncatedClient:
+    """Spends the whole budget reasoning and returns nothing."""
+
+    model = "dummy/truncated"
+
+    def __init__(self, cap):
+        self._cap = cap
+
+    def generate_design(self, prompt):
+        self.last_latency_ms = 1.0
+        self.last_usage = {
+            "prompt_tokens": 100,
+            "completion_tokens": self._cap,
+            "reasoning_tokens": self._cap + 4,
+            "total_tokens": self._cap + 100,
+        }
+        return ""
+
+
+class _SilentClient:
+    """Returns nothing, having spent nothing."""
+
+    model = "dummy/silent"
+
+    def generate_design(self, prompt):
+        self.last_latency_ms = 1.0
+        self.last_usage = {"prompt_tokens": 100, "completion_tokens": 0,
+                           "reasoning_tokens": 0, "total_tokens": 100}
+        return ""
+
+
+def _one_run(tmp_path, client, cap=8192):
+    slug = _make_prompt_unit(str(tmp_path))
+    written = run_benchmark(
+        prompt_slug=slug,
+        model_specs=[{"name": "m"}],
+        client_factory=lambda spec: client,
+        repeats=1,
+        results_root=str(tmp_path),
+        max_output_tokens=cap,
+    )
+    return json.loads(open(written[0], encoding="utf-8").readline())
+
+
+def test_output_truncated_at_the_cap_is_recorded_as_token_limit(tmp_path):
+    record = _one_run(tmp_path, _TruncatedClient(4096), cap=4096)
+    assert record["status"] == "token_limit"
+    assert "truncated" in record["error"].lower()
+    assert "4096" in record["error"]
+
+
+def test_a_genuinely_empty_response_is_still_an_empty_response(tmp_path):
+    record = _one_run(tmp_path, _SilentClient())
+    assert record["status"] == "empty_response"
+
+
+def test_truncation_is_distinguishable_after_the_fact(tmp_path):
+    """
+    The two are told apart by usage, so an analysis can exclude truncated runs
+    from a leaderboard without re-running them.
+    """
+    truncated = _one_run(tmp_path / "a", _TruncatedClient(2048), cap=2048)
+    empty = _one_run(tmp_path / "b", _SilentClient())
+    assert truncated["status"] != empty["status"]
+    assert truncated["usage"]["completion_tokens"] >= 2048
+    assert empty["usage"]["completion_tokens"] == 0

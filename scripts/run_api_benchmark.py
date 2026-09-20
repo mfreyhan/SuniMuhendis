@@ -485,8 +485,27 @@ def run_benchmark(
 
                     design = None
                     if not raw or not raw.strip():
-                        record["status"] = "empty_response"
-                        record["error"] = "Model returned an empty response."
+                        # Distinguish "the model had nothing to say" from "we cut
+                        # it off mid-thought". A reasoning model that spends the
+                        # whole budget thinking emits no answer tokens at all, and
+                        # recording that as an empty response reads on the
+                        # leaderboard as a design failure when it is a measurement
+                        # failure — the run never happened. Observed on
+                        # qwen3.8-27b at medium effort: 8192 completion tokens
+                        # against an 8192 cap, twice out of two.
+                        emitted = usage.get("completion_tokens") or 0
+                        reasoned = usage.get("reasoning_tokens") or 0
+                        limit = (record.get("effective_params") or {}).get("max_tokens") or                             (record.get("effective_params") or {}).get("max_completion_tokens")
+                        if limit and max(emitted, reasoned) >= limit:
+                            record["status"] = "token_limit"
+                            record["error"] = (
+                                "Output truncated at the {} token limit after {} reasoning "
+                                "tokens; the model never reached an answer. Re-run with a "
+                                "higher --max-output-tokens.".format(limit, reasoned)
+                            )
+                        else:
+                            record["status"] = "empty_response"
+                            record["error"] = "Model returned an empty response."
                     else:
                         try:
                             design = parse_llm_json(raw)
