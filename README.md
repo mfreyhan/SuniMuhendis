@@ -153,6 +153,5 @@ and project-authored reports are covered separately by
 excluded from that grant. Third-party provenance is documented in
 [THIRD_PARTY.md](THIRD_PARTY.md).
 
-Use [CITATION.cff](CITATION.cff) when citing the software. Contributions are
-welcome under [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities through
-the private process in [SECURITY.md](SECURITY.md).
+Use [CITATION.cff](CITATION.cff) when citing the software. Report
+vulnerabilities through the private process in [SECURITY.md](SECURITY.md).

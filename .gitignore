@@ -65,3 +65,10 @@ reports/python312_migration.md
 scripts/throughflow_research/
 tests/test_throughflow_research.py
 docs/throughflow.md
+
+# Personal notes and scratch scripts (local only, not published)
+DEPLOYMENT.md
+reports/LLM_Benchmark_Template.md
+scripts/test_hf.py
+scripts/test_opencode.py
+scripts/examples/outputs/

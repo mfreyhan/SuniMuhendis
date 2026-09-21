@@ -15,8 +15,8 @@ different simulator or score versions comparable.
   and clean-wheel consumer validation.
 - Added a constrained Python 3.12 development profile.
 - Clarified the public package boundary and external-consumer workflow.
-- Reorganized public documentation and added citation, security, contribution,
-  and third-party provenance guidance.
+- Reorganized public documentation and added citation, security, and
+  third-party provenance guidance.
 
 ## [0.5.0] - 2026-09-20
 
