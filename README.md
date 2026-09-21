@@ -13,16 +13,13 @@ a deterministic physics simulation, and a versioned scoring function. The same
 API can be used from this repository, an optimizer, or a separate training system.
 
 > **Project status:** public research software in alpha. The heat-exchanger
-> environment is available. The NASA turbo-design throughflow backend is under
-> research and is not distributed, registered, or supported as a production
-> environment yet.
+> environment is available; further engineering domains are planned.
 
 ## Available environments
 
 | Environment | Status | Install extra |
 |---|---|---|
 | `heat_exchanger` | Available; simulator V4 and versioned scores | `heat_exchanger` |
-| Turbomachinery throughflow | Phase 0–2 research complete; integration blocked on solver validation and third-party provenance | Not published |
 
 The heat-exchanger environment supports shell-and-tube and concentric-tube
 geometries. It uses `ht` and `fluids` where suitable, with additional
@@ -35,7 +32,7 @@ Python 3.12 is required. Install from a release tag so simulator and scoring
 behavior cannot move underneath an experiment:
 
 ```bash
-pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@envs-v0.5.0"
+pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@envs-v0.6.0"
 ```
 
 The supported runtime contract is `>=3.12,<3.13`. Support for another Python
@@ -57,19 +54,19 @@ env = make_env(
 task = {
     "task_id": "example",
     "score_version": "heat_exchanger_score_v4",
-    "target_heat_duty": 350_000.0,
-    "max_dp_tube": 2_500.0,
-    "max_dp_shell": 2_500.0,
+    "target_heat_duty": 250_000.0,
+    "max_dp_tube": 5_000.0,
+    "max_dp_shell": 5_000.0,
 }
 
 design = {
     "geometry_type": "shell_and_tube",
-    "length": 5.0,
+    "length": 3.0,
     "inner_tube_di": 0.016,
     "inner_tube_do": 0.020,
-    "outer_shell_di": 0.48,
-    "number_of_tubes": 200,
-    "baffle_spacing": 0.5,
+    "outer_shell_di": 0.30,
+    "number_of_tubes": 50,
+    "baffle_spacing": 0.2,
 }
 
 result = env.evaluate("example", task, "design-1", design)
@@ -121,7 +118,6 @@ repository tools and are excluded from the wheel.
 - [Library API and task auditing](docs/library.md)
 - [Benchmarking, cost accounting, and dashboard](docs/benchmarking.md)
 - [Development and release workflow](docs/development.md)
-- [Turbomachinery throughflow research status](docs/throughflow.md)
 - [Experiment track layout](results/EXPERIMENT_TRACKS.md)
 - [Architecture decisions](ARCHITECTURE_DECISIONS.md)
 
@@ -147,8 +143,6 @@ the providers you use.
 
 - **Available:** heat-exchanger evaluation, task feasibility auditing,
   zero-shot benchmark runner, cost ledger, and Streamlit dashboard.
-- **Research:** NASA turbo-design throughflow integration, advanced loss-model
-  validation, and external training-repository consumption.
 - **Planned:** feedback-driven experiments and additional engineering domains.
 
 ## License, citation, and security
@@ -156,8 +150,8 @@ the providers you use.
 Source code is licensed under the [Apache License 2.0](LICENSE). Benchmark data
 and project-authored reports are covered separately by
 [CC BY 4.0](results/LICENSE.md); third-party model responses are explicitly
-excluded from that grant. Third-party provenance and the NASA research boundary
-are documented in [THIRD_PARTY.md](THIRD_PARTY.md).
+excluded from that grant. Third-party provenance is documented in
+[THIRD_PARTY.md](THIRD_PARTY.md).
 
 Use [CITATION.cff](CITATION.cff) when citing the software. Contributions are
 welcome under [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities through

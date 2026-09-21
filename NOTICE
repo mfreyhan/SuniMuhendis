@@ -25,8 +25,3 @@ are not copied into the SuniMuhendis wheel:
 Repository-only benchmark and development tools use further dependencies listed
 in pyproject.toml and requirements.txt. This summary is not a substitute for the
 license material included with each installed distribution.
-
-NASA turbo-design is used only in a separately obtained, pinned research
-checkout. Its source, examples and loss-table assets are not distributed in
-this repository or the SuniMuhendis wheel. See THIRD_PARTY.md for the research
-and provenance boundary. No NASA endorsement is implied.

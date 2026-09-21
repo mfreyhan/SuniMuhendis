@@ -21,5 +21,4 @@ from the report.
 
 Benchmark responses and simulator inputs are untrusted data. Production-facing
 integrations should apply resource limits and must not execute model-generated
-code. Throughflow research scripts execute pinned upstream examples in isolated
-research environments; they are not a production API for untrusted designs.
+code.

@@ -1,7 +1,6 @@
 # Validated direct-dependency profile for CPython 3.12.10.
 # This constrains development and CI without forcing library consumers to use
-# the same patch versions. Throughflow backend dependencies remain in the
-# separate phase-0-2 research profile until the backend contract is accepted.
+# the same patch versions.
 build==1.6.1
 CoolProp==7.2.0
 fluids==1.3.0

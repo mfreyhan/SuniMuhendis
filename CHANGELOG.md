@@ -6,6 +6,8 @@ different simulator or score versions comparable.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-21
+
 ### Changed
 
 - Raised the supported runtime to CPython `>=3.12,<3.13`.
@@ -16,13 +18,6 @@ different simulator or score versions comparable.
 - Reorganized public documentation and added citation, security, contribution,
   and third-party provenance guidance.
 
-### Research
-
-- Recorded Phase 0–2 investigation of NASA turbo-design at a pinned upstream
-  commit.
-- Kept the throughflow backend and its assets outside the distributed package
-  while solver-validation and provenance gates remain open.
-
 ## [0.5.0] - 2026-09-20
 
 - Added the audited heat-exchanger simulator V4 and Score V4 task family.
@@ -30,5 +25,6 @@ different simulator or score versions comparable.
   task-owned operating conditions.
 - Added live price snapshots and token/cost accounting for benchmark runs.
 
-[Unreleased]: https://github.com/mfreyhan/SuniMuhendis/compare/envs-v0.5.0...main
+[Unreleased]: https://github.com/mfreyhan/SuniMuhendis/compare/envs-v0.6.0...main
+[0.6.0]: https://github.com/mfreyhan/SuniMuhendis/releases/tag/envs-v0.6.0
 [0.5.0]: https://github.com/mfreyhan/SuniMuhendis/releases/tag/envs-v0.5.0

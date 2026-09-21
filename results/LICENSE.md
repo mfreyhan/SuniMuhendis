@@ -32,11 +32,6 @@ We did not author that text and we do not claim copyright in it. It is reproduce
 
 The CC BY 4.0 grant above applies to our scores, metrics, annotations, and the structure and selection of the dataset. It does not and cannot extend to third-party model output.
 
-Research records produced while running third-party simulators can contain
-source identifiers and source-derived numerical fields. The grant covers our
-analysis, annotations, and record structure, but does not purport to relicense
-any upstream source, geometry, model asset, or other material we do not own.
-
 ## Citation
 
 If you use this benchmark data, please cite the repository and state which simulator and score versions the results came from. Every record carries `simulator_version` and `score_version`; results produced by different versions are not comparable and must not be pooled.

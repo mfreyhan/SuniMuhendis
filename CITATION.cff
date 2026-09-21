@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use SuniMuhendis, cite the software and record the simulator and score versions used."
 title: "SuniMuhendis: Physics-based evaluation environments for machine-generated engineering designs"
 type: software
-version: 0.5.0
-date-released: 2026-09-20
+version: 0.6.0
+date-released: 2026-09-21
 license: Apache-2.0
 repository-code: "https://github.com/mfreyhan/SuniMuhendis"
 url: "https://github.com/mfreyhan/SuniMuhendis"

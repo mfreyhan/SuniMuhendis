@@ -1,6 +1,6 @@
 ﻿# AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents (Claude Code, Codex, and others) when working with code in this repository.
 
 ## What this is
 
@@ -58,7 +58,7 @@ design (raw dict) → [1] schema validation → [2] DRC → [3] simulate → [4]
 ```
 
 - Stages run **cheapest-first, fail-fast**: any failure short-circuits with `score = 0.0` and a `status` of `schema_error` / `drc_error` / `simulation_error`, plus an `error_message`. This per-stage status is the evaluation feedback for the benchmark.
-- The **raw design dict flows through all stages** (not the validated Pydantic model). So `validate_schema`, `run_drc`, and `simulator.simulate` each receive the original dict. Note this does **not** let a design smuggle extra fields through: `schema.py` sets `extra="forbid"`, so anything outside the 7-field contract is rejected at stage 1.
+- The **raw design dict flows through all stages** (not the validated Pydantic model). So `validate_schema`, `run_drc`, and `simulator.simulate` each receive the original dict. Note this does **not** let a design smuggle extra fields through: `schema.py` sets `extra="forbid"`, so anything outside the schema's fields (seven required, seven optional) is rejected at stage 1.
 - `EvaluationResult` and `ScoreResult` (Pydantic, `src/core/types.py`) are the shared "language" returned everywhere.
 
 ### Layered, ABC-based, environment-agnostic core
@@ -167,7 +167,7 @@ audit-only path — evaluation is untouched, and all 110 recorded `hard_v3` runs
 re-score bit for bit.
 
 ### Heat exchanger specifics
-- **Schema is a minimal 7-field contract** (`geometry_type`, `length`, `inner_tube_di/do`, `outer_shell_di`, `number_of_tubes`, `baffle_spacing`). The simulator reads many more optional params via `dict.get(...)` defaults — but since the schema forbids extra fields, **none of them are reachable from a benchmarked design**; they only apply when calling the simulator directly. Treat them as an internal surface, not a design space — `tube_passes`, `pitch_type`, `material`, `pitch_ratio`, `baffle_cut`, fouling resistances, nozzle sizes, and fluid operating conditions (`m_dot_hot/cold`, `T_hot_in/cold_in`, …). Fluid thermophysical properties are otherwise **hardcoded** (water), which keeps evaluation deterministic.
+- **Schema has seven required fields** (`geometry_type`, `length`, `inner_tube_di/do`, `outer_shell_di`, `number_of_tubes`, `baffle_spacing`) plus the seven optional levers described below. The simulator reads further params via `dict.get(...)` defaults — fouling resistances and fluid operating conditions (`m_dot_hot/cold`, `T_hot_in/cold_in`, …) — but since the schema forbids extra fields, **those are not reachable from a benchmarked design**; they are set by the task (`operating_conditions`) or apply only when calling the simulator directly. Fluid thermophysical properties are otherwise **hardcoded** (water), which keeps evaluation deterministic.
 - **Simulator (`simulator.py`) library boundary:** tube/annulus side uses `ht` (Nusselt, ε-NTU) and `fluids` (friction factor); **shell side is hand-coded Kern/Bell-Delaware** because no library covers cross-flow over tube bundles. It also computes a cost model and mechanical/TEMA limit checks that produce `num_warnings`. Any metric coming out `NaN`/`Inf` is treated as a simulation failure.
 - **Simulator is at `VERSION = "v4"`.** V4 corrected three defects the physics audit found, and **its numbers differ from V3 — results from the two must never be pooled** (~15% of designs get a different warning count). The corrections: unsupported span now follows the TEMA table keyed by tube OD instead of one flat 1.5 m; the ASME wall-thickness check uses UG-27's `t = P·R/(S·E − 0.6·P)` (the previous form *added* where the code subtracts, understating thickness by ~11% at 200 bar) and honours a joint efficiency; and `drc.py` now reads the design's own `tube_passes` / `pitch_ratio` / `pitch_type` rather than assuming the defaults, so DRC and the simulator can no longer disagree about the same design.
 - **Correlation limits are reported, never charged to the design.** Kern's shell-side correlations are only valid for 2e3 < Re < 1e6, and its crossflow area assumes a bundle spanning the shell. When a design falls outside either, the simulator sets `shell_correlation_in_range` / `bundle_fill_fraction` and appends to `raw_data["fidelity_notes"]` — deliberately **not** to `warnings`, because the score penalises warnings and charging a design for the referee's blind spots would be scoring our own ignorance.
