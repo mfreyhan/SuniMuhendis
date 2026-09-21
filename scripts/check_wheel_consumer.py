@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import venv
 from pathlib import Path
@@ -48,8 +49,17 @@ result = make_env("heat_exchanger").evaluate(
 )
 assert result.status == "success", result
 assert "turbodesign" not in sys.modules
+import_path = Path(sunimuhendis.__file__).resolve()
+environment_root = Path(sys.prefix).resolve()
+assert import_path.is_relative_to(environment_root), (
+    "Import did not come from the clean consumer venv: "
+    + str(import_path)
+    + " is outside "
+    + str(environment_root)
+)
 print(json.dumps({
-    "import_path": str(Path(sunimuhendis.__file__).resolve()),
+    "import_path": str(import_path),
+    "environment_root": str(environment_root),
     "status": result.status,
     "score": result.score.normalized_total,
 }))
@@ -67,18 +77,23 @@ print(json.dumps({
         )
         smoke_cwd = Path(temp) / "outside-repository"
         smoke_cwd.mkdir()
-        completed = subprocess.run(
-            [str(python), "-I", "-c", code],
-            input=payload,
-            capture_output=True,
-            text=True,
-            cwd=smoke_cwd,
-            timeout=60,
-            check=True,
-        )
+        try:
+            completed = subprocess.run(
+                [str(python), "-I", "-c", code],
+                input=payload,
+                capture_output=True,
+                text=True,
+                cwd=smoke_cwd,
+                timeout=60,
+                check=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            if exc.stdout:
+                print(exc.stdout, end="")
+            if exc.stderr:
+                print(exc.stderr, end="", file=sys.stderr)
+            raise
         result = json.loads(completed.stdout)
-        if not Path(result["import_path"]).is_relative_to(environment):
-            raise RuntimeError("Import did not come from the clean consumer venv")
         print(json.dumps(result, indent=2))
 
 
