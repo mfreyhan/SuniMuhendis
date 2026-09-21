@@ -1,6 +1,6 @@
 # Throughflow — Faz 0–2 araştırma raporu
 
-Tarih: 21 Eylül 2026. Dal: `codex/throughflow-phase-0-2`. Başlangıç commit'i: `41332783398f847f3aab5b6c38d398c91f078b40`.
+Tarih: 21 Eylül 2026. Çalışma dalı `codex/throughflow-phase-0-2`, PR #2 ile `main` dalına birleştirildi. Başlangıç commit'i: `41332783398f847f3aab5b6c38d398c91f078b40`.
 
 **Karar: Entegrasyon için araştırma tabanı hazır; backend henüz eğitim hakemi olarak kabul edilebilir değil.** Mevcut heat exchanger korunarak gerçek NASA örnekleri çalıştırıldı. Basit ve çok kademeli çözüm yolları gözlendi; gelişmiş kayıp, Python uyumu ve sayısal kabul konusunda açık engeller bulundu. Bu çalışma yeni bir production environment veya `throughflow` extra'sı yayımlamaz.
 
@@ -11,7 +11,7 @@ Tarih: 21 Eylül 2026. Dal: `codex/throughflow-phase-0-2`. Başlangıç commit'i
 | 0 | Mevcut testler, beş regresyon örneği, kaynak hash'leri, temiz wheel tüketimi ve gereksinim matrisi | Tamamlandı |
 | 1 | Sabit NASA checkout, iki Python kurulumu, dependency envanteri, lisans ve asset araştırması | Araştırma tamamlandı; Linux ve dağıtım kapısı açık |
 | 2 | 65 backend senaryosu + 7 bağımlılık uyumsuzluğu deneyi; gerçek upstream testleri ve semantik inceleme | Araştırma tamamlandı; gelişmiş ampirik kayıplı güvenilir referans kabul şartı sağlanmadı |
-| 2.5 | Public paket ve geliştirme ortamı Python 3.12'ye geçirildi; constraint, CI ve wheel kontrolleri eklendi | Windows kabulü tamamlandı; uzaktaki Linux CI ve özel eğitim reposu geçişi bekliyor |
+| 2.5 | Public paket ve geliştirme ortamı Python 3.12'ye geçirildi; constraint, CI ve wheel kontrolleri eklendi | Windows ve Ubuntu CI tamamlandı; özel eğitim reposu geçişi bekliyor |
 
 Bu ayrım önemlidir: hata bulmuş olmak araştırmanın çıktısıdır, fakat başarısız kabul ölçütünü tamamlanmış saymaz. Faz 3 API taslağı bu bulgularla ilerleyebilir; backend destek sözleşmesi ve yayın kararı henüz dondurulmamalıdır.
 
@@ -46,7 +46,7 @@ Tam SHA: `23c2b0bf781b4b030014f458ecfde872896777a2`; kaynak metadata sürümü *
 
 PyPI sorgusunda en yeni dağıtım **1.4.2** çıktı; `license` ve `project_urls` alanları boştu. Kaynak 1.4.3 ile eşdeğerliği kurulmadı: [PyPI kaydı](pypi_provenance.json). Bu nedenle ilk geliştirme adayı sabit Git SHA'sıdır; `pip install turbo-design` üretim kaynağı kabul edilmez.
 
-Faz 2.5 kararıyla SuniMuhendis public runtime sözleşmesi `>=3.12,<3.13` oldu; geliştirme referansı 3.12.10'dur. Ayrı 3.12 worker varsayımı kaldırıldı. Windows'ta 229 test, wheel metadata kontrolü ve temiz repo-dışı HE tüketici deneyi geçti; aynı skor **0.7288073927259057** üretildi. Windows/Linux CI eklendi, fakat Linux sonucu ancak uzaktaki ilk workflow çalışınca kabul edilmiş sayılacak. Özel eğitim reposu bu workspace'te bulunmadığı için onun migration'ı ayrıca yapılacak. Ayrıntı: [Python 3.12 geçiş raporu](../python312_migration.md).
+Faz 2.5 kararıyla SuniMuhendis public runtime sözleşmesi `>=3.12,<3.13` oldu; geliştirme referansı 3.12.10'dur. Ayrı 3.12 worker varsayımı kaldırıldı. Windows'ta 229 test, wheel metadata kontrolü ve temiz repo-dışı HE tüketici deneyi geçti; aynı skor **0.7288073927259057** üretildi. PR ve birleşme sonrası workflow koşularında Windows ve Ubuntu test/build/temiz-wheel işleri geçti. Özel eğitim reposu bu workspace'te bulunmadığı için onun migration'ı ayrıca yapılacak. Ayrıntı: [Python 3.12 geçiş raporu](../python312_migration.md).
 
 Güncellemede yeni SHA + tam dependency profili + asset hash'leri birlikte sürümlenmeli. Bu rapordaki baseline ve yetenek vakaları yeniden çalışmadan sürüm değiştirilmemeli. Hareketli `main` veya sessiz solver/model fallback'i kabul edilmeyecek.
 
@@ -112,7 +112,7 @@ Süre ölçümü worker içindeki import+solve bölümünü kapsar; OS process b
 | ID | Gerekli iş | Kapanış kanıtı |
 |---|---|---|
 | B01 | Lisans/telif, tablo ve örnek geometri kökenini tamamla | Dağıtılacak her varlık için kaynak/lisans/bildirim kaydı |
-| B02 | Python 3.12 stratejisini bütün tüketicilerde doğrula | Windows tamamlandı; Linux CI ve özel eğitim reposu kurulumu geçmeli |
+| B02 | Python 3.12 stratejisini bütün tüketicilerde doğrula | Windows/Ubuntu CI tamamlandı; özel eğitim reposu kurulumu geçmeli |
 | B03 | `adjust_streamlines` üç argüman sözleşmesi ile iki argüman çağrılarını düzelt | Hareketli streamline ile 1/2 kademe ve çözünürlük regresyonu |
 | B04 | TD2 başlangıç NaN, KO skaler/dizi, AM array ve diğer kayıpların gereken geometri/alanlarını doğrula | Her makine için fiziksel referansla doğrulanmış ampirik kayıp yolu; fixture yanlışsa önce fixture düzeltmesi |
 | B05 | Debi/enerji/radyal denge ve verim tanımlarını dış kabul katmanında doğrula | Dönen ama kabul edilmeyen çözüm reward girdisi olmasın |
@@ -120,7 +120,7 @@ Süre ölçümü worker içindeki import+solve bölümünü kapsar; OS process b
 | B07 | Mutable state, chord ve angle matching sahipliğini ayır | Girdi değişmezliği, taze obje tekrarları, gerçek sabit geometri off-design testi |
 | B08 | Asset hazırlığını ve cache yolunu backend sözleşmesine taşı | Sabit SHA/hash, offline solve; pickle uyumu ve cache izolasyonu |
 
-Önerilen bir sonraki adım B03–B04 için küçük, ayrı testli backend düzeltme çalışmasıdır; B02'nin kalan Linux/eğitim-reposu kontrolleri paralel kabul kapısıdır. NASA kaynaklarını bu repoya kopyalayıp rastgele katsayılarla sonuç üretmek yerine, her değişiklik kendi minimal hata vakası ve fizik gerekçesiyle ele alınmalı. Gerekirse ayrı fork ve NOSA değişiklik kaydı kullanılmalı. B01 yayını bloke eder; özgün API/şema taslağına engel değildir.
+Önerilen bir sonraki adım B03–B04 için küçük, ayrı testli backend düzeltme çalışmasıdır; B02'nin kalan eğitim-reposu kontrolü paralel kabul kapısıdır. NASA kaynaklarını bu repoya kopyalayıp rastgele katsayılarla sonuç üretmek yerine, her değişiklik kendi minimal hata vakası ve fizik gerekçesiyle ele alınmalı. Gerekirse ayrı fork ve NOSA değişiklik kaydı kullanılmalı. B01, NASA backend'i veya varlıklarının dağıtımını bloke eder; proje tarafından yazılan API/şema taslağına ve açıkça sınırlandırılmış araştırma raporunun yayımlanmasına engel değildir. Public sınır [THIRD_PARTY.md](../../THIRD_PARTY.md) dosyasında korunur.
 
 ## Tekrar üretim
 

@@ -5,7 +5,7 @@ Durum: Faz 0 tamamlandı; Faz 1–2 araştırması yapıldı, kabul engelleri a�
 Hedef ortam adı: `turbomachinery_throughflow`  
 Hedef kurulum extra'sı: `throughflow`
 
-İlk plan 20 Eylül 2026 kaynak incelemesine dayanıyordu. 21 Eylül güncellemesi: NASA sabit SHA ile kuruldu; 65 senaryo ve 7 dependency uyumsuzluğu deneyi çalıştırıldı. [Faz 0–2 raporu](throughflow_phase_0_2/README.md), [kanıt matrisi](throughflow_phase_0_2/capability_matrix.md) ve [gereksinim eşlemesi](throughflow_phase_0_2/requirements_traceability.md) tamamlanan işleri ve engelleri kaydeder. Faz 2.5'te public runtime Python 3.12'ye geçirildi; yerel Windows kabulü tamamlandı, Linux CI ve özel eğitim reposu geçişi açık kaldı. Basit/çok kademeli sonuç dönüşleri fiziksel doğruluk sertifikası değildir. Çalışma dalı: `codex/throughflow-phase-0-2`; ana repodaki HE v5 değişiklikleri ayrı tutuldu.
+İlk plan 20 Eylül 2026 kaynak incelemesine dayanıyordu. 21 Eylül güncellemesi: NASA sabit SHA ile kuruldu; 65 senaryo ve 7 dependency uyumsuzluğu deneyi çalıştırıldı. [Faz 0–2 raporu](throughflow_phase_0_2/README.md), [kanıt matrisi](throughflow_phase_0_2/capability_matrix.md) ve [gereksinim eşlemesi](throughflow_phase_0_2/requirements_traceability.md) tamamlanan işleri ve engelleri kaydeder. Faz 2.5'te public runtime Python 3.12'ye geçirildi; yerel Windows ile uzak Windows/Ubuntu CI kabulü tamamlandı, özel eğitim reposu geçişi açık kaldı. Basit/çok kademeli sonuç dönüşleri fiziksel doğruluk sertifikası değildir. Çalışma PR #2 ile `main` dalına birleştirildi; ana repodaki bağımsız HE v5 değişiklikleri çalışma dalına alınmadı.
 
 ## 1. Nihai hedef ve tamamlanma tanımı
 
@@ -77,17 +77,17 @@ NASA projesi streamline/radial-equilibrium yaklaşımını kullanır. Bu ortam 3
 
 | Mevcut dosya | İncelemede görülen durum | Planlanan çalışma |
 |---|---|---|
-| [registry.py](D:/Projeler/SuniMuhendis_VS/src/sunimuhendis/environments/registry.py) | Yalnız heat exchanger kayıtlı | Lazy throughflow factory ve ortam metadata'sı |
-| [base_environment.py](D:/Projeler/SuniMuhendis_VS/src/sunimuhendis/core/base_environment.py) | Skorlu değerlendirme var; başarısız simülasyon tanıları sonuçta korunmuyor; secondary noktalar ağırlıkla uyarı olarak birleşiyor | Ortak doğrulanmış simülasyon yolu, hata ayrımı, nokta sonuçları ve skor girdisi hook'u |
-| [base_simulator.py](D:/Projeler/SuniMuhendis_VS/src/sunimuhendis/core/base_simulator.py) | Dört elemanlı tuple sözleşmesi | Mevcut sözleşmeyi koruyan typed public sonuç dönüşümü |
-| [types.py](D:/Projeler/SuniMuhendis_VS/src/sunimuhendis/core/types.py) | EvaluationResult/ScoreResult/Requirement mevcut | SimulationResult ve tipli tanı sözleşmesi; uyumluluk kontrollü |
-| [cache.py](D:/Projeler/SuniMuhendis_VS/src/sunimuhendis/core/cache.py) | Cache evaluate'a bağlı değil; anahtar yalnız görev/tasarım içeriyor | Fizik fingerprint'i içeren throughflow cache yolu |
-| [run_api_benchmark.py](D:/Projeler/SuniMuhendis_VS/scripts/run_api_benchmark.py) | Ortam ve simulator_version heat exchanger'a bağlı | Ortamı görevden seçme, sürümü ortamdan alma |
-| [run_llm_eval.py](D:/Projeler/SuniMuhendis_VS/scripts/run_llm_eval.py) | Heat exchanger import/kurulumu | Aynı ortam seçme yoluna geçiş |
-| [rescore_benchmark_results.py](D:/Projeler/SuniMuhendis_VS/scripts/rescore_benchmark_results.py) | Heat exchanger skoruna bağlı | Ortam/score registry; yeniden puanlama ve yeniden simülasyonu ayırma |
-| [dashboard.py](D:/Projeler/SuniMuhendis_VS/scripts/dashboard.py) | Heat exchanger metrik ve metin varsayımları | Ortam bazlı gereksinim, metrik ve sürüm ayrımı |
-| [pyproject.toml](D:/Projeler/SuniMuhendis_VS/pyproject.toml) | Optional environment extras ve src-layout var | throughflow extra, paket verisi, temiz wheel kurulumu |
-| [NOTICE](D:/Projeler/SuniMuhendis_VS/NOTICE) | Mevcut üçüncü taraf bağımlılıklar listelenmiş | NASA ve dağıtılan varlıklar için doğrulanmış bildirimler |
+| [registry.py](../src/sunimuhendis/environments/registry.py) | Yalnız heat exchanger kayıtlı | Lazy throughflow factory ve ortam metadata'sı |
+| [base_environment.py](../src/sunimuhendis/core/base_environment.py) | Skorlu değerlendirme var; başarısız simülasyon tanıları sonuçta korunmuyor; secondary noktalar ağırlıkla uyarı olarak birleşiyor | Ortak doğrulanmış simülasyon yolu, hata ayrımı, nokta sonuçları ve skor girdisi hook'u |
+| [base_simulator.py](../src/sunimuhendis/core/base_simulator.py) | Dört elemanlı tuple sözleşmesi | Mevcut sözleşmeyi koruyan typed public sonuç dönüşümü |
+| [types.py](../src/sunimuhendis/core/types.py) | EvaluationResult/ScoreResult/Requirement mevcut | SimulationResult ve tipli tanı sözleşmesi; uyumluluk kontrollü |
+| [cache.py](../src/sunimuhendis/core/cache.py) | Cache evaluate'a bağlı değil; anahtar yalnız görev/tasarım içeriyor | Fizik fingerprint'i içeren throughflow cache yolu |
+| [run_api_benchmark.py](../scripts/run_api_benchmark.py) | Ortam ve simulator_version heat exchanger'a bağlı | Ortamı görevden seçme, sürümü ortamdan alma |
+| [run_llm_eval.py](../scripts/run_llm_eval.py) | Heat exchanger import/kurulumu | Aynı ortam seçme yoluna geçiş |
+| [rescore_benchmark_results.py](../scripts/rescore_benchmark_results.py) | Heat exchanger skoruna bağlı | Ortam/score registry; yeniden puanlama ve yeniden simülasyonu ayırma |
+| [dashboard.py](../scripts/dashboard.py) | Heat exchanger metrik ve metin varsayımları | Ortam bazlı gereksinim, metrik ve sürüm ayrımı |
+| [pyproject.toml](../pyproject.toml) | Optional environment extras ve src-layout var | throughflow extra, paket verisi, temiz wheel kurulumu |
+| [NOTICE](../NOTICE) | Mevcut üçüncü taraf bağımlılıklar listelenmiş | NASA ve dağıtılan varlıklar için doğrulanmış bildirimler |
 
 ## 4. Faz haritası ve kilometre taşları
 
@@ -139,7 +139,7 @@ Yapılacak işler:
 - [x] Kod, kayıp tabloları, referans geometri ve örnek çıktıların kaynak/hak kayıtlarını ayrı tut. Çözülmemiş dağıtım izni ilgili varlığın yayınını bloke eder; bağımsız şema/API çalışmasını durdurmaz.
 - [x] Yeniden dağıtımda lisans/bildirim ve kaynak erişimi; değişiklikte tarih/yazar/köken kaydı yükümlülüklerini kontrol listesine çevir. NASA onayı izlenimi veren ürün ifadeleri kullanma. [NOSA §3](https://opensource.org/license/NASA-1.3)
 - [x] Özgün SuniMuhendis kodu ile NASA'dan türetilen patch'leri ayır. Fork gerekirse kaynak adresi, parent SHA, patch listesi ve lisans kaydını zorunlu kıl.
-- [x] Eski Python 3.9 hedefinin dependency/import uyumsuzluğunu ölç; runtime kararını ayrı fazda kaydet. Python 3.12 Windows kabulü Faz 2.5'te tamamlandı; Linux bekliyor.
+- [x] Eski Python 3.9 hedefinin dependency/import uyumsuzluğunu ölç; runtime kararını ayrı fazda kaydet. Python 3.12 Windows/Ubuntu paket CI kabulü Faz 2.5'te tamamlandı; NASA backend'inin Linux probe'u ayrıca açık.
 - [ ] Doğrulanmış Python/NASA/NumPy/SciPy/Cantera ve diğer transitif bağımlılık kombinasyonunu kilitle.
 - [x] Bir paket indeksindeki benzer isimli dağıtımı otomatik olarak NASA kaynağı sayma; wheel/sdist kaynak kökenini doğrula.
 - [x] `throughflow` extra'sı için yayın stratejisini seç: doğrulanmış indeks sürümü veya ilk geliştirme döneminde sabit Git commit'i. Git bağımlılığı kullanılırsa gerekli Git erişimini ve indeks yayın kısıtlarını belgele.
@@ -192,10 +192,10 @@ Kabul: En az bir ampirik kayıplı throughflow yolu gerçekten çalışmıştır
 - [x] Windows'ta tam testi, wheel build/metadata kontrolünü ve repo-dışı temiz tüketici kurulumunu çalıştır.
 - [x] Python 3.9'un yeni wheel'i reddettiğini doğrula.
 - [x] Windows ve Linux için Python 3.12 CI işi ekle.
-- [ ] Uzak CI'da Windows ve Linux işlerinin geçtiğini gör.
+- [x] Uzak CI'da Windows ve Linux işlerinin geçtiğini gör.
 - [ ] Özel eğitim reposunu aynı runtime/constraint sözleşmesine geçirip gerçek environment çağrısını çalıştır.
 
-Kabul: Yerel Windows kanıtı tamamlandı: 229 test geçti; wheel doğru runtime metadata'sı taşıdı ve temiz venv'de heat exchanger çalıştı. Fazın tüm-platform kabulü uzak Linux CI ve eğitim reposu tüketici deneyi tamamlanınca kapanır. [Geçiş raporu](python312_migration.md).
+Kabul: Yerel Windows kanıtı tamamlandı: 229 test geçti; wheel doğru runtime metadata'sı taşıdı ve temiz venv'de heat exchanger çalıştı. Uzak Windows/Ubuntu CI da geçti. Fazın tüketici kabulü özel eğitim reposu deneyi tamamlanınca kapanır. [Geçiş raporu](python312_migration.md).
 
 ## 8. Faz 3 — Tasarım, görev ve sonuç sözleşmeleri
 
@@ -550,7 +550,7 @@ Dış repo kurulumunda yayımlanmış doğrulanmış SuniMuhendis sürümü/etik
 
 ## 21. Planlanan dosya ve modül sorumlulukları
 
-Yeni modüller için hedef kök: `D:/Projeler/SuniMuhendis_VS/src/sunimuhendis/environments/turbomachinery_throughflow/`. Tablo içindeki dosya adları bu kökte oluşturulacak taslak modüllerdir; mevcut dosya değillerdir.
+Yeni modüller için hedef kök: `src/sunimuhendis/environments/turbomachinery_throughflow/`. Tablo içindeki dosya adları bu kökte oluşturulacak taslak modüllerdir; mevcut dosya değillerdir.
 
 | Modül | Sorumluluk |
 |---|---|
@@ -574,7 +574,7 @@ Yeni modüller için hedef kök: `D:/Projeler/SuniMuhendis_VS/src/sunimuhendis/e
 
 Bu liste sorumluluk sınırını tanımlar; her küçük sorumluluk için hemen ayrı dosya zorunlu değildir. Birden fazla backend sürümü gerçek ihtiyaç oluşturmadan genel plugin framework'ü inşa edilmeyecek.
 
-Yeni testlerin hedef kökü `D:/Projeler/SuniMuhendis_VS/tests/throughflow/`; temiz tüketici senaryoları `D:/Projeler/SuniMuhendis_VS/tests/packaging/` altında önerilir. Dokümantasyon için `D:/Projeler/SuniMuhendis_VS/docs/throughflow/` hedeflenir. Bu dizinler uygulama fazlarında oluşturulur.
+Yeni testlerin hedef kökü `tests/throughflow/`; temiz tüketici senaryoları `tests/packaging/` altında önerilir. Dokümantasyon için `docs/throughflow/` hedeflenir. Bu dizinler uygulama fazlarında oluşturulur.
 
 ## 22. Test stratejisi ve kabul matrisi
 
@@ -651,7 +651,7 @@ Kesin takvim Faz 2'den önce verilmez. En büyük belirsizlik dosya sayısı de�
 | İlk kompresör kayıp modeli | Çalışan/geçerli ampirik aday | Aynı koşullarda model doğrulaması |
 | Minimum streamline | Backend/model için doğrulanan sayı | Tek streamline ve düşük çözünürlük deneyleri |
 | Varsayılan benchmark fidelity | Ölçümle seçilen sabit profil | Refinement ve süre raporu |
-| Runtime | `>=3.12,<3.13`; referans 3.12.10 | Windows yerel kabulü tamam; Linux CI ve eğitim reposu bekleniyor |
+| Runtime | `>=3.12,<3.13`; referans 3.12.10 | Windows/Ubuntu CI tamam; eğitim reposu bekleniyor |
 | Off-design destek kapsamı | Uygun model ve sabit geometri | Closure/incidence/korunum kontrolleri |
 | İleri kombinasyon sınırları | Mümkün olan doğrulanmış kapsam | Birleşik senaryo testleri |
 | Sürüm numarası | Mevcut paket politikasına uygun yeni sürüm | API/physics değişikliklerinin son hali |

@@ -6,14 +6,19 @@ The source code in this repository is licensed under the Apache License, Version
 
 ## What we license
 
-The material we produced is licensed under the
+The benchmark and report material identified below that we produced is licensed under the
 **[Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)**.
 
-That covers everything in this repository that we wrote or computed, including:
+This grant covers the following project-authored or project-computed material:
 
 - task definitions (`task.json`) and prompts (`prompt.txt`)
 - evaluation output for every run: scores, score components, engineering metrics, simulator warnings, fidelity notes, status and error fields, token counts, latency, pricing snapshots and costs
 - research notes (`notes.md`), track documentation, and the engineering reports under `reports/`
+
+It does not replace the Apache-2.0 license for source code, and it does not apply
+to third-party material merely because that material is stored in this
+repository. Third-party research provenance is documented in
+[`THIRD_PARTY.md`](../THIRD_PARTY.md).
 
 You are free to share and adapt this material, including commercially, provided you give appropriate credit, link to the license, and indicate whether you made changes.
 
@@ -26,6 +31,11 @@ We did not author that text and we do not claim copyright in it. It is reproduce
 **If you intend to reuse the raw responses — particularly as training data — check the terms of the model that produced them.** Each record names its `model_id` and `provider`, so the applicable terms are identifiable per row.
 
 The CC BY 4.0 grant above applies to our scores, metrics, annotations, and the structure and selection of the dataset. It does not and cannot extend to third-party model output.
+
+Research records produced while running third-party simulators can contain
+source identifiers and source-derived numerical fields. The grant covers our
+analysis, annotations, and record structure, but does not purport to relicense
+any upstream source, geometry, model asset, or other material we do not own.
 
 ## Citation
 

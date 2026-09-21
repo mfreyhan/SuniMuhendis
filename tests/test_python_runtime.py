@@ -2,6 +2,8 @@ import sys
 import tomllib
 from pathlib import Path
 
+from sunimuhendis import __version__
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,3 +23,11 @@ def test_python_version_contract_is_consistent():
         and classifier != "Programming Language :: Python :: 3.12"
         for classifier in project["classifiers"]
     )
+
+
+def test_public_version_is_consistent():
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+
+    assert project["version"] == __version__
+    assert "version: {}".format(__version__) in citation
