@@ -21,7 +21,8 @@ def test_unknown_loss_row_is_rejected():
     t=ThroughflowTaskV1.model_validate(task(physics={"default_loss_model":"diffusion","row_loss_models":{"missing":"td2"}}))
     with pytest.raises(ValueError,match="unknown rows"): t.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
 def test_fixed_loss_requires_explicit_fraction():
-    with pytest.raises(ValidationError): ThroughflowTaskV1.model_validate(task(physics={"default_loss_model":"fixed_pressure"}))
+    parsed=ThroughflowTaskV1.model_validate(task(physics={"default_loss_model":"fixed_pressure"}))
+    with pytest.raises(ValueError,match="requires a fraction"): parsed.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
 def test_extra_fields_are_rejected():
     value=design(); value["rows"][0]["unknown"]=1
     with pytest.raises(ValidationError): ThroughflowDesignV1.model_validate(value)

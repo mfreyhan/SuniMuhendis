@@ -1,5 +1,6 @@
 """Versioned SI-unit contracts. The NASA backend is not registered yet."""
 from enum import Enum
+import math
 from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -51,7 +52,7 @@ class ThroughflowDesignV1(StrictModel):
     def topology(self):
         ids=[r.row_id for r in self.rows]; x=[r.axial_location_m for r in self.rows]
         if len(ids)!=len(set(ids)): raise ValueError("row_id values must be unique")
-        if any(b<=a for a,b in zip(x,x[1:])): raise ValueError("rows must be axially ordered")
+        if any(b<a for a,b in zip(x,x[1:])): raise ValueError("rows must be axially ordered")
         if self.rows[0].row_type!="inlet" or self.rows[-1].row_type!="outlet": raise ValueError("inlet/outlet boundaries required")
         stages=[r.stage_id for r in self.rows if r.row_type=="rotor"]
         if not stages or len(stages)!=len(set(stages)): raise ValueError("each stage requires exactly one rotor")
@@ -66,11 +67,12 @@ class Numerics(StrictModel):
     streamlines: int=Field(default=5,ge=1,le=65); max_iterations: int=Field(default=100,ge=1,le=2000); residual_tolerance: float=Field(default=1e-6,gt=0,le=1e-2); massflow_spread_tolerance: float=Field(default=.01,gt=0,le=.25)
 LossModelName = Literal["fixed_pressure","diffusion","td2","kacker_okapuu","ainley_mathieson"]
 class Physics(StrictModel):
-    default_loss_model: LossModelName; row_loss_models: Dict[str,LossModelName]=Field(default_factory=dict); fixed_pressure_loss_fraction: Optional[float]=Field(default=None,ge=0,lt=1)
+    default_loss_model: LossModelName; row_loss_models: Dict[str,LossModelName]=Field(default_factory=dict); fixed_pressure_loss_fraction: Optional[float]=Field(default=None,ge=0,lt=1); row_fixed_pressure_loss_fractions: Dict[str,float]=Field(default_factory=dict)
     @model_validator(mode="after")
     def fixed(self):
+        if any(not math.isfinite(v) or v<0 or v>=1 for v in self.row_fixed_pressure_loss_fractions.values()): raise ValueError("row fixed pressure loss fractions must be finite in [0,1)")
         selected={self.default_loss_model,*self.row_loss_models.values()}; has="fixed_pressure" in selected
-        if has != (self.fixed_pressure_loss_fraction is not None): raise ValueError("fixed pressure loss selection and fraction must be supplied together")
+        if not has and (self.fixed_pressure_loss_fraction is not None or self.row_fixed_pressure_loss_fractions): raise ValueError("fixed pressure loss fractions are unused")
         return self
 class ThroughflowTaskV1(StrictModel):
     environment: Literal["turbomachinery_throughflow"]="turbomachinery_throughflow"; task_schema_version: Literal["throughflow_task_v1"]="throughflow_task_v1"
@@ -78,8 +80,12 @@ class ThroughflowTaskV1(StrictModel):
     secondary_operating_points: List[SecondaryPoint]=Field(default_factory=list); physics: Physics; numerics: Numerics=Field(default_factory=Numerics); max_stages: int=Field(default=12,ge=1,le=30)
     def validate_design_ownership(self, design):
         if design.stage_count>self.max_stages: raise ValueError("design exceeds max_stages")
-        unknown=set(self.physics.row_loss_models)-{r.row_id for r in design.rows}
+        row_ids={r.row_id for r in design.rows}; unknown=(set(self.physics.row_loss_models)|set(self.physics.row_fixed_pressure_loss_fractions))-row_ids
         if unknown: raise ValueError("loss models reference unknown rows: {}".format(sorted(unknown)))
+        for row in design.rows:
+            if row.row_type not in ("stator","rotor"): continue
+            model=self.physics.row_loss_models.get(row.row_id,self.physics.default_loss_model)
+            if model=="fixed_pressure" and row.row_id not in self.physics.row_fixed_pressure_loss_fractions and self.physics.fixed_pressure_loss_fraction is None: raise ValueError("fixed pressure loss requires a fraction for {}".format(row.row_id))
 class Diagnostic(StrictModel):
     category: Literal["design_violation","model_validity","numerical_failure","infrastructure_failure","configuration_error"]
     code: str=Field(min_length=1); message: str=Field(min_length=1); location: Optional[str]=None

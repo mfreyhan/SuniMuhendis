@@ -64,7 +64,8 @@ class NasaTurboDesignSimulator(BaseSimulator):
         for row in design.rows[1:-1]:
             location=(row.axial_location_m-x[0])/length
             loss_name=task.physics.row_loss_models.get(row.row_id,task.physics.default_loss_model)
-            loss=self._loss(loss_name,task.physics.fixed_pressure_loss_fraction or 0.0)
+            fraction=task.physics.row_fixed_pressure_loss_fractions.get(row.row_id,task.physics.fixed_pressure_loss_fraction or 0.0)
+            loss=self._loss(loss_name,fraction)
             angles=self._profile(row.metal_angle_out_deg,70.0 if row.row_type=="stator" else -65.0)
             built=(make_stator_row if row.row_type=="stator" else make_rotor_row)(hub_location=location,metal_exit_angle_deg=angles,loss_function=loss)
             built.stage_id=stage_index[row.stage_id]
