@@ -60,7 +60,7 @@ class ThroughflowDesignV1(StrictModel):
     @property
     def stage_count(self): return sum(r.row_type=="rotor" for r in self.rows)
 class OperatingPoint(StrictModel):
-    mass_flow_kg_s: float=Field(gt=0); inlet_total_pressure_pa: float=Field(gt=0); inlet_total_temperature_k: float=Field(gt=0); shaft_speed_rpm: float=Field(gt=0); outlet_static_pressure_pa: Optional[float]=Field(default=None,gt=0)
+    mass_flow_kg_s: float=Field(gt=0); inlet_total_pressure_pa: float=Field(gt=0); inlet_total_temperature_k: float=Field(gt=0); shaft_speed_rpm: float=Field(gt=0); inlet_mach: float=Field(default=.2,gt=0,lt=2); inlet_flow_angle_deg: float=0.0; outlet_static_pressure_pa: Optional[float]=Field(default=None,gt=0); outlet_total_pressure_pa: Optional[float]=Field(default=None,gt=0)
 class SecondaryPoint(StrictModel):
     name: str=Field(min_length=1); mass_flow_kg_s: Optional[float]=Field(default=None,gt=0); shaft_speed_rpm: Optional[float]=Field(default=None,gt=0); outlet_static_pressure_pa: Optional[float]=Field(default=None,gt=0)
 class Numerics(StrictModel):

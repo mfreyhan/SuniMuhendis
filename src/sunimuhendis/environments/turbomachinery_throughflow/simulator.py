@@ -12,9 +12,8 @@ class NasaTurboDesignSimulator(BaseSimulator):
             design=ThroughflowDesignV1.model_validate(inputs["design"])
             task=ThroughflowTaskV1.model_validate(inputs["task"])
             task.validate_design_ownership(design)
-            if design.machine_type != "turbine" or design.flow_path != "axial":
-                raise ValueError("experimental backend currently supports axial turbines only")
-            return self._solve_turbine(design, task)
+            if design.flow_path != "axial": raise ValueError("experimental backend currently supports axial machines only")
+            return self._solve_turbine(design, task) if design.machine_type=="turbine" else self._solve_compressor(design,task)
         except (ImportError, ModuleNotFoundError) as exc:
             return False, {}, {}, "NASA turbo-design dependency is unavailable: {}".format(exc)
         except Exception as exc:
@@ -52,8 +51,8 @@ class NasaTurboDesignSimulator(BaseSimulator):
         x=np.asarray([s.axial_m for s in stations],dtype=float)
         passage=Passage(x,np.asarray([s.hub_radius_m for s in stations]),x,np.asarray([s.shroud_radius_m for s in stations]),passageType=PassageType.Axial)
         op=task.operating_conditions
-        inlet=Inlet(hub_location=0,alpha=[0])
-        inlet.init_total(P0=[op.inlet_total_pressure_pa],T0=[op.inlet_total_temperature_k],M=[0.2],percent_radii=[0.5])
+        inlet=Inlet(hub_location=0,alpha=[op.inlet_flow_angle_deg])
+        inlet.init_total(P0=[op.inlet_total_pressure_pa],T0=[op.inlet_total_temperature_k],M=[op.inlet_mach],percent_radii=[0.5])
         if op.outlet_static_pressure_pa is None:
             raise ValueError("axial turbine requires outlet_static_pressure_pa")
         outlet=Outlet(num_streamlines=task.numerics.streamlines)
@@ -75,6 +74,31 @@ class NasaTurboDesignSimulator(BaseSimulator):
         spool=TurbineSpool(passage=passage,massflow=op.mass_flow_kg_s,inlet=inlet,outlet=outlet,rows=rows,rpm=op.shaft_speed_rpm,num_streamlines=task.numerics.streamlines,fluid=fluid)
         spool.adjust_streamlines=False
         spool.solve()
+        metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":float(spool.overall_pressure_ratio()),"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines)}
+        if not all(math.isfinite(v) for v in metrics.values()): raise ValueError("solver returned non-finite summary metrics")
+        raw={"backend":"nasa/turbo-design","backend_mode":"fixed_streamline_geometry","simulator_version":self.VERSION,"convergence_history":getattr(spool,"convergence_history",[]),"rows":[{"row_id":key,"P0":np.asarray(getattr(value,"P0",[])).tolist(),"T0":np.asarray(getattr(value,"T0",[])).tolist(),"M":np.asarray(getattr(value,"M",[])).tolist()} for key,value in row_map.items()]}
+        return True,metrics,raw,""
+
+    def _solve_compressor(self,design,task):
+        import numpy as np
+        from cantera import Solution
+        from turbodesign import Inlet,Outlet,Passage,PassageType
+        from turbodesign.compressor_spool import CompressorSpool
+        from turbodesign.row_factory import make_rotor_row,make_stator_row
+        stations=design.passage.stations; x=np.asarray([s.axial_m for s in stations],dtype=float)
+        passage=Passage(x,np.asarray([s.hub_radius_m for s in stations]),x,np.asarray([s.shroud_radius_m for s in stations]),passageType=PassageType.Axial,zero_phi=True)
+        op=task.operating_conditions
+        if op.outlet_total_pressure_pa is None: raise ValueError("axial compressor requires outlet_total_pressure_pa")
+        inlet=Inlet(hub_location=0,alpha=[op.inlet_flow_angle_deg]); inlet.init_total([op.inlet_total_pressure_pa],[op.inlet_total_temperature_k],M=[op.inlet_mach],percent_radii=[.5])
+        outlet=Outlet(num_streamlines=task.numerics.streamlines); outlet.init_total(op.outlet_total_pressure_pa,[.5])
+        length=float(x[-1]-x[0]); rows=[]; row_map={}; stage_ratio=(op.outlet_total_pressure_pa/op.inlet_total_pressure_pa)**(1/design.stage_count)
+        stage_names=list(dict.fromkeys(r.stage_id for r in design.rows if r.row_type=="rotor")); stage_index={name:i for i,name in enumerate(stage_names)}
+        for row in design.rows[1:-1]:
+            location=(row.axial_location_m-x[0])/length; loss_name=task.physics.row_loss_models.get(row.row_id,task.physics.default_loss_model); fraction=task.physics.row_fixed_pressure_loss_fractions.get(row.row_id,task.physics.fixed_pressure_loss_fraction or 0.0); loss=self._loss(loss_name,fraction); angles=self._profile(row.metal_angle_out_deg,-23.87 if row.row_type=="rotor" else op.inlet_flow_angle_deg)
+            factory=make_rotor_row if row.row_type=="rotor" else make_stator_row
+            built=factory(hub_location=location,metal_exit_angle_deg=angles,loss_function=loss,P0_ratio=stage_ratio if row.row_type=="stator" else 1.0,num_blades=row.blade_count,axial_chord=row.axial_chord_m); built.stage_id=stage_index[row.stage_id]; rows.append(built); row_map[row.row_id]=built
+        fluid=Solution("air.yaml"); fluid.TP=op.inlet_total_temperature_k,op.inlet_total_pressure_pa
+        spool=CompressorSpool(passage,op.mass_flow_kg_s,inlet,outlet,rows,num_streamlines=task.numerics.streamlines,fluid=fluid,rpm=op.shaft_speed_rpm); spool.adjust_streamlines=False; spool.solve_balance_pressure()
         metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":float(spool.overall_pressure_ratio()),"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines)}
         if not all(math.isfinite(v) for v in metrics.values()): raise ValueError("solver returned non-finite summary metrics")
         raw={"backend":"nasa/turbo-design","backend_mode":"fixed_streamline_geometry","simulator_version":self.VERSION,"convergence_history":getattr(spool,"convergence_history",[]),"rows":[{"row_id":key,"P0":np.asarray(getattr(value,"P0",[])).tolist(),"T0":np.asarray(getattr(value,"T0",[])).tolist(),"M":np.asarray(getattr(value,"M",[])).tolist()} for key,value in row_map.items()]}

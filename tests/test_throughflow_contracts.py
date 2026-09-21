@@ -33,3 +33,12 @@ def test_environment_is_registered_and_lazy():
     assert "turbomachinery_throughflow" in list_environments()
     env=make_env("turbomachinery_throughflow")
     assert env.simulator.VERSION=="nasa_turbo_design_experimental_v1"
+
+def test_axial_compressor_contract_accepts_total_pressure_boundary():
+    from scripts.run_throughflow_compressor import build_case
+    design_value,task_value=build_case()
+    design_model=ThroughflowDesignV1.model_validate(design_value)
+    task_model=ThroughflowTaskV1.model_validate(task_value)
+    task_model.validate_design_ownership(design_model)
+    assert design_model.machine_type=="compressor"
+    assert task_model.operating_conditions.outlet_total_pressure_pa is not None
