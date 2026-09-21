@@ -4,7 +4,7 @@ All notable public changes are recorded here. Simulator and score behavior have
 their own explicit versions; a package release does not make results from
 different simulator or score versions comparable.
 
-## [0.6.0] - 2026-09-21
+## [Unreleased]
 
 ### Changed
 
@@ -30,5 +30,5 @@ different simulator or score versions comparable.
   task-owned operating conditions.
 - Added live price snapshots and token/cost accounting for benchmark runs.
 
-[0.6.0]: https://github.com/mfreyhan/SuniMuhendis/compare/envs-v0.5.0...envs-v0.6.0
+[Unreleased]: https://github.com/mfreyhan/SuniMuhendis/compare/envs-v0.5.0...main
 [0.5.0]: https://github.com/mfreyhan/SuniMuhendis/releases/tag/envs-v0.5.0
