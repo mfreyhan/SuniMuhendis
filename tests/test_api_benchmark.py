@@ -21,6 +21,14 @@ from sunimuhendis.model_clients.hf_client import HFInferenceClient
 from sunimuhendis.model_clients.opencode_client import OpenCodeClient
 from sunimuhendis.model_clients.openrouter_client import OpenRouterClient
 
+@pytest.fixture(autouse=True)
+def _isolate_repo_root(tmp_path, monkeypatch):
+    """Keep run_benchmark from archiving price books into the real repository."""
+    import scripts.run_api_benchmark as runner
+
+    monkeypatch.setattr(runner, "_REPO_ROOT", str(tmp_path))
+
+
 _VALID_STATUS = {
     "success", "schema_error", "drc_error", "simulation_error",
     "parse_error", "empty_response", "client_error", "token_limit",
