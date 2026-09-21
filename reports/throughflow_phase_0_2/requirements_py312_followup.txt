@@ -1,0 +1,4 @@
+# Follow-up profile: initial pinned Windows environment plus the EEE-HPC reader.
+-r requirements_py312.txt
+openpyxl==3.1.5
+et-xmlfile==2.0.0

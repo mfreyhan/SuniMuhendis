@@ -1,0 +1,195 @@
+{
+  "case": {
+    "id": "followup_compressor_aungier_0.3",
+    "example": "compressor1",
+    "n": 3,
+    "loss": "aungier",
+    "massflow_factor": 0.3
+  },
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "backend_sha": "23c2b0bf781b4b030014f458ecfde872896777a2",
+  "instrumentation": [
+    "plot/export suppressed",
+    "child-only home",
+    "network blocked",
+    "single BLAS thread"
+  ],
+  "physical_validation": "not_certified",
+  "packages": {
+    "turbo-design": "1.4.3",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "cantera": "3.2.0",
+    "pyturbo-aero": "1.3.8"
+  },
+  "status": "error",
+  "error_type": "CanteraError",
+  "error": "\n*******************************************************************************\nCanteraError thrown by Phase::setDensity:\ndensity must be positive. density = -0.062499080467742496\n*******************************************************************************\n",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 204, in worker\n    result.update(execute(spec))\n                  ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 164, in execute\n    namespace[\"main\"]()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\examples\\mattingly-axial-compressor\\example9.1.py\", line 71, in main\n    spool.solve_balance_pressure()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 134, in solve\n    getattr(spool, method)()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\compressor_spool.py\", line 381, in solve_balance_pressure\n    self.solve()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\compressor_spool.py\", line 353, in solve\n    self.initialize()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\compressor_spool.py\", line 342, in initialize\n    rotor_calc(row, upstream,calculate_vm=True)\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\compressor_math.py\", line 459, in rotor_calc\n    solve_massflow_for_current_loss()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\compressor_math.py\", line 431, in solve_massflow_for_current_loss\n    calculate_vm_func(res.x, apply=True)\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\compressor_math.py\", line 408, in calculate_vm_func\n    row.entropy_rise = row_entropy_rise(row, upstream, T_local, P_local)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\bladerow.py\", line 953, in row_entropy_rise\n    return entropy_change(row.fluid, T2, P2, upstream.T, upstream.P)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\bladerow.py\", line 936, in entropy_change\n    fluid.TP = float(T2_arr.flat[i]), float(P2_arr.flat[i])\n    ^^^^^^^^\n  File \"cantera/thermo.pyx\", line 1403, in cantera.thermo.ThermoPhase.TP.__set__\ncantera._utils.CanteraError: \n*******************************************************************************\nCanteraError thrown by Phase::setDensity:\ndensity must be positive. density = -0.062499080467742496\n*******************************************************************************\n\n",
+  "partial_solution": {
+    "num_streamlines": 3,
+    "row_count": 2,
+    "massflow_input_attribute": 6.80388,
+    "power_W": 0.0,
+    "pressure_ratio": 1.3000000000000003,
+    "eta_polytropic": 0.0,
+    "finite_selected_fields": true,
+    "row_massflow_spread_relative": 2.0,
+    "history": [],
+    "rows": [
+      {
+        "type": "Rotor",
+        "stage_id": 0,
+        "loss_model": "AxialCompressorAungier",
+        "r": [
+          0.2746123945920154,
+          0.30479999999999996,
+          0.3349876054079845
+        ],
+        "P0": [
+          -7094.425749250189,
+          -78187.72059387318,
+          -176246.36365422927
+        ],
+        "T0": [
+          299.80576510088486,
+          310.94824992295133,
+          323.2935321007675
+        ],
+        "P": [
+          -4809.726529504202,
+          -48891.5543221888,
+          -101121.18509274667
+        ],
+        "T": [
+          268.1396674656446,
+          271.72283436177736,
+          275.61402986438736
+        ],
+        "M": [
+          0.7656327669396593,
+          0.8464951620254559,
+          0.9266569078559211
+        ],
+        "M_rel": [
+          0.29255406537072176,
+          0.2925540653707225,
+          0.2925540653707222
+        ],
+        "Yp": [
+          9.53173236457282,
+          9.53173236457282,
+          9.53173236457282
+        ],
+        "power": 0,
+        "total_massflow": -6.8038847904514554,
+        "total_massflow_no_coolant": -6.8038847904514554,
+        "massflow": [
+          0.0,
+          -1.670653217937971,
+          -6.8038847904514554
+        ],
+        "rpm": 9549.29658551372,
+        "metal_exit_angle": [
+          -23.87,
+          -23.87,
+          -23.87
+        ],
+        "alpha2": [
+          1.2138396672803218,
+          1.249238205327977,
+          1.277922077358147
+        ],
+        "beta2": [
+          -0.41661009245104647,
+          -0.41661009245104647,
+          -0.41661009245104647
+        ],
+        "axial_chord": 0.02567168482885159,
+        "chord": [
+          0.03454465932984216
+        ]
+      },
+      {
+        "type": "Stator",
+        "stage_id": 0,
+        "loss_model": "AxialCompressorAungier",
+        "r": [
+          0.2769570664385224,
+          0.30479999999999996,
+          0.3326429335614775
+        ],
+        "P0": [
+          131758.8636,
+          131758.8636,
+          131758.8636
+        ],
+        "T0": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "P": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "T": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "M": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "M_rel": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "Yp": [
+          9.53173236457282,
+          9.53173236457282,
+          9.53173236457282
+        ],
+        "power": 0,
+        "total_massflow": 0,
+        "total_massflow_no_coolant": 0,
+        "massflow": [
+          0
+        ],
+        "rpm": 9549.29658551372,
+        "metal_exit_angle": [
+          40.0,
+          40.0,
+          40.0
+        ],
+        "alpha2": [
+          0.6981317007977318,
+          0.6981317007977318,
+          0.6981317007977318
+        ],
+        "beta2": [
+          0.6981317007977318,
+          0.6981317007977318,
+          0.6981317007977318
+        ],
+        "axial_chord": 0.05134336965770318,
+        "chord": [
+          0.06908931865968432
+        ]
+      }
+    ]
+  },
+  "warnings": [
+    "unclosed <socket.socket fd=1256, family=2, type=1, proto=0>"
+  ],
+  "blocked_network_attempts": [
+    "('18.168.122.62', 443)"
+  ],
+  "elapsed_seconds": 1.6931441999986419,
+  "written_files": [],
+  "peak_working_set_bytes": 202305536
+}

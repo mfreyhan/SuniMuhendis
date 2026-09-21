@@ -1,0 +1,28 @@
+{
+  "case": {
+    "id": "compressor1_repeat",
+    "example": "compressor1",
+    "n": 3,
+    "repeat_same_object": true
+  },
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "backend_sha": "23c2b0bf781b4b030014f458ecfde872896777a2",
+  "instrumentation": [
+    "plot/export suppressed",
+    "child-only home",
+    "network blocked",
+    "single BLAS thread"
+  ],
+  "physical_validation": "not_certified",
+  "status": "error",
+  "error_type": "Exception",
+  "error": "Invalid value of C 5.96 which causes Vm to be nan.\nChange reduce alpha/beta for RowType.Stator 2",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 189, in worker\n    result.update(execute(spec))\n                  ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 157, in execute\n    namespace[\"main\"]()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\examples\\mattingly-axial-compressor\\example9.1.py\", line 71, in main\n    spool.solve_balance_pressure()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 143, in solve\n    getattr(spool, method)()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\compressor_spool.py\", line 381, in solve_balance_pressure\n    self.solve()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\compressor_spool.py\", line 360, in solve\n    self.balance_pressure()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\compressor_spool.py\", line 507, in balance_pressure\n    row = radeq(row, upstream, downstream)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\radeq.py\", line 142, in radeq\n    res2 = solve_ivp(ode_radeq_streamtube, t_span = [0,hub_radius-mean_radius], y0 = ics,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\integrate\\_ivp\\ivp.py\", line 660, in solve_ivp\n    message = solver.step()\n              ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\integrate\\_ivp\\base.py\", line 201, in step\n    success, message = self._step_impl()\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\integrate\\_ivp\\rk.py\", line 144, in _step_impl\n    y_new, f_new = rk_step(self.fun, t, y, self.f, h, self.A,\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\integrate\\_ivp\\rk.py\", line 67, in rk_step\n    f_new = fun(t + h, y_new)\n            ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\integrate\\_ivp\\base.py\", line 158, in fun\n    return self.fun_single(t, y)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\integrate\\_ivp\\base.py\", line 24, in fun_wrapped\n    return np.asarray(fun(t, y), dtype=dtype)\n                      ^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\radeq.py\", line 99, in ode_radeq_streamtube\n    raise Exception(f\"Invalid value of C {C:0.2f} which causes Vm to be nan.\\nChange reduce alpha/beta for {row.row_type} {row.id}\")\nException: Invalid value of C 5.96 which causes Vm to be nan.\nChange reduce alpha/beta for RowType.Stator 2\n",
+  "warnings": [
+    "divide by zero encountered in divide",
+    "unclosed <socket.socket fd=1336, family=2, type=1, proto=0>"
+  ],
+  "elapsed_seconds": 2.1637446000022464,
+  "written_files": [],
+  "peak_working_set_bytes": 202780672
+}

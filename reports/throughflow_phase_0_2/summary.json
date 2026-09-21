@@ -1,0 +1,82 @@
+{
+  "groups": {
+    "py312_followup": {
+      "counts": {
+        "error": 5,
+        "completed": 1
+      },
+      "cases": 6,
+      "median_process_elapsed_seconds": 1.9071621500006586,
+      "maximum_process_elapsed_seconds": 6.57824840000103,
+      "max_peak_working_set_bytes": 217669632
+    },
+    "py312_latest": {
+      "counts": {
+        "error": 37,
+        "completed": 22
+      },
+      "cases": 59,
+      "median_process_elapsed_seconds": 1.9591027000060421,
+      "maximum_process_elapsed_seconds": 14.812741699999606,
+      "max_peak_working_set_bytes": 208572416
+    },
+    "py312_numpy126": {
+      "counts": {
+        "error": 7
+      },
+      "cases": 7,
+      "median_process_elapsed_seconds": 0.5225541999971028,
+      "maximum_process_elapsed_seconds": 1.1953099000020302,
+      "max_peak_working_set_bytes": 89452544
+    }
+  },
+  "test_reports": {
+    "baseline_pytest.xml": {
+      "tests": 222,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failure_reasons": []
+    },
+    "final_pytest.xml": {
+      "tests": 227,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failure_reasons": []
+    },
+    "python312_migration_pytest.xml": {
+      "tests": 229,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failure_reasons": []
+    },
+    "research_tests.xml": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failure_reasons": []
+    },
+    "upstream_py312.xml": {
+      "tests": 365,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4,
+      "expected_failure_reasons": [
+        "R1 (docs/centrifugal/20-review-fixes.md): ImpellerLeakageAungier.delta_h is dimensionally m/s, not J/kg (docs/PHYSICS-RULES.md rule 1) -- confirmed today at ~1.914812 J/kg, i.e. really 1.91 m/s. DO NOT make this pass by guessing the missing factor (e.g. multiplying by Ucl again) -- that would be exactly the magic-number failure this project exists to prevent. This xfail stays red until the formula is repaired against Aungier (2000)'s own primary source.",
+        "KNOWN DEFECT, not a flake -- but now ONE loss, not three. 2026-08-01: ImpellerIncidenceConrad is RESURRECTED (item 5e: beta1b_deg is wired and the model now RAISES rather than falling back to the flow angle), and ImpellerEntranceDiffusionAungier + ImpellerMixingAungier were revived by giving this fixture the geometry production has always passed (throat_area, blockage, camberline lengths -- item 10 / debt D5). Note ImpellerMixingAungier was dead and the previous version of THIS REASON did not even name it: with blockage2 = 0 its W_out reduces to W2 exactly, so W_sep - W_out == 0 identically. WHAT REMAINS: ImpellerChokeAungier alone, and for a sharper reason than 'no throat station' -- the throat IS wired now. Its onset gate (x <= 0 -> return 0) never opens inside the envelope the solver can reach: measured dh == 0.000000 EXACTLY at the largest mdot that converges, at 80/90/100/105% speed; the solver's own meridional-Mach choke criterion trips first (Choked raised at mdot 5.90 vs 5.85 solving, at design speed). An onset loss whose onset lies outside the solvable envelope cannot be evidence. DO NOT close this by lowering onset_threshold or onset_scale -- those are published Aungier/Kovar constants and moving them to make a test pass is precisely what docs/DO-NOT-FIT.md forbids. Resolve the disagreement between Aungier's onset criterion and the solver's choke criterion instead. strict=True: when it is resolved, this test MUST start passing and the marker must be removed.",
+        "KNOWN DEFECT (debt D7), not a flake. ImpellerRecirculationOh is 90.1% of all parasitic work, and the psi = 0.81 'pass' rests entirely on it (remove it: psi -> 0.776, FAIL). NOT expected to resolve via the Japikse two-zone model (item 5c): docs/centrifugal/10-two-zone.md investigated it and its verdict is 'do not implement' -- two-zone mixing is INTERNAL (destroys pressure, no work term), recirculation is PARASITIC (adds work, no pressure); per PHYSICS-RULES rule 6 an internal model cannot substitute for a parasitic one at any coefficient value. D7 has NO known resolution in hand -- it is an open, reported defect. strict=True: when a real fix lands, remove the marker.",
+        "KNOWN, UNRESOLVED (item 5e, open). The incidence minimum sits at mdot ~ 6.0 kg/s, ~22% ABOVE the 4.927 design point -- i.e. the model believes HECC runs at ~8 deg positive incidence at its own design point, which is not credible. A real impeller is shockless AT design. Same signature as the unresolved ~5 deg gap between the derived TE metal angles (28.6-37.7) and NASA's stated band (32-42). Candidate causes: (a) the derived beta1b is systematically low; (b) we solve with ZERO inlet blockage, understating Vm1 and so overstating the flow angle. DO NOT close this by tuning beta1b until the V lands on the design point -- that is fitting geometry to the answer, the exact error that made the psi gate meaningless. Resolve the discrepancy, then delete this marker."
+      ]
+    },
+    "upstream_slow_py312.xml": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failure_reasons": []
+    }
+  }
+}

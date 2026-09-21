@@ -1,0 +1,1334 @@
+{
+  "case": {
+    "id": "turbine2_5_original",
+    "example": "turbine2",
+    "n": 5,
+    "loss": null
+  },
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "backend_sha": "23c2b0bf781b4b030014f458ecfde872896777a2",
+  "instrumentation": [
+    "plot/export suppressed",
+    "child-only home",
+    "network blocked",
+    "single BLAS thread"
+  ],
+  "physical_validation": "not_certified",
+  "status": "error",
+  "error_type": "TypeError",
+  "error": "adjust_streamlines() missing 1 required positional argument: 'massflow_fraction'",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 189, in worker\n    result.update(execute(spec))\n                  ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 155, in execute\n    exec(compile(tree, str(script), \"exec\"), namespace)\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\examples\\optturb-multistage\\multistage-fixed_pressure_loss2.py\", line 98, in <module>\n    spool.solve() # This also initializes streamlines\n    ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 131, in solve\n    getattr(spool, method)()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\turbine_spool.py\", line 394, in solve\n    self._balance_pressure()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\turbine_spool.py\", line 770, in _balance_pressure\n    adjust_streamlines(rows[:-1], self.passage)\nTypeError: adjust_streamlines() missing 1 required positional argument: 'massflow_fraction'\n",
+  "partial_solution": {
+    "num_streamlines": 5,
+    "row_count": 4,
+    "massflow_input_attribute": 22,
+    "power_W": 11124919.330993678,
+    "pressure_ratio": 3.8199417540167744,
+    "eta_polytropic": 0.7841552008785121,
+    "finite_selected_fields": true,
+    "row_massflow_spread_relative": 4.581788242784866e-05,
+    "history": [
+      {
+        "iteration": 1,
+        "massflow_std": 6.936209053854357,
+        "massflow_change": 6.935209053854357,
+        "relative_change": 0.9998558290281858,
+        "massflow": 35.368321167434644
+      },
+      {
+        "iteration": 2,
+        "massflow_std": 6.935720886267843,
+        "massflow_change": 0.0004881675865142654,
+        "relative_change": 7.038454899198684e-05,
+        "massflow": 35.3699149245299
+      },
+      {
+        "iteration": 3,
+        "massflow_std": 6.935098663281217,
+        "massflow_change": 0.0006222229866263973,
+        "relative_change": 8.97208557278122e-05,
+        "massflow": 35.368988686410844
+      },
+      {
+        "iteration": 4,
+        "massflow_std": 6.933497173154752,
+        "massflow_change": 0.0016014901264647108,
+        "relative_change": 0.00023097869465720576,
+        "massflow": 35.368988502811376
+      },
+      {
+        "iteration": 5,
+        "massflow_std": 17.66502243105182,
+        "massflow_change": 10.731525257897069,
+        "relative_change": 0.60750136603467,
+        "massflow": 29.801109795194915
+      },
+      {
+        "iteration": 6,
+        "massflow_std": 12.725706002764419,
+        "massflow_change": 4.939316428287402,
+        "relative_change": 0.38813692750833856,
+        "massflow": 35.70005774856202
+      },
+      {
+        "iteration": 7,
+        "massflow_std": 8.511704409911854,
+        "massflow_change": 4.214001592852565,
+        "relative_change": 0.4950831690002502,
+        "massflow": 35.64946782127034
+      },
+      {
+        "iteration": 8,
+        "massflow_std": 7.328768206993315,
+        "massflow_change": 1.1829362029185386,
+        "relative_change": 0.1614099626987449,
+        "massflow": 35.45018799573693
+      },
+      {
+        "iteration": 9,
+        "massflow_std": 7.032754369587676,
+        "massflow_change": 0.29601383740563936,
+        "relative_change": 0.042090740249043336,
+        "massflow": 35.39021019923711
+      },
+      {
+        "iteration": 10,
+        "massflow_std": 6.9586374248828,
+        "massflow_change": 0.07411694470487618,
+        "relative_change": 0.01065107149279652,
+        "massflow": 35.37443458281763
+      },
+      {
+        "iteration": 11,
+        "massflow_std": 6.940086036383777,
+        "massflow_change": 0.018551388499022714,
+        "relative_change": 0.00267307759612288,
+        "massflow": 35.370437530614254
+      },
+      {
+        "iteration": 12,
+        "massflow_std": 6.935509818135071,
+        "massflow_change": 0.004576218248705466,
+        "relative_change": 0.000659824348707503,
+        "massflow": 35.36944860589546
+      },
+      {
+        "iteration": 13,
+        "massflow_std": 6.937944597980318,
+        "massflow_change": 0.0024347798452462044,
+        "relative_change": 0.00035093676677023123,
+        "massflow": 35.37037448936381
+      },
+      {
+        "iteration": 14,
+        "massflow_std": 6.937218905052551,
+        "massflow_change": 0.0007256929277668078,
+        "relative_change": 0.00010460862453659454,
+        "massflow": 35.36944859333733
+      },
+      {
+        "iteration": 15,
+        "massflow_std": 6.935617632958172,
+        "massflow_change": 0.0016012720943789915,
+        "relative_change": 0.00023087663984959603,
+        "massflow": 35.369448409632845
+      },
+      {
+        "iteration": 16,
+        "massflow_std": 21.5238243791922,
+        "massflow_change": 14.588206746234027,
+        "relative_change": 0.677770199627578,
+        "massflow": 15.71430748905352
+      },
+      {
+        "iteration": 17,
+        "massflow_std": 5.227177837803637,
+        "massflow_change": 16.29664654138856,
+        "relative_change": 3.117675932800501,
+        "massflow": 34.11731966486093
+      },
+      {
+        "iteration": 18,
+        "massflow_std": 5.191802885529653,
+        "massflow_change": 0.03537495227398413,
+        "relative_change": 0.0068136162049949,
+        "massflow": 34.10906739958318
+      },
+      {
+        "iteration": 19,
+        "massflow_std": 5.1918575042508674,
+        "massflow_change": 5.4618721214261257e-05,
+        "relative_change": 1.052007324344742e-05,
+        "massflow": 34.10689747447046
+      },
+      {
+        "iteration": 20,
+        "massflow_std": 5.19028965570634,
+        "massflow_change": 0.001567848544527628,
+        "relative_change": 0.00030207341950634576,
+        "massflow": 34.10691275872955
+      },
+      {
+        "iteration": 21,
+        "massflow_std": 21.525574347961903,
+        "massflow_change": 16.335284692255563,
+        "relative_change": 0.7588779945285051,
+        "massflow": 15.714306921676744
+      },
+      {
+        "iteration": 22,
+        "massflow_std": 5.128487763371438,
+        "massflow_change": 16.397086584590465,
+        "relative_change": 3.197255670901926,
+        "massflow": 32.510026508592205
+      },
+      {
+        "iteration": 23,
+        "massflow_std": 4.9284372342924865,
+        "massflow_change": 0.20005052907895138,
+        "relative_change": 0.04059106762829051,
+        "massflow": 33.341798680548365
+      },
+      {
+        "iteration": 24,
+        "massflow_std": 4.915135650686317,
+        "massflow_change": 0.013301583606169842,
+        "relative_change": 0.0027062495425355143,
+        "massflow": 33.34365126871156
+      },
+      {
+        "iteration": 25,
+        "massflow_std": 4.916204225226068,
+        "massflow_change": 0.001068574539750955,
+        "relative_change": 0.00021735763829091486,
+        "massflow": 33.34125971724903
+      },
+      {
+        "iteration": 26,
+        "massflow_std": 4.9147789779780515,
+        "massflow_change": 0.0014252472480160705,
+        "relative_change": 0.0002899921348248339,
+        "massflow": 33.34127142491684
+      },
+      {
+        "iteration": 27,
+        "massflow_std": 9.731522411151344,
+        "massflow_change": 4.816743433173293,
+        "relative_change": 0.4949629903388795,
+        "massflow": 35.45451370256889
+      },
+      {
+        "iteration": 28,
+        "massflow_std": 3.908438483599813,
+        "massflow_change": 5.823083927551531,
+        "relative_change": 1.4898747804233727,
+        "massflow": 34.15221490490582
+      },
+      {
+        "iteration": 29,
+        "massflow_std": 3.914059188327735,
+        "massflow_change": 0.005620704727922199,
+        "relative_change": 0.0014360295686595432,
+        "massflow": 34.153983094661015
+      },
+      {
+        "iteration": 30,
+        "massflow_std": 3.913291258826441,
+        "massflow_change": 0.0007679295012943399,
+        "relative_change": 0.00019623622431943252,
+        "massflow": 34.15211671234521
+      },
+      {
+        "iteration": 31,
+        "massflow_std": 3.9131930893964704,
+        "massflow_change": 9.816942997042943e-05,
+        "relative_change": 2.508678404764587e-05,
+        "massflow": 34.15211661878513
+      },
+      {
+        "iteration": 32,
+        "massflow_std": 5.1705307819152,
+        "massflow_change": 1.25733769251873,
+        "relative_change": 0.24317381436282706,
+        "massflow": 31.346364380276974
+      },
+      {
+        "iteration": 33,
+        "massflow_std": 3.8386222340726968,
+        "massflow_change": 1.3319085478425037,
+        "relative_change": 0.3469756768509562,
+        "massflow": 33.57363370940315
+      },
+      {
+        "iteration": 34,
+        "massflow_std": 3.841559654159691,
+        "massflow_change": 0.002937420086994269,
+        "relative_change": 0.0007646425804721247,
+        "massflow": 33.575892435905686
+      },
+      {
+        "iteration": 35,
+        "massflow_std": 3.8410726719014106,
+        "massflow_change": 0.00048698225828047725,
+        "relative_change": 0.00012678288068926615,
+        "massflow": 33.57369102398365
+      },
+      {
+        "iteration": 36,
+        "massflow_std": 3.841634077521064,
+        "massflow_change": 0.0005614056196532324,
+        "relative_change": 0.00014613719274780517,
+        "massflow": 33.57369095018919
+      },
+      {
+        "iteration": 37,
+        "massflow_std": 3.780278579921877,
+        "massflow_change": 0.06135549759918657,
+        "relative_change": 0.016230416965845554,
+        "massflow": 33.256449375051666
+      },
+      {
+        "iteration": 38,
+        "massflow_std": 3.7819776187447744,
+        "massflow_change": 0.0016990388228972364,
+        "relative_change": 0.00044924613368313416,
+        "massflow": 33.25943226147041
+      },
+      {
+        "iteration": 39,
+        "massflow_std": 3.782537603480835,
+        "massflow_change": 0.0005599847360606702,
+        "relative_change": 0.00014804472414110332,
+        "massflow": 33.25706867722354
+      },
+      {
+        "iteration": 40,
+        "massflow_std": 3.7824159536439814,
+        "massflow_change": 0.0001216498368536989,
+        "relative_change": 3.216194050167893e-05,
+        "massflow": 33.2570750902247
+      },
+      {
+        "iteration": 41,
+        "massflow_std": 3.750132816313954,
+        "massflow_change": 0.03228313733002741,
+        "relative_change": 0.00860853172708663,
+        "massflow": 33.535565506692194
+      },
+      {
+        "iteration": 42,
+        "massflow_std": 3.7516411409289088,
+        "massflow_change": 0.0015083246149547591,
+        "relative_change": 0.0004020439477804897,
+        "massflow": 33.53779667175091
+      },
+      {
+        "iteration": 43,
+        "massflow_std": 3.7516445956620803,
+        "massflow_change": 3.4547331715373275e-06,
+        "relative_change": 9.208583285132971e-07,
+        "massflow": 33.53557433936162
+      },
+      {
+        "iteration": 44,
+        "massflow_std": 3.75165069708766,
+        "massflow_change": 6.101425579885245e-06,
+        "relative_change": 1.626330933373321e-06,
+        "massflow": 33.535574266645526
+      },
+      {
+        "iteration": 45,
+        "massflow_std": 3.746504427996113,
+        "massflow_change": 0.00514626909154714,
+        "relative_change": 0.0013736188467017819,
+        "massflow": 33.524699525447076
+      },
+      {
+        "iteration": 46,
+        "massflow_std": 3.748021233199907,
+        "massflow_change": 0.0015168052037939361,
+        "relative_change": 0.00040469493351801266,
+        "massflow": 33.526927522607735
+      },
+      {
+        "iteration": 47,
+        "massflow_std": 3.748029575901417,
+        "massflow_change": 8.342701510066775e-06,
+        "relative_change": 2.225889988624308e-06,
+        "massflow": 33.52469924392591
+      },
+      {
+        "iteration": 48,
+        "massflow_std": 3.74805066655566,
+        "massflow_change": 2.109065424305001e-05,
+        "relative_change": 5.6270995563759695e-06,
+        "massflow": 33.5246991715134
+      },
+      {
+        "iteration": 49,
+        "massflow_std": 3.724212423842816,
+        "massflow_change": 0.02383824271284407,
+        "relative_change": 0.006400881582433115,
+        "massflow": 33.51531546728461
+      },
+      {
+        "iteration": 50,
+        "massflow_std": 3.725738162243205,
+        "massflow_change": 0.001525738400388832,
+        "relative_change": 0.00040951305055484907,
+        "massflow": 33.51754863692598
+      },
+      {
+        "iteration": 51,
+        "massflow_std": 3.7257545379812833,
+        "massflow_change": 1.6375738078444613e-05,
+        "relative_change": 4.395280985772466e-06,
+        "massflow": 33.51531523590061
+      },
+      {
+        "iteration": 52,
+        "massflow_std": 3.72578272776278,
+        "massflow_change": 2.8189781496656963e-05,
+        "relative_change": 7.56613671715207e-06,
+        "massflow": 33.51531516374878
+      },
+      {
+        "iteration": 53,
+        "massflow_std": 3.6098896321118943,
+        "massflow_change": 0.11589309565088568,
+        "relative_change": 0.032104332115850516,
+        "massflow": 33.50570827245518
+      },
+      {
+        "iteration": 54,
+        "massflow_std": 3.611489696369867,
+        "massflow_change": 0.0016000642579725444,
+        "relative_change": 0.000443048268857272,
+        "massflow": 33.50794667330669
+      },
+      {
+        "iteration": 55,
+        "massflow_std": 3.6115151635548384,
+        "massflow_change": 2.5467184971539325e-05,
+        "relative_change": 7.05166220220762e-06,
+        "massflow": 33.50570803544457
+      },
+      {
+        "iteration": 56,
+        "massflow_std": 3.611546958230664,
+        "massflow_change": 3.179467582548057e-05,
+        "relative_change": 8.803616896914757e-06,
+        "massflow": 33.505707963558095
+      },
+      {
+        "iteration": 57,
+        "massflow_std": 3.003696294625792,
+        "massflow_change": 0.6078506636048719,
+        "relative_change": 0.20236755117101463,
+        "massflow": 33.48326676980242
+      },
+      {
+        "iteration": 58,
+        "massflow_std": 3.006157743487349,
+        "massflow_change": 0.0024614488615570806,
+        "relative_change": 0.0008188022956844678,
+        "massflow": 33.485516970393775
+      },
+      {
+        "iteration": 59,
+        "massflow_std": 3.0061900835988755,
+        "massflow_change": 3.2340111526529824e-05,
+        "relative_change": 1.075783986613837e-05,
+        "massflow": 33.48326612815555
+      },
+      {
+        "iteration": 60,
+        "massflow_std": 3.006216794736453,
+        "massflow_change": 2.6711137577350996e-05,
+        "relative_change": 8.885299830710543e-06,
+        "massflow": 33.48326605688369
+      },
+      {
+        "iteration": 61,
+        "massflow_std": 2.421491990868088,
+        "massflow_change": 0.5847248038683648,
+        "relative_change": 0.24147294563577928,
+        "massflow": 33.23690798328546
+      },
+      {
+        "iteration": 62,
+        "massflow_std": 0.5591782788202284,
+        "massflow_change": 1.8623137120478597,
+        "relative_change": 3.330447162534687,
+        "massflow": 33.351387619066735
+      },
+      {
+        "iteration": 63,
+        "massflow_std": 0.5626074034160727,
+        "massflow_change": 0.003429124595844324,
+        "relative_change": 0.006095057717021076,
+        "massflow": 33.35371275619947
+      },
+      {
+        "iteration": 64,
+        "massflow_std": 0.5619203130659911,
+        "massflow_change": 0.0006870903500816317,
+        "relative_change": 0.0012227540704707373,
+        "massflow": 33.35139097496089
+      },
+      {
+        "iteration": 65,
+        "massflow_std": 0.5600575881110257,
+        "massflow_change": 0.0018627249549654223,
+        "relative_change": 0.0033259525350742255,
+        "massflow": 33.351390907154
+      },
+      {
+        "iteration": 66,
+        "massflow_std": 10.680775760795955,
+        "massflow_change": 10.12071817268493,
+        "relative_change": 0.9475639597109856,
+        "massflow": 29.785133690666445
+      },
+      {
+        "iteration": 67,
+        "massflow_std": 1.9972195137909574,
+        "massflow_change": 8.683556247004997,
+        "relative_change": 4.347822653966857,
+        "massflow": 32.61824634984919
+      },
+      {
+        "iteration": 68,
+        "massflow_std": 0.27352366194582567,
+        "massflow_change": 1.7236958518451317,
+        "relative_change": 6.301816228924752,
+        "massflow": 33.125679244293586
+      },
+      {
+        "iteration": 69,
+        "massflow_std": 0.2714946084969764,
+        "massflow_change": 0.002029053448849294,
+        "relative_change": 0.007473641779048041,
+        "massflow": 33.128131865063736
+      },
+      {
+        "iteration": 70,
+        "massflow_std": 0.2707493672509929,
+        "massflow_change": 0.0007452412459834634,
+        "relative_change": 0.002752513343060197,
+        "massflow": 33.1256914744754
+      },
+      {
+        "iteration": 71,
+        "massflow_std": 0.2718591185259615,
+        "massflow_change": 0.0011097512749685956,
+        "relative_change": 0.004082082223269692,
+        "massflow": 33.1256914120719
+      },
+      {
+        "iteration": 72,
+        "massflow_std": 0.6134361004459254,
+        "massflow_change": 0.34157698191996394,
+        "relative_change": 0.5568256932900774,
+        "massflow": 32.88299866538857
+      },
+      {
+        "iteration": 73,
+        "massflow_std": 0.20730146265293173,
+        "massflow_change": 0.40613463779299375,
+        "relative_change": 1.9591498901913322,
+        "massflow": 33.04859314839942
+      },
+      {
+        "iteration": 74,
+        "massflow_std": 0.20326084084464321,
+        "massflow_change": 0.004040621808288514,
+        "relative_change": 0.0198789978015335,
+        "massflow": 33.05107735398241
+      },
+      {
+        "iteration": 75,
+        "massflow_std": 0.20574698070667446,
+        "massflow_change": 0.0024861398620312503,
+        "relative_change": 0.012083481631138218,
+        "massflow": 33.04859717476062
+      },
+      {
+        "iteration": 76,
+        "massflow_std": 0.2074455238774852,
+        "massflow_change": 0.0016985431708107235,
+        "relative_change": 0.008187899835399016,
+        "massflow": 33.04859711406628
+      },
+      {
+        "iteration": 77,
+        "massflow_std": 0.8085712569601685,
+        "massflow_change": 0.6011257330826834,
+        "relative_change": 0.7434418771483683,
+        "massflow": 33.552530708342786
+      },
+      {
+        "iteration": 78,
+        "massflow_std": 0.13642325740818953,
+        "massflow_change": 0.672147999551979,
+        "relative_change": 4.926931172306327,
+        "massflow": 33.20540188185382
+      },
+      {
+        "iteration": 79,
+        "massflow_std": 0.1391095517202797,
+        "massflow_change": 0.002686294312090165,
+        "relative_change": 0.019310638837308186,
+        "massflow": 33.20779105738709
+      },
+      {
+        "iteration": 80,
+        "massflow_std": 0.13761224888131013,
+        "massflow_change": 0.0014973028389695664,
+        "relative_change": 0.010880592760757675,
+        "massflow": 33.20539217268504
+      },
+      {
+        "iteration": 81,
+        "massflow_std": 0.13822061092349935,
+        "massflow_change": 0.0006083620421892255,
+        "relative_change": 0.004401384410939511,
+        "massflow": 33.205392108443874
+      },
+      {
+        "iteration": 82,
+        "massflow_std": 0.8630283371116898,
+        "massflow_change": 0.7248077261881904,
+        "relative_change": 0.839842326167314,
+        "massflow": 33.03954105696833
+      },
+      {
+        "iteration": 83,
+        "massflow_std": 0.16462168509080133,
+        "massflow_change": 0.6984066520208885,
+        "relative_change": 4.242494855010531,
+        "massflow": 33.17466615814453
+      },
+      {
+        "iteration": 84,
+        "massflow_std": 0.120936014290523,
+        "massflow_change": 0.043685670800278326,
+        "relative_change": 0.3612296225947451,
+        "massflow": 33.193612857980085
+      },
+      {
+        "iteration": 85,
+        "massflow_std": 0.12366240153193948,
+        "massflow_change": 0.002726387241416481,
+        "relative_change": 0.022047018395581704,
+        "massflow": 33.19601848322634
+      },
+      {
+        "iteration": 86,
+        "massflow_std": 0.1232336597827145,
+        "massflow_change": 0.000428741749224984,
+        "relative_change": 0.0034790961331582714,
+        "massflow": 33.19361344037492
+      },
+      {
+        "iteration": 87,
+        "massflow_std": 0.12215053674914139,
+        "massflow_change": 0.001083123033573108,
+        "relative_change": 0.008867116448268257,
+        "massflow": 33.193613376410056
+      },
+      {
+        "iteration": 88,
+        "massflow_std": 0.14776930816394898,
+        "massflow_change": 0.02561877141480759,
+        "relative_change": 0.17337004370612433,
+        "massflow": 33.13107212032841
+      },
+      {
+        "iteration": 89,
+        "massflow_std": 0.011216551093859845,
+        "massflow_change": 0.13655275707008913,
+        "relative_change": 12.174219680133291,
+        "massflow": 33.165337934281766
+      },
+      {
+        "iteration": 90,
+        "massflow_std": 0.014077577139864458,
+        "massflow_change": 0.0028610260460046125,
+        "relative_change": 0.20323284451433374,
+        "massflow": 33.167758682057695
+      },
+      {
+        "iteration": 91,
+        "massflow_std": 0.009801849704019538,
+        "massflow_change": 0.004275727435844919,
+        "relative_change": 0.43621638414752784,
+        "massflow": 33.16533888966053
+      },
+      {
+        "iteration": 92,
+        "massflow_std": 0.011163660330262098,
+        "massflow_change": 0.0013618106262425593,
+        "relative_change": 0.12198603199624464,
+        "massflow": 33.16533882635211
+      },
+      {
+        "iteration": 93,
+        "massflow_std": 0.29879951582152936,
+        "massflow_change": 0.28763585549126724,
+        "relative_change": 0.9626382917670787,
+        "massflow": 32.9874485941181
+      },
+      {
+        "iteration": 94,
+        "massflow_std": 0.05955472572325166,
+        "massflow_change": 0.2392447900982777,
+        "relative_change": 4.017225958021171,
+        "massflow": 33.12716242919328
+      },
+      {
+        "iteration": 95,
+        "massflow_std": 0.012630753482019917,
+        "massflow_change": 0.046923972241231744,
+        "relative_change": 3.7150572456369115,
+        "massflow": 33.15582714666151
+      },
+      {
+        "iteration": 96,
+        "massflow_std": 0.008536724782796894,
+        "massflow_change": 0.004094028699223023,
+        "relative_change": 0.4795783867219499,
+        "massflow": 33.16108426596463
+      },
+      {
+        "iteration": 97,
+        "massflow_std": 0.00937054242719725,
+        "massflow_change": 0.0008338176444003566,
+        "relative_change": 0.088982857809839,
+        "massflow": 33.1635064738497
+      },
+      {
+        "iteration": 98,
+        "massflow_std": 0.005623638382184452,
+        "massflow_change": 0.0037469040450127987,
+        "relative_change": 0.6662775574053443,
+        "massflow": 33.16108446632578
+      },
+      {
+        "iteration": 99,
+        "massflow_std": 0.008004717223547644,
+        "massflow_change": 0.002381078841363192,
+        "relative_change": 0.2974594573258281,
+        "massflow": 33.16108440311526
+      },
+      {
+        "iteration": 100,
+        "massflow_std": 0.09018653379113177,
+        "massflow_change": 0.08218181656758412,
+        "relative_change": 0.9112426557817797,
+        "massflow": 33.11349423543896
+      },
+      {
+        "iteration": 101,
+        "massflow_std": 0.01963805991158717,
+        "massflow_change": 0.0705484738795446,
+        "relative_change": 3.5924360245952016,
+        "massflow": 33.148520940273
+      },
+      {
+        "iteration": 102,
+        "massflow_std": 0.005700965361720478,
+        "massflow_change": 0.013937094549866691,
+        "relative_change": 2.44469027008097,
+        "massflow": 33.15677164876112
+      },
+      {
+        "iteration": 103,
+        "massflow_std": 0.0029895174532993843,
+        "massflow_change": 0.0027114479084210936,
+        "relative_change": 0.9069851408389007,
+        "massflow": 33.159196178156435
+      },
+      {
+        "iteration": 104,
+        "massflow_std": 0.005149898382082871,
+        "massflow_change": 0.002160380928783487,
+        "relative_change": 0.41949971989733187,
+        "massflow": 33.156771926473354
+      },
+      {
+        "iteration": 105,
+        "massflow_std": 0.004975275082049014,
+        "massflow_change": 0.00017462330003385762,
+        "relative_change": 0.035098220129356324,
+        "massflow": 33.15677186336196
+      },
+      {
+        "iteration": 106,
+        "massflow_std": 0.017712536853259186,
+        "massflow_change": 0.012737261771210172,
+        "relative_change": 0.7191099658243736,
+        "massflow": 33.1564038554566
+      },
+      {
+        "iteration": 107,
+        "massflow_std": 0.005244922000420364,
+        "massflow_change": 0.012467614852838822,
+        "relative_change": 2.377082986522885,
+        "massflow": 33.156706998593776
+      },
+      {
+        "iteration": 108,
+        "massflow_std": 0.0014541042016604458,
+        "massflow_change": 0.0037908177987599186,
+        "relative_change": 2.606978093063188,
+        "massflow": 33.15913135504631
+      },
+      {
+        "iteration": 109,
+        "massflow_std": 0.004614402973639832,
+        "massflow_change": 0.0031602987719793864,
+        "relative_change": 0.6848770664445348,
+        "massflow": 33.15670706959969
+      },
+      {
+        "iteration": 110,
+        "massflow_std": 0.005703994048709966,
+        "massflow_change": 0.0010895910750701341,
+        "relative_change": 0.1910224775421285,
+        "massflow": 33.15670700648973
+      },
+      {
+        "iteration": 111,
+        "massflow_std": 0.009953723543132863,
+        "massflow_change": 0.0042497294944228966,
+        "relative_change": 0.42694871683017677,
+        "massflow": 33.16440721769604
+      },
+      {
+        "iteration": 112,
+        "massflow_std": 0.002020331333444525,
+        "massflow_change": 0.007933392209688337,
+        "relative_change": 3.926777790533226,
+        "massflow": 33.159434959611424
+      },
+      {
+        "iteration": 113,
+        "massflow_std": 0.004445853645186143,
+        "massflow_change": 0.002425522311741618,
+        "relative_change": 0.5455695363179379,
+        "massflow": 33.16185775918869
+      },
+      {
+        "iteration": 114,
+        "massflow_std": 0.003734923143847989,
+        "massflow_change": 0.000710930501338154,
+        "relative_change": 0.1903467551960659,
+        "massflow": 33.159434893093454
+      },
+      {
+        "iteration": 115,
+        "massflow_std": 0.0038958704938489774,
+        "massflow_change": 0.00016094735000098852,
+        "relative_change": 0.041312294711824064,
+        "massflow": 33.159434829920876
+      },
+      {
+        "iteration": 116,
+        "massflow_std": 0.0026518024319898558,
+        "massflow_change": 0.0012440680618591216,
+        "relative_change": 0.46914055393093507,
+        "massflow": 33.15907178371756
+      },
+      {
+        "iteration": 117,
+        "massflow_std": 0.0011824469659987764,
+        "massflow_change": 0.0014693554659910794,
+        "relative_change": 1.2426396347932276,
+        "massflow": 33.15927584202248
+      },
+      {
+        "iteration": 118,
+        "massflow_std": 0.0036007548354324683,
+        "massflow_change": 0.002418307869433692,
+        "relative_change": 0.6716113648274088,
+        "massflow": 33.16169885933316
+      },
+      {
+        "iteration": 119,
+        "massflow_std": 0.0023608748672693646,
+        "massflow_change": 0.0012398799681631037,
+        "relative_change": 0.5251781809161168,
+        "massflow": 33.15927591051644
+      },
+      {
+        "iteration": 120,
+        "massflow_std": 0.002497122734747121,
+        "massflow_change": 0.00013624786747775623,
+        "relative_change": 0.05456194266380495,
+        "massflow": 33.15927584734753
+      },
+      {
+        "iteration": 121,
+        "massflow_std": 0.006657322579538969,
+        "massflow_change": 0.004160199844791848,
+        "relative_change": 0.6249058529292341,
+        "massflow": 33.156875369250926
+      },
+      {
+        "iteration": 122,
+        "massflow_std": 0.0021143977981361427,
+        "massflow_change": 0.004542924781402826,
+        "relative_change": 2.1485667386749308,
+        "massflow": 33.158663912263776
+      },
+      {
+        "iteration": 123,
+        "massflow_std": 0.0013277490278572408,
+        "massflow_change": 0.0007866487702789019,
+        "relative_change": 0.5924679693032184,
+        "massflow": 33.15908949612497
+      },
+      {
+        "iteration": 124,
+        "massflow_std": 0.0012144515430720937,
+        "massflow_change": 0.00011329748478514719,
+        "relative_change": 0.09329107071538506,
+        "massflow": 33.1592057165476
+      },
+      {
+        "iteration": 125,
+        "massflow_std": 0.0011915988280445356,
+        "massflow_change": 2.2852715027558068e-05,
+        "relative_change": 0.01917819528663044,
+        "massflow": 33.15924643764702
+      },
+      {
+        "iteration": 126,
+        "massflow_std": 0.0011851152169473384,
+        "massflow_change": 6.483611097197204e-06,
+        "relative_change": 0.005470869839894485,
+        "massflow": 33.15926284717535
+      },
+      {
+        "iteration": 127,
+        "massflow_std": 0.001182832027279757,
+        "massflow_change": 2.283189667581396e-06,
+        "relative_change": 0.0019302737962145055,
+        "massflow": 33.15926986467873
+      },
+      {
+        "iteration": 128,
+        "massflow_std": 0.0011819259855486912,
+        "massflow_change": 9.060417310658223e-07,
+        "relative_change": 0.0007665807691377613,
+        "massflow": 33.15927293500249
+      },
+      {
+        "iteration": 129,
+        "massflow_std": 0.0011815489687032165,
+        "massflow_change": 3.770168454746408e-07,
+        "relative_change": 0.00031908694050017026,
+        "massflow": 33.159274272472864
+      }
+    ],
+    "rows": [
+      {
+        "type": "Stator",
+        "stage_id": 0,
+        "loss_model": "FixedPressureLoss",
+        "r": [
+          0.36579817589630564,
+          0.3773990879481528,
+          0.389,
+          0.4006009120518472,
+          0.4122018241036944
+        ],
+        "P0": [
+          956864.2671999593,
+          956864.2671999593,
+          956864.2671999593,
+          956864.2671999593,
+          956864.2671999593
+        ],
+        "T0": [
+          1300.0,
+          1300.0,
+          1300.0,
+          1300.0,
+          1300.0
+        ],
+        "P": [
+          712428.4479997283,
+          712428.4479997283,
+          712428.4479997283,
+          712428.4479997283,
+          712428.4479997283
+        ],
+        "T": [
+          1209.590277113485,
+          1209.590277113485,
+          1209.590277113485,
+          1209.590277113485,
+          1209.590277113485
+        ],
+        "M": [
+          0.719332859375266,
+          0.69890624408247,
+          0.6798965091499819,
+          0.6621750335461997,
+          0.6455750168516321
+        ],
+        "M_rel": [
+          0.34226846850821185,
+          0.31361193052419695,
+          0.28724119629461337,
+          0.2632219745066756,
+          0.24163547457609164
+        ],
+        "Yp": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "power": 0.0,
+        "total_massflow": 33.159274272472864,
+        "total_massflow_no_coolant": 33.159274272472864,
+        "massflow": [
+          0.0,
+          8.2560148718563,
+          16.533035359631555,
+          24.833458222993464,
+          33.159274272472864
+        ],
+        "rpm": 7500,
+        "metal_exit_angle": [
+          72.0,
+          72.0,
+          72.0,
+          72.0,
+          72.0
+        ],
+        "alpha2": [
+          1.2566370614359172,
+          1.2566370614359172,
+          1.2566370614359172,
+          1.2566370614359172,
+          1.2566370614359172
+        ],
+        "beta2": [
+          0.8639360997846729,
+          0.8111485398152691,
+          0.7503656697823929,
+          0.6803073977883117,
+          0.5995359797733218
+        ],
+        "axial_chord": 0.09862081497707455,
+        "chord": [
+          0.1327073964536062
+        ]
+      },
+      {
+        "type": "Rotor",
+        "stage_id": 0,
+        "loss_model": "FixedPressureLoss",
+        "r": [
+          0.3584837107321934,
+          0.3737418553660967,
+          0.389,
+          0.4042581446339033,
+          0.41951628926780665
+        ],
+        "P0": [
+          570855.464802471,
+          566113.1454688379,
+          562156.1992296305,
+          558801.6057081103,
+          555937.6418504813
+        ],
+        "T0": [
+          1168.2497347931608,
+          1166.043193208972,
+          1164.3381796289195,
+          1163.040872686916,
+          1162.0917686699208
+        ],
+        "P": [
+          535739.7742269905,
+          535739.7742269905,
+          535739.7742269905,
+          535739.7742269905,
+          535739.7742269905
+        ],
+        "T": [
+          1149.0887638976012,
+          1149.921980118792,
+          1150.6237454076904,
+          1151.2007273983568,
+          1151.6901973873023
+        ],
+        "M": [
+          0.31960900701585504,
+          0.2930567404449245,
+          0.2702149199551543,
+          0.2510094264450323,
+          0.2352169871540599
+        ],
+        "M_rel": [
+          0.6961349064535468,
+          0.6809430496358667,
+          0.6685168172478019,
+          0.6587135178231671,
+          0.6512402618022595
+        ],
+        "Yp": [
+          0.18,
+          0.18,
+          0.18,
+          0.18,
+          0.18
+        ],
+        "power": 5229334.706848537,
+        "total_massflow": 33.15906876168363,
+        "total_massflow_no_coolant": 33.15906876168363,
+        "massflow": [
+          0.0,
+          8.022548994276807,
+          16.209116071622848,
+          24.58064228517455,
+          33.15906876168363
+        ],
+        "rpm": 7500,
+        "metal_exit_angle": [
+          -72.0,
+          -72.0,
+          -72.0,
+          -72.0,
+          -72.0
+        ],
+        "alpha2": [
+          -0.8324515948099097,
+          -0.7698312962528071,
+          -0.7005094637744508,
+          -0.6250389194957134,
+          -0.5441478123274202
+        ],
+        "beta2": [
+          -1.2566370614359172,
+          -1.2566370614359172,
+          -1.2566370614359172,
+          -1.2566370614359172,
+          -1.2566370614359172
+        ],
+        "axial_chord": 0.1479312224656118,
+        "chord": [
+          0.19906109468040928
+        ]
+      },
+      {
+        "type": "Stator",
+        "stage_id": 1,
+        "loss_model": "FixedPressureLoss",
+        "r": [
+          0.35542283977737454,
+          0.3722114198886873,
+          0.389,
+          0.40578858011131275,
+          0.4225771602226255
+        ],
+        "P0": [
+          539797.7474003293,
+          535766.7759667413,
+          532403.371663415,
+          529551.9671701227,
+          527117.597891138
+        ],
+        "T0": [
+          1168.2497347931608,
+          1166.043193208972,
+          1164.3381796289195,
+          1163.040872686916,
+          1162.0917686699208
+        ],
+        "P": [
+          363804.01545485994,
+          363804.01545485994,
+          363804.01545485994,
+          363804.01545485994,
+          363804.01545485994
+        ],
+        "T": [
+          1058.8666182283748,
+          1058.8422057266023,
+          1058.9541395046126,
+          1059.1904363069896,
+          1059.5417046680068
+        ],
+        "M": [
+          0.8431530959436175,
+          0.806583940922482,
+          0.7744892984651679,
+          0.7461728063876543,
+          0.7208696083332397
+        ],
+        "M_rel": [
+          0.4562214781947245,
+          0.40640078263112145,
+          0.3625691845472427,
+          0.3244157806769101,
+          0.2916929154032891
+        ],
+        "Yp": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "power": 0.0,
+        "total_massflow": 33.16058806889092,
+        "total_massflow_no_coolant": 33.16058806889092,
+        "massflow": [
+          0.0,
+          8.245975128646748,
+          16.513246215469962,
+          24.81468404937234,
+          33.16058806889092
+        ],
+        "rpm": 7500,
+        "metal_exit_angle": [
+          70.0,
+          70.0,
+          70.0,
+          70.0,
+          70.0
+        ],
+        "alpha2": [
+          1.2217304763960306,
+          1.2217304763960306,
+          1.2217304763960306,
+          1.2217304763960306,
+          1.2217304763960306
+        ],
+        "beta2": [
+          0.8865424025773033,
+          0.8246586862422105,
+          0.7516045657730315,
+          0.6654099810712741,
+          0.5637731802250397
+        ],
+        "axial_chord": 0.1972416299541491,
+        "chord": [
+          0.2654147929072124
+        ]
+      },
+      {
+        "type": "Rotor",
+        "stage_id": 1,
+        "loss_model": "FixedPressureLoss",
+        "r": [
+          0.3520610474,
+          0.3705305237,
+          0.389,
+          0.4074694763,
+          0.42593895260000003
+        ],
+        "P0": [
+          272955.3048065942,
+          266095.0964577759,
+          260774.8861302956,
+          256620.62376581624,
+          253387.64680350278
+        ],
+        "T0": [
+          1019.1690054434563,
+          1012.2279164245256,
+          1006.9590291163823,
+          1003.0230759101291,
+          1000.1871958273205
+        ],
+        "P": [
+          224719.1011235955,
+          224719.1011235955,
+          224719.1011235955,
+          224719.1011235955,
+          224719.1011235955
+        ],
+        "T": [
+          970.2119889194801,
+          969.8415829366961,
+          969.8216564320991,
+          970.0631055402132,
+          970.5597423185427
+        ],
+        "M": [
+          0.5465432061474395,
+          0.5086427652231832,
+          0.4761129517467434,
+          0.44848070111374333,
+          0.42509536796086694
+        ],
+        "M_rel": [
+          0.9224960308547636,
+          0.8992173048215698,
+          0.8802686148564145,
+          0.8651439596104391,
+          0.8531239956119344
+        ],
+        "Yp": [
+          0.18,
+          0.18,
+          0.18,
+          0.18,
+          0.18
+        ],
+        "power": 5895584.624145141,
+        "total_massflow": 33.159866395418895,
+        "total_massflow_no_coolant": 33.159866395418895,
+        "massflow": [
+          0.0,
+          7.950709057375035,
+          16.114951525878325,
+          24.51183822557529,
+          33.159866395418895
+        ],
+        "rpm": 7500,
+        "metal_exit_angle": [
+          -65.0,
+          -65.0,
+          -65.0,
+          -65.0,
+          -65.0
+        ],
+        "alpha2": [
+          -0.7765632255401167,
+          -0.7270526589096286,
+          -0.6739476169050492,
+          -0.6176288474221825,
+          -0.558307951481677
+        ],
+        "beta2": [
+          -1.1344640137963142,
+          -1.1344640137963142,
+          -1.1344640137963142,
+          -1.1344640137963142,
+          -1.1344640137963142
+        ],
+        "axial_chord": 0.24655203744268636,
+        "chord": [
+          0.33176849113401546
+        ]
+      }
+    ]
+  },
+  "warnings": [
+    "FinDiff is deprecated, use Diff instead. See https://findiff.readthedocs.io/en/latest/ for the new API. To suppress this warning: import warnings; warnings.filterwarnings('ignore', message='FinDiff is deprecated')",
+    "divide by zero encountered in divide",
+    "unclosed <socket.socket fd=948, family=2, type=1, proto=0>"
+  ],
+  "elapsed_seconds": 10.375334499993187,
+  "written_files": [],
+  "peak_working_set_bytes": 204722176
+}

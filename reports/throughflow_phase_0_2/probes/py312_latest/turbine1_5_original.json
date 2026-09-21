@@ -1,0 +1,336 @@
+{
+  "case": {
+    "id": "turbine1_5_original",
+    "example": "turbine1",
+    "n": 5,
+    "loss": null
+  },
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "backend_sha": "23c2b0bf781b4b030014f458ecfde872896777a2",
+  "instrumentation": [
+    "plot/export suppressed",
+    "child-only home",
+    "network blocked",
+    "single BLAS thread"
+  ],
+  "physical_validation": "not_certified",
+  "status": "error",
+  "error_type": "TypeError",
+  "error": "adjust_streamlines() missing 1 required positional argument: 'massflow_fraction'",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 189, in worker\n    result.update(execute(spec))\n                  ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 155, in execute\n    exec(compile(tree, str(script), \"exec\"), namespace)\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\examples\\optturb-turbine\\optturb-fixed_pressure_loss2.py\", line 81, in <module>\n    spool.solve() # This also initializes streamlines\n    ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 131, in solve\n    getattr(spool, method)()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\turbine_spool.py\", line 394, in solve\n    self._balance_pressure()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\turbine_spool.py\", line 770, in _balance_pressure\n    adjust_streamlines(rows[:-1], self.passage)\nTypeError: adjust_streamlines() missing 1 required positional argument: 'massflow_fraction'\n",
+  "partial_solution": {
+    "num_streamlines": 5,
+    "row_count": 2,
+    "massflow_input_attribute": 35.9,
+    "power_W": 3395099.3697367758,
+    "pressure_ratio": 3.388027223480794,
+    "eta_polytropic": 0.7324008826823825,
+    "finite_selected_fields": true,
+    "row_massflow_spread_relative": 5.22150987026154e-05,
+    "history": [
+      {
+        "iteration": 1,
+        "massflow_std": 4.4529480794126,
+        "massflow_change": 4.4519480794126,
+        "relative_change": 0.9997754296744165,
+        "massflow": 21.204664866650106
+      },
+      {
+        "iteration": 2,
+        "massflow_std": 0.2005595187332858,
+        "massflow_change": 4.252388560679314,
+        "relative_change": 21.202626469872794,
+        "massflow": 22.788657110593622
+      },
+      {
+        "iteration": 3,
+        "massflow_std": 1.992591390625261,
+        "massflow_change": 1.7920318718919752,
+        "relative_change": 0.8993473927083707,
+        "massflow": 22.507581532392237
+      },
+      {
+        "iteration": 4,
+        "massflow_std": 0.1337499407758962,
+        "massflow_change": 1.8588414498493648,
+        "relative_change": 13.897886152816577,
+        "massflow": 22.78309058415251
+      },
+      {
+        "iteration": 5,
+        "massflow_std": 1.3413947021908221,
+        "massflow_change": 1.207644761414926,
+        "relative_change": 0.900290391368439,
+        "massflow": 22.480394988739175
+      },
+      {
+        "iteration": 6,
+        "massflow_std": 0.20478430964257655,
+        "massflow_change": 1.1366103925482456,
+        "relative_change": 5.550280656423562,
+        "massflow": 22.740185708088667
+      },
+      {
+        "iteration": 7,
+        "massflow_std": 0.0029301920936930514,
+        "massflow_change": 0.2018541175488835,
+        "relative_change": 68.88767394579847,
+        "massflow": 22.76866612124665
+      },
+      {
+        "iteration": 8,
+        "massflow_std": 0.07562696551692483,
+        "massflow_change": 0.07269677342323178,
+        "relative_change": 0.9612546652683388,
+        "massflow": 22.758764414051242
+      },
+      {
+        "iteration": 9,
+        "massflow_std": 0.014904113910979788,
+        "massflow_change": 0.06072285160594504,
+        "relative_change": 4.074234266366604,
+        "massflow": 22.770097710547788
+      },
+      {
+        "iteration": 10,
+        "massflow_std": 0.01440496287775872,
+        "massflow_change": 0.000499151033221068,
+        "relative_change": 0.034651323815055285,
+        "massflow": 22.766584082471667
+      },
+      {
+        "iteration": 11,
+        "massflow_std": 0.0001161247297609691,
+        "massflow_change": 0.014288838147997751,
+        "relative_change": 123.04733175620615,
+        "massflow": 22.76834435721735
+      },
+      {
+        "iteration": 12,
+        "massflow_std": 0.002844133836234164,
+        "massflow_change": 0.002728009106473195,
+        "relative_change": 0.9591704411791231,
+        "massflow": 22.76798911429381
+      },
+      {
+        "iteration": 13,
+        "massflow_std": 0.00045725769574289643,
+        "massflow_change": 0.0023868761404912675,
+        "relative_change": 5.219980249022081,
+        "massflow": 22.76827640046161
+      },
+      {
+        "iteration": 14,
+        "massflow_std": 0.0011888270973905435,
+        "massflow_change": 0.0007315694016476471,
+        "relative_change": 0.6153707324247826,
+        "massflow": 22.768474335817167
+      }
+    ],
+    "rows": [
+      {
+        "type": "Stator",
+        "stage_id": 0,
+        "loss_model": "FixedPressureLoss",
+        "r": [
+          0.3657901888775107,
+          0.37739509443875535,
+          0.389,
+          0.4006049055612447,
+          0.41220981112248933
+        ],
+        "P0": [
+          450586.1257702345,
+          450586.1257702345,
+          450586.1257702345,
+          450586.1257702345,
+          450586.1257702345
+        ],
+        "T0": [
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3
+        ],
+        "P": [
+          276407.8089150882,
+          276407.8089150882,
+          276407.8089150882,
+          276407.8089150882,
+          276407.8089150882
+        ],
+        "T": [
+          591.5902171884165,
+          591.5902171884165,
+          591.5902171884165,
+          591.5902171884165,
+          591.5902171884165
+        ],
+        "M": [
+          0.9230489264026106,
+          0.8961796776777609,
+          0.871422146292529,
+          0.8485425338213571,
+          0.827266661848431
+        ],
+        "M_rel": [
+          0.3951116778523862,
+          0.35806327337963784,
+          0.3248403401524339,
+          0.2956367877381406,
+          0.27071273456360717
+        ],
+        "Yp": [
+          0.221,
+          0.221,
+          0.221,
+          0.221,
+          0.221
+        ],
+        "power": 0.0,
+        "total_massflow": 22.768474335817167,
+        "total_massflow_no_coolant": 22.768474335817167,
+        "massflow": [
+          0.0,
+          5.672374167093461,
+          11.355897546070779,
+          17.05373243261847,
+          22.768474335817167
+        ],
+        "rpm": 7500,
+        "metal_exit_angle": [
+          73.0,
+          73.0,
+          73.0,
+          73.0,
+          73.0
+        ],
+        "alpha2": [
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606
+        ],
+        "beta2": [
+          0.818892332491191,
+          0.7498907272439955,
+          0.6691951054416143,
+          0.5750391177032782,
+          0.46581911037027196
+        ],
+        "axial_chord": 0.098710183535293,
+        "chord": [
+          0.13282765371054267
+        ]
+      },
+      {
+        "type": "Rotor",
+        "stage_id": 0,
+        "loss_model": "FixedPressureLoss",
+        "r": [
+          0.35847194,
+          0.37373597000000003,
+          0.389,
+          0.40426403,
+          0.41952806000000004
+        ],
+        "P0": [
+          151485.59223713283,
+          149161.00021930313,
+          147266.6548864064,
+          145716.97616362775,
+          144471.14841123862
+        ],
+        "T0": [
+          534.8614629335967,
+          532.8447032648954,
+          531.3524261582647,
+          530.3027311448484,
+          529.6553572104563
+        ],
+        "P": [
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626
+        ],
+        "T": [
+          506.4644432352077,
+          507.8462298581293,
+          509.0902623560213,
+          510.2219555656306,
+          511.3045399209372
+        ],
+        "M": [
+          0.539543221362635,
+          0.5055393519336232,
+          0.47648653395143614,
+          0.4520380672673573,
+          0.4316703513025124
+        ],
+        "M_rel": [
+          1.063766223572293,
+          1.0439703323652127,
+          1.027954060084734,
+          1.0153318686536315,
+          1.0054950327897332
+        ],
+        "Yp": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "power": 3395099.3697367758,
+        "total_massflow": 22.767285508719777,
+        "total_massflow_no_coolant": 22.767285508719777,
+        "massflow": [
+          0.0,
+          5.492407529381916,
+          11.109341400825304,
+          16.863632799328222,
+          22.767285508719777
+        ],
+        "rpm": 7500,
+        "metal_exit_angle": [
+          -67.6,
+          -67.6,
+          -67.6,
+          -67.6,
+          -67.6
+        ],
+        "alpha2": [
+          -0.7207358196036099,
+          -0.6649718990355835,
+          -0.605694588222698,
+          -0.5434498301491716,
+          -0.4786187871917381
+        ],
+        "beta2": [
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666
+        ],
+        "axial_chord": 0.1480652753029395,
+        "chord": [
+          0.19924148056581403
+        ]
+      }
+    ]
+  },
+  "warnings": [
+    "FinDiff is deprecated, use Diff instead. See https://findiff.readthedocs.io/en/latest/ for the new API. To suppress this warning: import warnings; warnings.filterwarnings('ignore', message='FinDiff is deprecated')",
+    "Method 'bounded' does not support relative tolerance in x; defaulting to absolute tolerance.",
+    "divide by zero encountered in divide",
+    "unclosed <socket.socket fd=988, family=2, type=1, proto=0>"
+  ],
+  "elapsed_seconds": 2.079327999999805,
+  "written_files": [],
+  "peak_working_set_bytes": 202366976
+}

@@ -1,0 +1,334 @@
+{
+  "case": {
+    "id": "turbine1_9_td2",
+    "example": "turbine1",
+    "n": 9,
+    "loss": "td2"
+  },
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "backend_sha": "23c2b0bf781b4b030014f458ecfde872896777a2",
+  "instrumentation": [
+    "plot/export suppressed",
+    "child-only home",
+    "network blocked",
+    "single BLAS thread"
+  ],
+  "physical_validation": "not_certified",
+  "status": "error",
+  "error_type": "ValueError",
+  "error": "nan detected",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 189, in worker\n    result.update(execute(spec))\n                  ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 155, in execute\n    exec(compile(tree, str(script), \"exec\"), namespace)\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\examples\\optturb-turbine\\optturb-fixed_pressure_loss2.py\", line 81, in <module>\n    spool.solve() # This also initializes streamlines\n    ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 131, in solve\n    getattr(spool, method)()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\turbine_spool.py\", line 387, in solve\n    self.initialize()\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\turbine_spool.py\", line 380, in initialize\n    rotor_calc(row, upstream,True,Is_static_defined)\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\turbine_math.py\", line 266, in rotor_calc\n    raise ValueError(f'nan detected')\nValueError: nan detected\n",
+  "partial_solution": {
+    "num_streamlines": 9,
+    "row_count": 2,
+    "massflow_input_attribute": 35.9,
+    "power_W": 0.0,
+    "pressure_ratio": "inf",
+    "eta_polytropic": 0.0,
+    "finite_selected_fields": false,
+    "row_massflow_spread_relative": 2.0,
+    "history": [],
+    "rows": [
+      {
+        "type": "Stator",
+        "stage_id": 0,
+        "loss_model": "TD2",
+        "r": [
+          0.3657901888775107,
+          0.371592641658133,
+          0.37739509443875535,
+          0.3831975472193777,
+          0.389,
+          0.3948024527806223,
+          0.4006049055612447,
+          0.40640735834186703,
+          0.41220981112248933
+        ],
+        "P0": [
+          486806.57922003587,
+          486806.57922003587,
+          486806.57922003587,
+          486806.57922003587,
+          486806.57922003587,
+          486806.57922003587,
+          486806.57922003587,
+          486806.57922003587,
+          486806.57922003587
+        ],
+        "T0": [
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3
+        ],
+        "P": [
+          387878.7878787879,
+          387878.7878787879,
+          387878.7878787879,
+          387878.7878787879,
+          387878.7878787879,
+          387878.7878787879,
+          387878.7878787879,
+          387878.7878787879,
+          387878.7878787879
+        ],
+        "T": [
+          636.2071780957598,
+          636.2071780957598,
+          636.2071780957598,
+          636.2071780957598,
+          636.2071780957598,
+          636.2071780957598,
+          636.2071780957598,
+          636.2071780957598,
+          636.2071780957598
+        ],
+        "M": [
+          0.5852190470134916,
+          0.5852190470134916,
+          0.5852190470134916,
+          0.5852190470134916,
+          0.5852190470134916,
+          0.5852190470134916,
+          0.5852190470134916,
+          0.5852190470134916,
+          0.5852190470134916
+        ],
+        "M_rel": [
+          0.17176024445868895,
+          0.17279665724475776,
+          0.1743043023234433,
+          0.1762710887724038,
+          0.17868185565580327,
+          0.18151891421898791,
+          0.18476262818255645,
+          0.18839199346484242,
+          0.19238518525456985
+        ],
+        "Yp": [
+          0.11767105019968008,
+          0.11767105019968008,
+          0.11767105019968008,
+          0.11767105019968008,
+          0.11767105019968008,
+          0.11767105019968008,
+          0.11767105019968008,
+          0.11767105019968008,
+          0.11767105019968008
+        ],
+        "power": 0,
+        "total_massflow": 20.60497268410219,
+        "total_massflow_no_coolant": 20.60497268410219,
+        "massflow": [
+          0.0,
+          2.4411557006608047,
+          4.920730225565043,
+          7.438723574712699,
+          9.995135748103758,
+          12.589966745738234,
+          15.223216567616145,
+          17.894885213737474,
+          20.60497268410219
+        ],
+        "rpm": 7500,
+        "metal_exit_angle": [
+          73.0,
+          73.0,
+          73.0,
+          73.0,
+          73.0,
+          73.0,
+          73.0,
+          73.0,
+          73.0
+        ],
+        "alpha2": [
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606,
+          1.2740903539558606
+        ],
+        "beta2": [
+          -0.0876101095732608,
+          -0.1401874820718797,
+          -0.19199676924838416,
+          -0.2427839698693694,
+          -0.292325895525758,
+          -0.3404344105881431,
+          -0.38695845053144484,
+          -0.43178400097212627,
+          -0.47483238283562124
+        ],
+        "axial_chord": 0.098710183535293,
+        "chord": [
+          0.13282765371054267
+        ]
+      },
+      {
+        "type": "Rotor",
+        "stage_id": 0,
+        "loss_model": "TD2",
+        "r": [
+          0.35847194,
+          0.366103955,
+          0.37373597000000003,
+          0.381367985,
+          0.389,
+          0.396632015,
+          0.40426403,
+          0.41189604500000004,
+          0.41952806000000004
+        ],
+        "P0": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "T0": [
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3,
+          676.3
+        ],
+        "P": [
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626,
+          126262.62626262626
+        ],
+        "T": [
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan"
+        ],
+        "M": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "M_rel": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "Yp": [
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan",
+          "nan"
+        ],
+        "power": 0,
+        "total_massflow": 35.9,
+        "total_massflow_no_coolant": 0,
+        "massflow": [
+          0.0,
+          4.4875,
+          8.975,
+          13.462499999999999,
+          17.95,
+          22.4375,
+          26.924999999999997,
+          31.412499999999998,
+          35.9
+        ],
+        "rpm": 7500,
+        "metal_exit_angle": [
+          -67.6,
+          -67.6,
+          -67.6,
+          -67.6,
+          -67.6,
+          -67.6,
+          -67.6,
+          -67.6,
+          -67.6
+        ],
+        "alpha2": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "beta2": [
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666,
+          -1.1798425743481666
+        ],
+        "axial_chord": 0.1480652753029395,
+        "chord": [
+          0.19924148056581403
+        ]
+      }
+    ]
+  },
+  "warnings": [
+    "FinDiff is deprecated, use Diff instead. See https://findiff.readthedocs.io/en/latest/ for the new API. To suppress this warning: import warnings; warnings.filterwarnings('ignore', message='FinDiff is deprecated')",
+    "divide by zero encountered in divide",
+    "divide by zero encountered in scalar divide",
+    "invalid value encountered in scalar divide",
+    "unclosed <socket.socket fd=1224, family=2, type=1, proto=0>"
+  ],
+  "elapsed_seconds": 1.6697750000021188,
+  "written_files": [],
+  "peak_working_set_bytes": 202043392
+}

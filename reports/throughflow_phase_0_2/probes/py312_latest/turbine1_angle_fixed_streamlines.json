@@ -1,0 +1,253 @@
+{
+  "case": {
+    "id": "turbine1_angle_fixed_streamlines",
+    "example": "turbine1",
+    "n": 3,
+    "mode": "angle",
+    "fixed_streamlines": true
+  },
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "backend_sha": "23c2b0bf781b4b030014f458ecfde872896777a2",
+  "instrumentation": [
+    "plot/export suppressed",
+    "child-only home",
+    "network blocked",
+    "single BLAS thread"
+  ],
+  "physical_validation": "not_certified",
+  "source_example": "examples/optturb-turbine/optturb-fixed_pressure_loss2.py",
+  "source_sha256": "177ac7a354627b8dd25df9f16109ac3ae300cb19c014ea2bb901972825d78682",
+  "solves": [
+    {
+      "num_streamlines": 3,
+      "row_count": 2,
+      "massflow_input_attribute": 35.9,
+      "power_W": 4037833.1692478,
+      "pressure_ratio": 2.75059392696021,
+      "eta_polytropic": 0.6453109466467349,
+      "finite_selected_fields": true,
+      "row_massflow_spread_relative": 5.95430280244245e-07,
+      "history": [
+        {
+          "iteration": 1,
+          "massflow_std": 3.8801661401513954,
+          "massflow_change": 3.8791661401513955,
+          "relative_change": 0.9997422790767508,
+          "massflow": 39.78014025898491
+        },
+        {
+          "iteration": 2,
+          "massflow_std": 2.1302868255190788e-05,
+          "massflow_change": 3.88014483728314,
+          "relative_change": 182141.89708175472,
+          "massflow": 35.900011894141215
+        },
+        {
+          "iteration": 3,
+          "massflow_std": 2.137594769635598e-05,
+          "massflow_change": 7.307944116519138e-08,
+          "relative_change": 0.003418769647235311,
+          "massflow": 35.900011755416344
+        }
+      ],
+      "rows": [
+        {
+          "type": "Stator",
+          "stage_id": 0,
+          "loss_model": "FixedPressureLoss",
+          "r": [
+            0.3657901888775107,
+            0.389,
+            0.41220981112248933
+          ],
+          "P0": [
+            475221.21212121216,
+            475221.21212121216,
+            475221.21212121216
+          ],
+          "T0": [
+            676.3,
+            676.3,
+            676.3
+          ],
+          "P": [
+            387878.7878787879,
+            387878.7878787879,
+            387878.7878787879
+          ],
+          "T": [
+            640.0679597032586,
+            640.0679597032586,
+            640.0679597032586
+          ],
+          "M": [
+            0.5516815374413532,
+            0.5516815374413532,
+            0.5516815374413532
+          ],
+          "M_rel": [
+            0.3369883017338452,
+            0.31526082592811344,
+            0.3629543098456708
+          ],
+          "Yp": [
+            0.221,
+            0.221,
+            0.221
+          ],
+          "power": 0.0,
+          "total_massflow": 35.900011755416344,
+          "total_massflow_no_coolant": 35.900011755416344,
+          "massflow": [
+            0.0,
+            17.489780110349066,
+            35.900011755416344
+          ],
+          "rpm": 7500,
+          "metal_exit_angle": [
+            73.0,
+            73.0,
+            73.0
+          ],
+          "alpha2": [
+            1.0014506556495566,
+            1.0290361286709824,
+            0.973865182628131
+          ],
+          "beta2": [
+            -0.3622726759115028,
+            -0.44563343362704627,
+            -0.5464218097295189
+          ],
+          "axial_chord": 1e-12,
+          "chord": [
+            1.3456327296063761e-12
+          ]
+        },
+        {
+          "type": "Rotor",
+          "stage_id": 0,
+          "loss_model": "FixedPressureLoss",
+          "r": [
+            0.35847194,
+            0.389,
+            0.41952806000000004
+          ],
+          "P0": [
+            184474.1740752458,
+            188044.97407949032,
+            173464.33517342826
+          ],
+          "T0": [
+            568.1584388795588,
+            572.4102343408839,
+            561.5290202976335
+          ],
+          "P": [
+            126262.62626262626,
+            126262.62626262626,
+            126262.62626262626
+          ],
+          "T": [
+            511.32728300322987,
+            512.4157686184452,
+            514.0797801327586
+          ],
+          "M": [
+            0.7598696376478381,
+            0.7799013681391022,
+            0.6924600136050714
+          ],
+          "M_rel": [
+            1.2636596022569442,
+            1.2573480601873892,
+            1.271715868357913
+          ],
+          "Yp": [
+            0.3,
+            0.3,
+            0.3
+          ],
+          "power": 4037833.1692478,
+          "total_massflow": 35.89999037946865,
+          "total_massflow_no_coolant": 35.89999037946865,
+          "massflow": [
+            0.0,
+            17.368104999880998,
+            35.89999037946865
+          ],
+          "rpm": 7500,
+          "metal_exit_angle": [
+            -67.6,
+            -67.6,
+            -67.6
+          ],
+          "alpha2": [
+            -0.7251014574417441,
+            -0.5088322403101971,
+            -0.6444586416883616
+          ],
+          "beta2": [
+            -1.0593878218980348,
+            -0.9983444121107754,
+            -1.1204312316852942
+          ],
+          "axial_chord": 0.014626262199536232,
+          "chord": [
+            0.0196815771275005
+          ]
+        }
+      ],
+      "solve_seconds": 0.048601599999528844,
+      "geometry_before": [
+        {
+          "metal_exit_angle": [
+            73.0,
+            73.0,
+            73.0
+          ],
+          "axial_chord": 0.098710183535293,
+          "rpm": 7500
+        },
+        {
+          "metal_exit_angle": [
+            -67.6,
+            -67.6,
+            -67.6
+          ],
+          "axial_chord": 0.1480652753029395,
+          "rpm": 7500
+        }
+      ],
+      "geometry_after": [
+        {
+          "metal_exit_angle": [
+            73.0,
+            73.0,
+            73.0
+          ],
+          "axial_chord": 1e-12,
+          "rpm": 7500
+        },
+        {
+          "metal_exit_angle": [
+            -67.6,
+            -67.6,
+            -67.6
+          ],
+          "axial_chord": 0.014626262199536232,
+          "rpm": 7500
+        }
+      ]
+    }
+  ],
+  "status": "completed",
+  "warnings": [
+    "FinDiff is deprecated, use Diff instead. See https://findiff.readthedocs.io/en/latest/ for the new API. To suppress this warning: import warnings; warnings.filterwarnings('ignore', message='FinDiff is deprecated')",
+    "divide by zero encountered in divide",
+    "unclosed <socket.socket fd=776, family=2, type=1, proto=0>"
+  ],
+  "elapsed_seconds": 1.773978500001249,
+  "written_files": [],
+  "peak_working_set_bytes": 201416704
+}

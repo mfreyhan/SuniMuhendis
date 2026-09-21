@@ -1,0 +1,36 @@
+{
+  "case": {
+    "id": "turbine1_3_fixed_streamlines",
+    "example": "turbine1",
+    "n": 3,
+    "fixed_streamlines": true
+  },
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "backend_sha": "23c2b0bf781b4b030014f458ecfde872896777a2",
+  "instrumentation": [
+    "plot/export suppressed",
+    "child-only home",
+    "network blocked",
+    "single BLAS thread"
+  ],
+  "physical_validation": "not_certified",
+  "packages": {
+    "turbo-design": "1.4.3",
+    "numpy": "1.26.4",
+    "scipy": "1.18.1",
+    "cantera": "3.2.0",
+    "pyturbo-aero": "1.3.8"
+  },
+  "status": "error",
+  "error_type": "AttributeError",
+  "error": "module 'numpy' has no attribute 'long'",
+  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 204, in worker\n    result.update(execute(spec))\n                  ^^^^^^^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\scripts\\throughflow_research\\probe_backend.py\", line 100, in execute\n    from turbodesign.enums import RowType\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\__init__.py\", line 1, in <module>\n    from .turbine_spool import TurbineSpool\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\build\\throughflow_research\\turbo-design\\turbodesign\\turbine_spool.py\", line 14, in <module>\n    from scipy.interpolate import interp1d\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\interpolate\\__init__.py\", line 192, in <module>\n    from ._interpolate import *\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\interpolate\\_interpolate.py\", line 19, in <module>\n    from . import _fitpack_py\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\interpolate\\_fitpack_py.py\", line 10, in <module>\n    from ._bsplines import BSpline\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\interpolate\\_bsplines.py\", line 11, in <module>\n    from scipy.optimize import minimize_scalar\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\optimize\\__init__.py\", line 422, in <module>\n    from ._optimize import *\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\optimize\\_optimize.py\", line 34, in <module>\n    from scipy.sparse.linalg import LinearOperator\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\sparse\\__init__.py\", line 250, in <module>\n    from ._base import *\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\sparse\\_base.py\", line 8, in <module>\n    from ._sputils import (asmatrix, check_shape,\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\scipy\\sparse\\_sputils.py\", line 17, in <module>\n    np.uintc, np.long, np.ulong, np.longlong, np.ulonglong,\n              ^^^^^^^\n  File \"C:\\Users\\mfati\\.codex\\worktrees\\throughflow-phase-0-2\\SuniMuhendis_VS\\.venv\\Lib\\site-packages\\numpy\\__init__.py\", line 347, in __getattr__\n    raise AttributeError(\"module {!r} has no attribute \"\nAttributeError: module 'numpy' has no attribute 'long'. Did you mean: 'log'?\n",
+  "warnings": [
+    "A NumPy version >=2.0.0 and <2.8.0 is required for this version of SciPy (detected version 1.26.4)",
+    "In the future `np.long` will be defined as the corresponding NumPy scalar."
+  ],
+  "blocked_network_attempts": [],
+  "elapsed_seconds": 0.5389009999998962,
+  "written_files": [],
+  "peak_working_set_bytes": 89333760
+}
