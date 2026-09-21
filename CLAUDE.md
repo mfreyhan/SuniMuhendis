@@ -8,8 +8,8 @@ SuniMuhendis is a framework researching whether an LLM can learn to produce **va
 
 ## Environment & commands
 
-- **Setup:** dependencies live in a project venv. Activate it once per shell â€” `source .venv/bin/activate` â€” then use plain `python` / `pytest` / `streamlit`. (Recreate with `python3 -m venv .venv && pip install -r requirements.txt && pip install -e .`.) The `pip install -e .` step makes the `sunimuhendis` package importable.
-- **Interpreter:** Python **3.9.6**. Keep all code **3.9-compatible** â€” no `X | Y` union syntax (use `typing.Optional`/`Union`), no `match`. PEP 585 generics (`tuple[...]`, `dict[...]`) are fine and already used.
+- **Setup:** dependencies live in a project venv. Activate it once per shell â€” `source .venv/bin/activate` â€” then use plain `python` / `pytest` / `streamlit`. Recreate with `python3.12 -m venv .venv`, `python -m pip install -c constraints/python312.txt -r requirements.txt`, and `python -m pip install -e .`. The editable install makes the `sunimuhendis` package importable.
+- **Interpreter:** CPython **3.12**; the reproducible development version is in `.python-version`. The package currently declares `>=3.12,<3.13`; expand that range only after the full test and clean-wheel consumer checks pass on the new minor version.
 - **Tests:** `pytest tests/ -v` â€” run a single file/test with `pytest tests/test_heat_exchanger_score.py -v` or `-k <substring>`.
 - **Secrets:** `HF_TOKEN` is read from `.env` (gitignored; see `.env.example`) via `python-dotenv`.
 

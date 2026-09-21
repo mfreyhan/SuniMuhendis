@@ -72,6 +72,9 @@ The environments are packaged so that another project — a training pipeline, a
 
 ### Install
 
+Python 3.12 is required. Until Python 3.13 has passed the same simulator and
+clean-wheel checks, the published runtime contract is `>=3.12,<3.13`.
+
 ```bash
 pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@envs-v0.4.0"
 ```
@@ -222,15 +225,17 @@ Keeps task catalogs separated by track, reads the pipeline as a funnel (responde
 
 ## Development
 
-Python **3.9**. Keep contributions 3.9-compatible: no `X | Y` unions, no `match`.
+Python **3.12** is the supported runtime. The package currently declares
+`>=3.12,<3.13`; support for a new minor version is opened only after the full
+test and clean-wheel consumer checks pass on that version.
 
 ```bash
 git clone https://github.com/mfreyhan/SuniMuhendis.git
 cd SuniMuhendis
 
-python3 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install -c constraints/python312.txt -r requirements.txt
 pip install -e .                  # makes `sunimuhendis` importable
 
 pytest tests/ -v
