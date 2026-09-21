@@ -74,7 +74,7 @@ class NasaTurboDesignSimulator(BaseSimulator):
         spool=TurbineSpool(passage=passage,massflow=op.mass_flow_kg_s,inlet=inlet,outlet=outlet,rows=rows,rpm=op.shaft_speed_rpm,num_streamlines=task.numerics.streamlines,fluid=fluid)
         spool.adjust_streamlines=False
         spool.solve()
-        metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":float(spool.overall_pressure_ratio()),"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines)}
+        metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":float(spool.overall_pressure_ratio()),"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines),"streamtube_count":float(task.numerics.streamlines-1)}
         if not all(math.isfinite(v) for v in metrics.values()): raise ValueError("solver returned non-finite summary metrics")
         raw={"backend":"nasa/turbo-design","backend_mode":"fixed_streamline_geometry","simulator_version":self.VERSION,"convergence_history":getattr(spool,"convergence_history",[]),"rows":[{"row_id":key,"P0":np.asarray(getattr(value,"P0",[])).tolist(),"T0":np.asarray(getattr(value,"T0",[])).tolist(),"M":np.asarray(getattr(value,"M",[])).tolist()} for key,value in row_map.items()]}
         return True,metrics,raw,""
@@ -99,7 +99,7 @@ class NasaTurboDesignSimulator(BaseSimulator):
             built=factory(hub_location=location,metal_exit_angle_deg=angles,loss_function=loss,P0_ratio=stage_ratio if row.row_type=="stator" else 1.0,num_blades=row.blade_count,axial_chord=row.axial_chord_m); built.stage_id=stage_index[row.stage_id]; rows.append(built); row_map[row.row_id]=built
         fluid=Solution("air.yaml"); fluid.TP=op.inlet_total_temperature_k,op.inlet_total_pressure_pa
         spool=CompressorSpool(passage,op.mass_flow_kg_s,inlet,outlet,rows,num_streamlines=task.numerics.streamlines,fluid=fluid,rpm=op.shaft_speed_rpm); spool.adjust_streamlines=False; spool.solve_balance_pressure()
-        metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":float(spool.overall_pressure_ratio()),"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines)}
+        metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":float(spool.overall_pressure_ratio()),"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines),"streamtube_count":float(task.numerics.streamlines-1)}
         if not all(math.isfinite(v) for v in metrics.values()): raise ValueError("solver returned non-finite summary metrics")
         raw={"backend":"nasa/turbo-design","backend_mode":"fixed_streamline_geometry","simulator_version":self.VERSION,"convergence_history":getattr(spool,"convergence_history",[]),"rows":[{"row_id":key,"P0":np.asarray(getattr(value,"P0",[])).tolist(),"T0":np.asarray(getattr(value,"T0",[])).tolist(),"M":np.asarray(getattr(value,"M",[])).tolist()} for key,value in row_map.items()]}
         return True,metrics,raw,""
