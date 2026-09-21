@@ -139,6 +139,29 @@ for packaging checks and the clean consumer test.
 API keys are read from a git-ignored `.env`; copy `.env.example` and add only
 the providers you use.
 
+## Benchmark dashboard
+
+The repository includes a Streamlit dashboard for exploring every recorded
+benchmark run. From the development environment above:
+
+```bash
+streamlit run scripts/dashboard.py
+```
+
+It opens in the browser and reads the results stored under `results/`, so no
+API key is needed to browse them. Pick an experiment track and task, then use
+the tabs:
+
+| Tab | Shows |
+|---|---|
+| Overview | Evaluation funnel (responded → parsed → schema → DRC → simulated) and headline scores |
+| Runs | Individual run records: raw response, parsed design, metrics, score breakdown, provenance |
+| Leaderboard | Model ranking for the selected task |
+| Engineering | Requirement compliance (duty target, pressure-drop limits) and design diversity |
+| Reliability | Reliability and inference efficiency: cost per benchmark point, and whether more reasoning effort pays off |
+| Spend | All-time token use and cost across every task |
+| Task | The task definition, prompt, and notes |
+
 ## Project status
 
 - **Available:** heat-exchanger evaluation, task feasibility auditing,
