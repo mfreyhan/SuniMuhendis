@@ -72,3 +72,6 @@ reports/LLM_Benchmark_Template.md
 scripts/test_hf.py
 scripts/test_opencode.py
 scripts/examples/outputs/
+
+# Generated training data (local only, not published)
+datasets/sft/
