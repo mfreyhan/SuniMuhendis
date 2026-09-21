@@ -13,7 +13,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--python', required=True)
     args = parser.parse_args()
-    wheel = ROOT / 'build/throughflow_research/wheels/sunimuhendis-0.5.0-py3-none-any.whl'
+    wheels = sorted((ROOT / 'build/throughflow_research/wheels').glob('sunimuhendis-*.whl'))
+    if len(wheels) != 1:
+        raise RuntimeError('Expected exactly one SuniMuhendis wheel, found {}'.format(len(wheels)))
+    wheel = wheels[0]
     with zipfile.ZipFile(wheel) as archive:
         files = archive.namelist()
     baseline = json.loads((ROOT / 'reports/throughflow_phase_0_2/heat_exchanger_baseline.json').read_text(encoding='utf-8'))

@@ -1,0 +1,30 @@
+name: Research or physics finding
+description: Report a validation, correlation, calibration, or reproducibility finding
+title: "[Research] "
+labels: ["research"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Commit, simulator, and score versions
+    validations:
+      required: true
+  - type: textarea
+    id: claim
+    attributes:
+      label: Finding
+      description: State the claim and its practical consequence.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and reproduction
+      description: Include equations, references, inputs, tolerances, and commands where applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Data and third-party provenance
+      description: Identify external sources and their redistribution terms.

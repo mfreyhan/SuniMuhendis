@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use SuniMuhendis, cite the software and record the simulator and score versions used."
+title: "SuniMuhendis: Physics-based evaluation environments for machine-generated engineering designs"
+type: software
+version: 0.5.0
+date-released: 2026-09-20
+license: Apache-2.0
+repository-code: "https://github.com/mfreyhan/SuniMuhendis"
+url: "https://github.com/mfreyhan/SuniMuhendis"
+authors:
+  - family-names: Reyhan
+    given-names: Mehmet Fatih
+  - family-names: Şahin
+    given-names: Ertuğrul
+keywords:
+  - engineering design
+  - physics simulation
+  - large language models
+  - heat exchanger
+  - benchmarking
+abstract: >-
+  SuniMuhendis provides versioned schema, design-rule, physics-simulation, and
+  scoring environments for evaluating machine-generated engineering designs.
