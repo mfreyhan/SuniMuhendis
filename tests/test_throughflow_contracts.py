@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
 from sunimuhendis.environments.turbomachinery_throughflow import ThroughflowDesignV1, ThroughflowTaskV1, ThroughflowSimulationResultV1
+from sunimuhendis import list_environments, make_env
 
 def design(n=1):
     rows=[{"row_id":"in","row_type":"inlet","axial_location_m":0.0}]
@@ -26,3 +27,8 @@ def test_extra_fields_are_rejected():
     with pytest.raises(ValidationError): ThroughflowDesignV1.model_validate(value)
 def test_numerical_failure_is_not_reward_eligible():
     with pytest.raises(ValidationError,match="clean success"): ThroughflowSimulationResultV1.model_validate({"status":"success","reward_eligible":True,"diagnostics":[{"category":"numerical_failure","code":"massflow","message":"spread exceeded"}]})
+
+def test_environment_is_registered_and_lazy():
+    assert "turbomachinery_throughflow" in list_environments()
+    env=make_env("turbomachinery_throughflow")
+    assert env.simulator.VERSION=="nasa_turbo_design_experimental_v1"

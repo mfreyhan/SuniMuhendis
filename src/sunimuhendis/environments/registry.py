@@ -20,9 +20,16 @@ def _make_heat_exchanger(**kwargs) -> BaseEnvironment:
     
     return HeatExchangerEnv(HeatExchangerSimulator(), score_fn)
 
+def _make_turbomachinery_throughflow(**kwargs) -> BaseEnvironment:
+    from .turbomachinery_throughflow.env import TurbomachineryThroughflowEnv
+    from .turbomachinery_throughflow.score import ExperimentalThroughflowScore
+    from .turbomachinery_throughflow.simulator import NasaTurboDesignSimulator
+    return TurbomachineryThroughflowEnv(NasaTurboDesignSimulator(), ExperimentalThroughflowScore())
+
 
 _REGISTRY: Dict[str, Callable[..., BaseEnvironment]] = {
     "heat_exchanger": _make_heat_exchanger,
+    "turbomachinery_throughflow": _make_turbomachinery_throughflow,
 }
 
 
