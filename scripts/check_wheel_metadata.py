@@ -2,10 +2,12 @@
 import argparse
 from email.parser import BytesParser
 from pathlib import Path
+import tomllib
 from zipfile import ZipFile
 
 
 EXPECTED_REQUIRES_PYTHON = ">=3.12,<3.13"
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _specifier_parts(value):
@@ -23,6 +25,9 @@ def main():
         raise RuntimeError("Expected exactly one wheel, found {}".format(len(wheels)))
 
     wheel = wheels[0]
+    expected_version = tomllib.loads(
+        (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )["project"]["version"]
     with ZipFile(wheel) as archive:
         files = archive.namelist()
         metadata_files = [name for name in files if name.endswith(".dist-info/METADATA")]
@@ -32,6 +37,8 @@ def main():
 
     if _specifier_parts(metadata["Requires-Python"]) != _specifier_parts(EXPECTED_REQUIRES_PYTHON):
         raise RuntimeError("Unexpected Requires-Python: {}".format(metadata["Requires-Python"]))
+    if metadata["Version"] != expected_version:
+        raise RuntimeError("Unexpected wheel version: {}".format(metadata["Version"]))
     if not any(name.startswith("sunimuhendis/prompts/") for name in files):
         raise RuntimeError("Public prompt package is missing")
     forbidden = ("sunimuhendis/model_clients/", "sunimuhendis/baselines/", "turbodesign/")

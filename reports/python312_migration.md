@@ -37,6 +37,6 @@ JUnit kaydı: [python312_migration_pytest.xml](throughflow_phase_0_2/python312_m
 
 ## Açık maddeler
 
-Bu workspace'te Linux/WSL/Docker olmadığı için Linux sonucu yerelde üretilmedi; eklenen GitHub Actions işi ilk uzak çalışmada kanıt sağlayacak. Özel eğitim reposu bu workspace'te olmadığı için sürümü burada değiştirilemedi. Orada Python 3.12 ortamı kurulmalı, bu wheel/tag tüketilmeli ve gerçek eğitim çağrısı en az bir HE ve ileride bir throughflow vakasıyla sınanmalıdır.
+Linux sonucu yerelde üretilmedi; eklenen GitHub Actions işi Ubuntu'da test, build, metadata ve temiz-wheel tüketici kontrollerini başarıyla tamamladı. Windows işi de aynı committe geçti. Özel eğitim reposu bu workspace'te olmadığı için sürümü burada değiştirilemedi. Orada Python 3.12 ortamı kurulmalı, bu wheel/tag tüketilmeli ve gerçek eğitim çağrısı en az bir HE ve ileride bir throughflow vakasıyla sınanmalıdır.
 
 `constraints/python312.txt` tüm transitif dependency'lerin hash'li lock dosyası değildir. Doğrudan geliştirme profilini sabitler; platforma özel transitif kilit ve artifact hash'leri release aşamasında üretilir. Throughflow backend'inin NASA/Cantera/pyturbo bağımlılıkları Faz 0–2 araştırma profillerinde ayrı kalır ve backend kabul edilmeden public `throughflow` extra'sına eklenmez.
