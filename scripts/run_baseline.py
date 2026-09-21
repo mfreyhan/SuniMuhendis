@@ -81,6 +81,7 @@ def main():
         
     # Save the training dataset
     sft_path = os.path.join(os.path.dirname(__file__), '../datasets/sft/heat_exchanger_initial.jsonl')
+    os.makedirs(os.path.dirname(sft_path), exist_ok=True)
     with open(sft_path, 'w', encoding='utf-8') as f:
         for item in all_successful_designs:
             f.write(json.dumps(item) + "\n")
