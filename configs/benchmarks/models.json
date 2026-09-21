@@ -1,5 +1,5 @@
 {
-  "_comment": "LLM API Providers model listesi. 'name' = dashboard'da gorunen ad. 'model' = API model id. Provider'lar ust baslik olarak gruplanmistir.",
+  "_comment": "LLM API provider model list. 'name' = display name in the dashboard. 'model' = API model id. Models are grouped under their provider.",
   "providers": {
     "openrouter": [
       {

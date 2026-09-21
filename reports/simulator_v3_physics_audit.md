@@ -1,217 +1,217 @@
-# Simülatör V3 — Fiziksel Doğruluk ve Görev Kalibrasyonu Denetimi
+# Simulator V3 — Physical Accuracy and Task Calibration Audit
 
-**Tarih:** 2026-09-18
-**Kapsam:** `simulator.py` V3, `drc.py`, `score.py` (V3), `results/zero_shot/heat_exchanger_hard_v2/task.json`
-**Yöntem:** Analitik türetme + ~410.000 tasarımın toplu simülasyonu (rastgele ve yönlendirilmiş örnekleme)
-**Sonuç:** Fizik motorunda katastrofik hata **yok**. Katastrofik sorun **görev kalibrasyonunda**: `hard_v2`'nin parametre seçimi, hiçbir tasarımın kaçamayacağı sabit bir ceza ve aşılamaz bir duty tavanı yaratıyor.
+**Date:** 2026-09-18
+**Scope:** `simulator.py` V3, `drc.py`, `score.py` (V3), `results/zero_shot/heat_exchanger_hard_v2/task.json`
+**Method:** Analytical derivation + batch simulation of ~410,000 designs (random and directed sampling)
+**Conclusion:** There is **no** catastrophic error in the physics engine. The catastrophic problem is in **task calibration**: `hard_v2`'s parameter choice creates a fixed penalty no design can escape and a duty ceiling no design can exceed.
 
 ---
 
-## 1. Doğrulanan Bulgular (fizik motoru sağlam)
+## 1. Verified findings (the physics engine is sound)
 
-| Kontrol | Yöntem | Sonuç |
+| Check | Method | Result |
 |---|---|---|
-| Enerji dengesi | ε-NTU'dan çıkan Q ile U·A·F·LMTD karşılaştırması | Sapma **%0.00** |
-| 2. yasa | 4.000 rastgele tasarımda ε ve Q/Q_max | İhlal **yok**; ε hiç konfigürasyon limitini aşmadı |
-| ε-NTU ↔ LMTD-F tutarlılığı | İki bağımsız hesap yolu | Birbirini doğruluyor |
-| `ht` kütüphane çağrısı | `effectiveness_from_NTU(subtype="S&T", n_shell_tube=1)` | Çalışıyor; sessiz fallback'e **düşmüyor** |
-| Duvar iletimi | `ln(do/di) / (2πkLN)` | Silindirik iletim doğru |
-| Kütüphane sınırı | `ht`/`fluids` yalnızca boru içi akışta, kabuk tarafı elle Kern | Doğru ayrım |
+| Energy balance | Q from ε-NTU compared with U·A·F·LMTD | Deviation **0.00%** |
+| Second law | ε and Q/Q_max over 4,000 random designs | **No** violations; ε never exceeded the configuration limit |
+| ε-NTU ↔ LMTD-F consistency | Two independent calculation paths | They agree |
+| `ht` library call | `effectiveness_from_NTU(subtype="S&T", n_shell_tube=1)` | Works; does **not** drop into a silent fallback |
+| Wall conduction | `ln(do/di) / (2πkLN)` | Cylindrical conduction is correct |
+| Library boundary | `ht`/`fluids` only for in-tube flow, shell side hand-coded Kern | Correct split |
 
-Bu nedenle aşağıdaki bulguların hiçbiri "denklem yanlış" değildir; hepsi **kalibrasyon ve tasarım uzayı** sorunudur.
+None of the findings below is therefore a case of "the equation is wrong"; all of them are **calibration and design-space** problems.
 
 ---
 
-## 2. KATASTROFİK — `hard_v2` ulaşılamaz bir noktada kalibre edilmiş
+## 2. CATASTROPHIC — `hard_v2` is calibrated at an unreachable point
 
-### 2.1. Duty hedefi, konfigürasyonun termodinamik tavanının %95'inde
+### 2.1. The duty target sits at 95% of the configuration's thermodynamic ceiling
 
-Şema `tube_passes` alanını dışarı açmıyor; varsayılan `DEFAULT_TUBE_PASSES = 2`. Dolayısıyla her tasarım zorunlu olarak **1 kabuk – 2 boru geçişli** TEMA E. Debiler eşit olduğu için `Cr = 0.99809` ve bu konfigürasyonun asimptotik tavanı sabittir:
+The schema does not expose `tube_passes`; the default is `DEFAULT_TUBE_PASSES = 2`. Every design is therefore necessarily a **1 shell – 2 tube pass** TEMA E. Because the flow rates are equal, `Cr = 0.99809`, and the asymptotic ceiling of this configuration is fixed:
 
 ```
 ε_max = 2 / (1 + Cr + sqrt(1 + Cr²)) = 0.586346          (NTU → ∞)
-Q_max,konfig = ε_max · C_min · ΔT = 367.815 W
+Q_max,config = ε_max · C_min · ΔT = 367,815 W
 ```
 
-Görev hedefi **350.000 W** — yani mutlak tavanın **%95.2**'si.
+The task target is **350,000 W** — **95.2%** of the absolute ceiling.
 
 | NTU | ε | Q (W) |
 |---:|---:|---:|
-| 1.0 | 0.4629 | 290.402 |
-| 2.0 | 0.5573 | 349.571 |
-| 2.5 | 0.5721 | 358.860 |
-| 3.0 | 0.5793 | 363.408 |
-| 5.0 | 0.5859 | 367.554 |
-| ∞ | 0.5863 | 367.815 |
+| 1.0 | 0.4629 | 290,402 |
+| 2.0 | 0.5573 | 349,571 |
+| 2.5 | 0.5721 | 358,860 |
+| 3.0 | 0.5793 | 363,408 |
+| 5.0 | 0.5859 | 367,554 |
+| ∞ | 0.5863 | 367,815 |
 
-Hedef, NTU 2 ile 3 arasında geçiliyor; **NTU 3'ün ötesinde eklenen hiçbir alan duty'yi artırmıyor.** Karşılaştırma: saf karşıt akışta NTU=5 için ε=0.834 olurdu. Yani ısı transferi hedefi optimize edilebilir bir amaç değil; bir eşik ve hemen ardından bir duvar.
+The target is crossed between NTU 2 and 3; **beyond NTU 3, no added area increases duty.** For comparison, pure counterflow at NTU = 5 would give ε = 0.834. The heat-transfer target is therefore not an optimisable objective; it is a threshold followed immediately by a wall.
 
-### 2.2. İki uyarı matematiksel olarak kaçınılmaz — her feasible tasarım sabit ×0.8 yiyor
+### 2.2. Two warnings are mathematically unavoidable — every feasible design takes a fixed ×0.8
 
-**(a) `F < 0.75` uyarısı.** Debiler ve giriş sıcaklıkları sabit olduğundan çıkış sıcaklıkları — dolayısıyla LMTD düzeltme faktörü F — **yalnızca Q'nun fonksiyonudur**. Hiçbir geometrik serbestlik F'yi etkileyemez:
-
-```
-F = 0.75  <=>  Q = 328.436 W
-görev hedefi 350.000 W  =>  F <= 0.625, daima
-```
-
-Duty gereksinimini karşılamak bu uyarıyı **garanti eder**.
-
-**(b) `Tube velocity < 0.5 m/s` uyarısı.** Nozzle çapı `D_nozzle_hot = 0.05 m` varsayılanında sabit ve şemada yok. Tek başına nozzle kaybı **1.668 Pa**, yani 2.500 Pa bütçesinin **%66.7'si**. Geriye 832 Pa kalır. Boru tarafı header kaybı tek başına `4·N_pass·ρv²/2 = 3.887·v²`:
+**(a) The `F < 0.75` warning.** Because flow rates and inlet temperatures are fixed, the outlet temperatures — and therefore the LMTD correction factor F — are **a function of Q alone**. No geometric freedom can affect F:
 
 ```
-sürtünme SIFIR olsa dahi   v_tube < 0.4626 m/s
+F = 0.75  <=>  Q = 328,436 W
+task target 350,000 W  =>  F <= 0.625, always
+```
+
+Meeting the duty requirement **guarantees** this warning.
+
+**(b) The `Tube velocity < 0.5 m/s` warning.** The nozzle diameter is fixed at the default `D_nozzle_hot = 0.05 m` and is not in the schema. The nozzle loss alone is **1,668 Pa**, i.e. **66.7%** of the 2,500 Pa budget, leaving 832 Pa. The tube-side header loss alone is `4·N_pass·ρv²/2 = 3,887·v²`:
+
+```
+even with ZERO friction    v_tube < 0.4626 m/s
 MIN_TUBE_VELOCITY = 0.50 m/s
 ```
 
-Yani `ΔP <= 2500 Pa` kısıtı ile `v >= 0.5 m/s` **birbirini dışlar**.
+So the `ΔP <= 2500 Pa` constraint and `v >= 0.5 m/s` are **mutually exclusive**.
 
-**Ampirik doğrulama.** Üç bağımsız tarama — 60.000 rastgele, 200.000 yönlendirilmiş (boru hızı 0.4–3.2 m/s aralığına zorlanarak), 150.000 `concentric_tube` — üç gereksinimi de sağlayan tasarımlarda uyarı sayısı **her zaman tam olarak 2**; hiçbir örnekte 0 veya 1 görülmedi. Yönlendirilmiş taramada boru hızı sağlıklı aralığa zorlandığında **190.809 geçerli simülasyonun hiçbiri** üç gereksinimi sağlayamadı.
+**Empirical confirmation.** Across three independent sweeps — 60,000 random, 200,000 directed (tube velocity forced into 0.4–3.2 m/s), and 150,000 `concentric_tube` — designs meeting all three requirements always carried **exactly 2** warnings; no sample showed 0 or 1. In the directed sweep, with tube velocity forced into the healthy range, **none of 190,809 valid simulations** met all three requirements.
 
-Sonuç:
+Result:
 
 ```
-penalty_factor = 0.8  (her feasible tasarım için sabit)
-skor tavanı    = 0.9786 × 0.8 = 0.7829
+penalty_factor = 0.8  (fixed for every feasible design)
+score ceiling  = 0.9786 × 0.8 = 0.7829
 ```
 
-Bu, gözlenen değerlerle birebir örtüşüyor:
+This matches the observed values exactly:
 
-| Kaynak | En iyi skor |
+| Source | Best score |
 |---|---:|
-| 3.000 tasarımlık kalibrasyon taraması | 0.7834 |
+| 3,000-design calibration sweep | 0.7834 |
 | `gpt-oss-120b__reasoning-low` (n=20) | 0.7829 |
 | `nex-n2.5-pro__reasoning-none` (n=20) | 0.7834 |
 
-### 2.3. Beyan edilen kısıt ile gerçek kısıt uyuşmuyor
+### 2.3. The stated constraint does not match the real constraint
 
-Prompt "ΔP <= 2.500 Pa" diyor. Modelin fiilen karşılaması gereken şey **geometrik ΔP <= 832 Pa (boru) / 876 Pa (kabuk)** — kalanı modelin ne gördüğü ne de değiştirebildiği sabit bir nozzle kaybı. Görev bu haliyle hem çözülemez hem de öğrenilemez.
+The prompt says "ΔP <= 2,500 Pa". What the model actually has to meet is **geometric ΔP <= 832 Pa (tube) / 876 Pa (shell)** — the rest is a fixed nozzle loss the model can neither see nor change. As posed, the task is both unsolvable and unlearnable.
 
 ---
 
-## 3. ×0.8 çarpanı evrensel mi? — Hayır, `hard_v1`/`hard_v2`'ye özgü ve bıçak sırtı
+## 3. Is the ×0.8 multiplier universal? — No, it is specific to `hard_v1`/`hard_v2`, and on a knife edge
 
-Her iki tetikleyici de task parametrelerinin fonksiyonudur ve `hard_v2` her ikisinin de yanlış tarafında, üstelik **kıl payı**:
+Both triggers are functions of the task parameters, and `hard_v2` is on the wrong side of both — by a **hair's breadth**:
 
-| Task | Hedef duty | ΔP limiti | Zorunlu uyarı | penalty tavanı |
+| Task | Target duty | ΔP limit | Forced warnings | Penalty ceiling |
 |---|---:|---:|---|---:|
-| `hard_v1`, `hard_v2` | 350.000 W | 2.500 Pa | `F<0.75`, `v_tube<0.5` | **0.80** |
-| `v1`, `v3` | 150.000 W | 50.000 Pa | — | **1.00** |
+| `hard_v1`, `hard_v2` | 350,000 W | 2,500 Pa | `F<0.75`, `v_tube<0.5` | **0.80** |
+| `v1`, `v3` | 150,000 W | 50,000 Pa | — | **1.00** |
 
-**Uçurumun kenarı — ΔP limiti (hedef 350 kW sabit):**
+**The cliff edge — ΔP limit (target fixed at 350 kW):**
 
-| ΔP limiti | Nozzle payı | Ulaşılabilir v_tube | Durum |
+| ΔP limit | Nozzle share | Reachable v_tube | Status |
 |---:|---:|---:|---|
-| 2.500 Pa | %66.7 | 0.463 m/s | **zorunlu uyarı** |
-| 3.000 Pa | %55.6 | 0.585 m/s | serbest |
-| 5.000 Pa | %33.4 | 0.926 m/s | serbest |
-| 10.000 Pa | %16.7 | 1.464 m/s | serbest |
+| 2,500 Pa | 66.7% | 0.463 m/s | **forced warning** |
+| 3,000 Pa | 55.6% | 0.585 m/s | free |
+| 5,000 Pa | 33.4% | 0.926 m/s | free |
+| 10,000 Pa | 16.7% | 1.464 m/s | free |
 
-**Uçurumun kenarı — hedef duty (F=0.75 eşiği 328.436 W):**
+**The cliff edge — target duty (F = 0.75 threshold at 328,436 W):**
 
-| Hedef duty | Durum |
+| Target duty | Status |
 |---:|---|
-| 320.000 W | serbest |
-| 328.436 W | eşik |
-| 340.000 W | **zorunlu F uyarısı** |
-| 350.000 W | **zorunlu F uyarısı** |
+| 320,000 W | free |
+| 328,436 W | threshold |
+| 340,000 W | **forced F warning** |
+| 350,000 W | **forced F warning** |
 
-ΔP limitini 2.500 → 3.000 Pa yapmak veya hedefi 350 → 325 kW'a çekmek, her iki zorunlu cezayı da tek başına kaldırır. Yani sorun yapısal değil, **parametre seçimi**.
+Raising the ΔP limit from 2,500 to 3,000 Pa, or lowering the target from 350 to 325 kW, would each on its own remove both forced penalties. The problem is not structural; it is **parameter choice**.
 
 ---
 
-## 4. Model ayrıştırma gücü — mevcut skor neyi ölçüyor?
+## 4. Model discrimination — what does the current score measure?
 
-`hard_v2` üzerindeki tüm koşular (n >= 20):
+All runs on `hard_v2` (n >= 20):
 
-| Model | n | Geçerli | Ort. (tüm) | Ort. (geçerli) | Max | sd (geçerli) |
+| Model | n | Valid | Mean (all) | Mean (valid) | Max | sd (valid) |
 |---|---:|---:|---:|---:|---:|---:|
-| gpt-oss-120b (low) | 20 | %85 | 0.637 | 0.750 | 0.783 | 0.082 |
-| qwen3.8-27b (none) | 20 | %90 | 0.443 | 0.492 | 0.720 | 0.152 |
-| deepseek-v4-flash (none) | 20 | %100 | 0.409 | 0.409 | 0.724 | 0.189 |
-| nex-n2.5-pro (none) | 20 | %75 | 0.252 | 0.336 | 0.783 | 0.190 |
-| gpt-oss-20b (low) | 20 | %45 | 0.205 | 0.455 | 0.625 | 0.181 |
-| llama-3.3-70b | 20 | %10 | 0.040 | 0.403 | 0.492 | 0.090 |
+| gpt-oss-120b (low) | 20 | 85% | 0.637 | 0.750 | 0.783 | 0.082 |
+| qwen3.8-27b (none) | 20 | 90% | 0.443 | 0.492 | 0.720 | 0.152 |
+| deepseek-v4-flash (none) | 20 | 100% | 0.409 | 0.409 | 0.724 | 0.189 |
+| nex-n2.5-pro (none) | 20 | 75% | 0.252 | 0.336 | 0.783 | 0.190 |
+| gpt-oss-20b (low) | 20 | 45% | 0.205 | 0.455 | 0.625 | 0.181 |
+| llama-3.3-70b | 20 | 10% | 0.040 | 0.403 | 0.492 | 0.090 |
 
-Manşet metrik (ortalama toplam ödül) iki ayrı yeteneği tek sayıya karıştırıyor:
+The headline metric (mean total reward) mixes two separate abilities into one number:
 
-- **Uyum:** geçerli, DRC'den geçen bir JSON üretebiliyor mu? (aralık: %10 – %100)
-- **Mühendislik:** ürettiği tasarım ne kadar iyi? (aralık: 0.336 – 0.750)
+- **Compliance:** can it produce valid JSON that passes DRC? (range: 10% – 100%)
+- **Engineering:** how good is the design it produces? (range: 0.336 – 0.750)
 
-Korelasyonlar: `corr(geçerlilik, manşet) = 0.83`, `corr(tasarım kalitesi, manşet) = 0.76`. Yani manşet kabaca ikisinin ortalaması ve bir model yalnızca **güvenilir olarak** üst sıraya çıkabiliyor (bkz. deepseek-v4-flash: %100 geçerli, ama en düşük tasarım kalitelerinden biri).
+Correlations: `corr(validity, headline) = 0.83`, `corr(design quality, headline) = 0.76`. The headline is roughly the average of the two, and a model can rise to the top on **reliability** alone (see deepseek-v4-flash: 100% valid, but among the lowest design quality).
 
-**Ödül bütçesinin dağılımı — asıl adalet sorunu.** 80.000 tasarımlık taramada:
+**Distribution of the reward budget — the real fairness problem.** In an 80,000-design sweep:
 
 ```
-geçersiz cevap (0.0)  ->  en kötü feasible tasarım :  +0.439 puan
-en kötü feasible      ->  teorik optimum           :  +0.256 puan
+invalid answer (0.0)   ->  worst feasible design :  +0.439 points
+worst feasible         ->  theoretical optimum   :  +0.256 points
 ```
 
-Feasible tasarımların skor dağılımı: p5 = 0.528, medyan = 0.616, p95 = 0.746, tavan = 0.783 (sd = 0.068).
+Score distribution of feasible designs: p5 = 0.528, median = 0.616, p95 = 0.746, ceiling = 0.783 (sd = 0.068).
 
-**Skor, mühendislik yapmayı değil, ortaya çıkmayı ödüllendiriyor.** Bu doğrudan araştırma sorusunu bloke eder: geri bildirimli iterasyon yalnızca ikinci (0.256'lık) aralığı iyileştirebilir ve bu aralık birincisinden dardır. `zero-shot < feedback-driven < eğitilmiş model` merdiveni bu görevde ölçülemez.
+**The score rewards showing up, not doing engineering.** This directly blocks the research question: feedback-driven iteration can only improve the second (0.256) interval, and that interval is narrower than the first. The `zero-shot < feedback-driven < trained model` ladder cannot be measured on this task.
 
 ---
 
-## 5. İkincil bulgular (katastrofik değil, ancak v3 tasarımını etkiler)
+## 5. Secondary findings (not catastrophic, but they affect the v3 design)
 
-| # | Bulgu | Etki |
+| # | Finding | Effect |
 |---|---|---|
-| 5.1 | Kern Nu korelasyonu geçerlilik aralığının altında kullanılıyor (gerçekçi tasarımlarda `Re_shell ≈ 1.000`, Kern >= 2.000 için geçerli); `Re < 10`'da `abs(Re)` ile ekstrapole ediliyor | `h_o` iyimser |
-| 5.2 | `P_design` varsayılanı 101.325 Pa (atmosferik) → **her iki ASME et kalınlığı kontrolü de ölü kod**. 22.457 tasarımda bir kez bile tetiklenmedi. Aynı şekilde nozzle hızı, pitch ratio ve min approach kontrolleri de hiç tetiklenmiyor | Tasarım kontrollerinin yarısı işlevsiz |
-| 5.3 | İşletme maliyeti, yıllıklaştırılmış maliyetin **%0.32**'si (toplam pompa gücü 13.6 W) → maliyet fiilen çelik kütlesi | "Kompaktlık için pompalama gücü öde" ödünleşimi hiç yok |
-| 5.4 | Sıcak akışkan özellikleri 80 °C suyunda donmuş; `T_hot_in` değiştirilse bile güncellenmiyor | Nominal dışı sıcaklıklarda hatalı (mevcut tasklar varsayılanı kullandığı için şu an etkisiz) |
-| 5.5 | `drc.py`, `tube_passes=2` / `pitch_ratio=1.25` / `pitch_type=square` değerlerini **sabit kodluyor** ve tasarımın kendi değerlerini yok sayıyor; simülatör gerçek değerleri kullanıyor | `tube_passes=4` içeren tasarım DRC'yi geçip simülatörde `simulation_error` veriyor. **v3'te şema genişletilirse bu hemen ısırır.** |
-| 5.6 | Kabuk tarafı `A_cross`, `N_tubes`'a hiç bağlı değil (klasik Kern varsayımı) | Geniş kabukte seyrek demet → `h_o` aşırı tahmin |
-| 5.7 | `schema.py` `extra="forbid"` kullanıyor → simülatörün `dict.get(...)` ile okuduğu ~20 opsiyonel parametre (`tube_passes`, `pitch_ratio`, `baffle_cut`, `D_nozzle_hot`, `m_dot_hot`, ...) **hiçbir LLM tasarımından erişilebilir değil**; şema aşamasında reddediliyorlar | Tasarım uzayı gerçekten yalnızca 7 alan; bu parametreler benchmark açısından ölü. *(Not: `CLAUDE.md`'deki "extra fields beyond the schema are preserved and used downstream" ifadesi bu nedenle hatalı — düzeltilmeli.)* |
-| 5.8 | `concentric_tube` karşıt akış olduğu için ε tavanını kırıyor (538 kW'a ulaşıyor), ancak en iyi skoru 0.761 ve 80 m'lik boru (`L/D = 421`) gerektiriyor | Gerçek bir kaçış yolu değil; 0.783 tavanını değiştirmiyor |
+| 5.1 | The Kern Nu correlation is used below its validity range (`Re_shell ≈ 1,000` in realistic designs, Kern valid for >= 2,000); at `Re < 10` it is extrapolated with `abs(Re)` | `h_o` optimistic |
+| 5.2 | The `P_design` default is 101,325 Pa (atmospheric) → **both ASME wall-thickness checks are dead code**. They did not fire once across 22,457 designs. The nozzle-velocity, pitch-ratio and minimum-approach checks likewise never fire | Half of the design checks are inert |
+| 5.3 | Operating cost is **0.32%** of annualised cost (total pumping power 13.6 W) → cost is effectively steel mass | The "pay pumping power for compactness" trade-off does not exist |
+| 5.4 | Hot-fluid properties are frozen at 80 °C water; they are not updated even if `T_hot_in` changes | Wrong at off-nominal temperatures (currently no effect, as existing tasks use the default) |
+| 5.5 | `drc.py` **hardcodes** `tube_passes=2` / `pitch_ratio=1.25` / `pitch_type=square` and ignores the design's own values; the simulator uses the real values | A design with `tube_passes=4` passes DRC and then fails in the simulator with `simulation_error`. **This bites immediately if the schema is widened in v3.** |
+| 5.6 | Shell-side `A_cross` does not depend on `N_tubes` at all (classic Kern assumption) | Sparse bundle in a wide shell → `h_o` overestimated |
+| 5.7 | `schema.py` uses `extra="forbid"` → the ~20 optional parameters the simulator reads via `dict.get(...)` (`tube_passes`, `pitch_ratio`, `baffle_cut`, `D_nozzle_hot`, `m_dot_hot`, ...) are **unreachable from any LLM design**; they are rejected at the schema stage | The design space really is only 7 fields; these parameters are dead from the benchmark's point of view. *(Note: the statement in `CLAUDE.md` that "extra fields beyond the schema are preserved and used downstream" is therefore wrong and should be corrected.)* |
+| 5.8 | `concentric_tube` breaks the ε ceiling because it is counterflow (reaching 538 kW), but its best score is 0.761 and it needs an 80 m tube (`L/D = 421`) | Not a real escape route; does not change the 0.783 ceiling |
 
 ---
 
-## 6. `hard_v3` için çıkarımlar
+## 6. Implications for `hard_v3`
 
-Denetimin operasyonel sonucu: **v3'te ilk iş zorluk eklemek değil, başlığı açmaktır.** Öncelik sırasıyla:
+The operational conclusion of the audit: **the first job in v3 is not to add difficulty but to open up headroom.** In order of priority:
 
-1. **Nozzle boyutunu ya şemaya aç ya da ΔP skorundan çıkar.** ΔP kısıtının %66'sının modelin dokunamadığı bir sabit olması hem görevi çözülemez kılıyor hem de ölçümü anlamsızlaştırıyor.
-2. **`tube_passes`'i şemaya aç** (veya debileri dengesizleştirerek `Cr`'yi 1'den uzaklaştır). İkisi de ε tavanını kaldırır ve duty'yi tekrar optimize edilebilir bir amaç yapar. Şemayı genişletmeden önce **madde 5.5 düzeltilmelidir**, aksi halde DRC ile simülatör çelişir.
-3. **Hedef duty ile uyarı eşiklerini tutarlı hale getir.** Bir gereksinimi karşılamak bir uyarıyı zorunlu kılmamalı; uyarılar kazanılabilir olmalı, sabit vergi olmamalı.
-4. **Ödül bütçesini yeniden dağıt.** "Geçerli tasarım üretme" ile "iyi tasarım üretme" arasındaki oran şu an 0.44 / 0.26. Bunun tersine dönmesi gerekir ki iterasyon ve eğitim ölçülebilir kazanç üretebilsin.
-5. **Raporlamada iki ekseni ayır.** Geçerlilik oranı ve geçerli-tasarım kalitesi ayrı raporlanmalı; tek bir manşet ortalama modelleri adil ayrıştırmıyor.
+1. **Either expose the nozzle size in the schema or remove it from the ΔP score.** Having 66% of the ΔP constraint be a constant the model cannot touch makes the task unsolvable and the measurement meaningless.
+2. **Expose `tube_passes` in the schema** (or unbalance the flows to move `Cr` away from 1). Either lifts the ε ceiling and makes duty an optimisable objective again. **Item 5.5 must be fixed** before widening the schema, otherwise DRC and the simulator disagree.
+3. **Make the target duty and the warning thresholds consistent.** Meeting a requirement must not force a warning; warnings should be avoidable, not a fixed tax.
+4. **Redistribute the reward budget.** The ratio between "producing a valid design" and "producing a good design" is currently 0.44 / 0.26. It needs to be reversed so that iteration and training can produce measurable gains.
+5. **Separate the two axes in reporting.** Validity rate and valid-design quality should be reported separately; a single headline average does not discriminate between models fairly.
 
 ---
 
-## 7. Denetim sonrası yapılan düzeltmeler (Simülatör V4, paket 0.3.0)
+## 7. Fixes made after the audit (Simulator V4, package 0.3.0)
 
-Bu denetimin bulguları üzerine aşağıdakiler düzeltildi. **Simülatör sürümü `v3` → `v4`'e yükseltildi:
-çıktılar değişti, V3 ve V4 sonuçları asla birlikte havuzlanmamalı.**
+The following were fixed in response to this audit. **The simulator version was raised from `v3` to `v4`:
+outputs changed, and V3 and V4 results must never be pooled.**
 
-### Düzeltilenler
+### Fixed
 
-| Bulgu | Yapılan | Etki |
+| Finding | Change | Effect |
 |---|---|---|
-| 5.5 — DRC `tube_passes`/`pitch_ratio`/`pitch_type`'ı sabit kodluyordu | `drc.py` artık bu değerleri tasarımın kendisinden okuyor; geçiş sayısının çift olması, boru sayısını bölmesi ve TEMA asgari hatve oranı DRC'de doğrulanıyor | Davranış değişmedi (şema ek alan kabul etmiyor), ancak **v3'te şema genişletilmeden önce zorunluydu** |
-| Sabit `MAX_UNSUPPORTED_SPAN = 1.5 m` | TEMA RCB-4.52 tablosu, boru dış çapına göre (`max_unsupported_span()`); tablo arası çaplar daha küçük girdinin limitini alır | **Tasarımların %15.5'inde uyarı sayısı değişti**, skor sapması −0.098…+0.096, ortalama ≈ 0 |
-| ASME et kalınlığı formülü işaret hatası | UG-27(c)(1) formuna geçildi: `t = P·R/(S·E − 0.6·P)`; kaynak verimi `E` parametresi eklendi (varsayılan 1.0) | Varsayılan atmosferik basınçta uyarı değişmiyor; yüksek basınçta artık emniyetsiz değil |
-| 5.1 — Kern korelasyonu geçerlilik aralığı dışında | `shell_correlation_in_range` metriği + `raw_data["fidelity_notes"]` | Skoru **etkilemiyor** (bkz. aşağıdaki not) |
-| 5.6 — Kern `A_cross` demet doluluğunu görmüyor | `bundle_fill_fraction` metriği + doluluk %70'in altındaysa not | Skoru **etkilemiyor** |
+| 5.5 — DRC hardcoded `tube_passes`/`pitch_ratio`/`pitch_type` | `drc.py` now reads these values from the design itself; DRC checks that the pass count is even, divides the tube count, and meets the TEMA minimum pitch ratio | No behaviour change (the schema accepts no extra fields), but **required before widening the schema in v3** |
+| Fixed `MAX_UNSUPPORTED_SPAN = 1.5 m` | TEMA RCB-4.52 table keyed by tube OD (`max_unsupported_span()`); diameters between table entries take the limit of the smaller entry | **Warning count changed for 15.5% of designs**, score shift −0.098…+0.096, mean ≈ 0 |
+| Sign error in the ASME wall-thickness formula | Switched to the UG-27(c)(1) form: `t = P·R/(S·E − 0.6·P)`; added a joint-efficiency parameter `E` (default 1.0) | No change in warnings at the default atmospheric pressure; no longer unsafe at high pressure |
+| 5.1 — Kern correlation outside its validity range | `shell_correlation_in_range` metric + `raw_data["fidelity_notes"]` | Does **not** affect the score (see the note below) |
+| 5.6 — Kern `A_cross` ignores bundle fill | `bundle_fill_fraction` metric + a note when fill is below 70% | Does **not** affect the score |
 
-**Neden güvenilirlik notları `warnings`'e girmiyor:** skor her uyarı için %10 kesiyor. Korelasyonumuzun
-geçerlilik aralığı dışına çıkması tasarımın kusuru değil, *bizim* modelimizin sınırı. Bunu uyarı sayarsak
-hakemin cehaletini tasarıma fatura etmiş oluruz. Bu yüzden ayrı bir kanaldan raporlanıyorlar.
+**Why fidelity notes do not go into `warnings`:** the score deducts 10% per warning. A design falling outside our
+correlation's validity range is not a flaw in the design; it is a limit of *our* model. Counting it as a warning
+would charge the referee's ignorance to the design, so these are reported through a separate channel.
 
-### Bilinçli olarak düzeltilmeyenler
+### Deliberately not fixed
 
-| Bulgu | Neden |
+| Finding | Reason |
 |---|---|
-| 5.4 — Akışkan özellikleri 80 °C'de sabit | Özellikleri ortalama yığın sıcaklığında hesaplamak tüm termal sonuçları yeniden yazar. Kazanç marjinal, risk yüksek; ayrıca şema sıcaklık girdisine izin vermediği için benchmark yolunda hiçbir etkisi yok. Bilinen sınırlama olarak kayıt altında. |
-| 5.2 — ASME kontrolleri ölü | Formül düzeltildi ama kontroller yine tetiklenmiyor: **et kalınlığı tasarlanmıyor, türetiliyor** (`max(6 mm, D/200)`). Canlandırmanın tek yolu kalınlığı şemaya bir tasarım değişkeni olarak eklemek — bu bir v3 görev kararı. |
-| 5.3 — İşletme maliyeti ihmal edilebilir | Bu bir fizik hatası değil, ağırlık/görev tasarımı sorunu. ΔP–maliyet ödünleşimini anlamlı kılmak v3'ün ödül bütçesi kararına ait. |
+| 5.4 — Fluid properties fixed at 80 °C | Evaluating properties at the mean bulk temperature would rewrite every thermal result. The gain is marginal and the risk high; and since the schema allows no temperature input, it has no effect on the benchmark path. Recorded as a known limitation. |
+| 5.2 — ASME checks are dead | The formula is fixed, but the checks still do not fire: **wall thickness is not designed, it is derived** (`max(6 mm, D/200)`). The only way to bring them to life is to add thickness to the schema as a design variable — a v3 task decision. |
+| 5.3 — Operating cost is negligible | This is not a physics error but a weighting/task-design issue. Making the ΔP–cost trade-off meaningful belongs to v3's reward-budget decision. |
 
-### Denetim aracı
+### Audit tool
 
-Bulguların tekrarlanabilir olması için `BaseEnvironment.audit_task()` eklendi — ortamdan bağımsız bir
-şablon metot, her ortam kendi fiziğini `analyse_physics()` ile dolduruyor. Bu raporun 2., 3. ve 4.
-bölümlerindeki tüm sayılar tek çağrıyla yeniden üretilebilir:
+To make the findings reproducible, `BaseEnvironment.audit_task()` was added — an environment-independent
+template method in which each environment supplies its own physics through `analyse_physics()`. Every number in
+sections 2, 3 and 4 of this report can be regenerated with a single call:
 
 ```python
 from sunimuhendis import make_env
@@ -219,6 +219,5 @@ env = make_env("heat_exchanger", score_version="heat_exchanger_score_v3")
 print(env.audit_task(task_params).summary())
 ```
 
-`tests/test_task_audit.py` hem duvara dayalı görevin işaretlendiğini hem de gerçekten boşluğu olan bir
-görevin **işaretlenmediğini** sabitliyor. `tests/test_simulator_v4_fixes.py` yukarıdaki her düzeltmeyi
-ayrı ayrı sabitliyor.
+`tests/test_task_audit.py` pins both that the walled task is flagged and that a task with genuine headroom is
+**not** flagged. `tests/test_simulator_v4_fixes.py` pins each of the fixes above individually.
