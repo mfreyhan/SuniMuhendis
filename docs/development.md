@@ -56,7 +56,8 @@ Windows and Ubuntu.
 1. Update `CHANGELOG.md`, `pyproject.toml`, `CITATION.cff`, and public docs.
 2. Run the full verification sequence above.
 3. Confirm Windows and Ubuntu CI on the exact commit.
-4. Tag the environment release, for example `envs-v0.6.0`.
+4. Tag the environment release with the chosen package version, for example
+   `envs-vX.Y.Z`.
 5. Create a GitHub Release describing simulator, score, runtime, and data changes.
 6. Install the tagged wheel from a clean external environment.
 
