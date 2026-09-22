@@ -13,18 +13,23 @@ a deterministic physics simulation, and a versioned scoring function. The same
 API can be used from this repository, an optimizer, or a separate training system.
 
 > **Project status:** public research software in alpha. The heat-exchanger
-> environment is available; further engineering domains are planned.
+> environment is available; turbomachinery throughflow remains experimental.
 
 ## Available environments
 
 | Environment | Status | Install extra |
 |---|---|---|
 | `heat_exchanger` | Available; simulator V4 and versioned scores | `heat_exchanger` |
+| `turbomachinery_throughflow` | Experimental; reward disabled pending validation | [setup guide](docs/turbomachinery_throughflow.md) |
 
 The heat-exchanger environment supports shell-and-tube and concentric-tube
 geometries. It uses `ht` and `fluids` where suitable, with additional
 shell-side, cost, mechanical, and correlation-validity checks implemented in
 the environment.
+
+The throughflow environment supports multi-stage axial compressor and turbine
+research through a pinned NASA backend. Its current physics limits and separate
+installation steps are documented in the [throughflow setup guide](docs/turbomachinery_throughflow.md).
 
 ## Install
 

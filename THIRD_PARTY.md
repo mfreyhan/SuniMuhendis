@@ -17,6 +17,13 @@ uses additional dependencies listed in `pyproject.toml` and
 `requirements.txt`. The authoritative license for each dependency is the
 license included with its installed distribution or upstream source.
 
+The experimental `turbomachinery_throughflow` environment uses NASA
+`turbo-design` at a pinned Git commit. That dependency is installed separately
+from `requirements-throughflow.txt` and is governed by the NASA Open Source
+Agreement. Its source and loss-correlation pickle files are not included in the
+SuniMuhendis wheel. The setup script downloads correlation files from the same
+pinned revision and verifies recorded SHA-256 hashes before use.
+
 ## Third-party model responses
 
 Benchmark JSONL records can contain raw responses produced by external models.

@@ -34,6 +34,9 @@ Repository = "https://github.com/mfreyhan/SuniMuhendis.git"
 Issues = "https://github.com/mfreyhan/SuniMuhendis/issues"
 Changelog = "https://github.com/mfreyhan/SuniMuhendis/blob/main/CHANGELOG.md"
 
+[project.scripts]
+sunimuhendis-setup-throughflow = "sunimuhendis.environments.turbomachinery_throughflow.assets:main"
+
 # Per-environment extras: install only the simulator deps you actually use,
 # e.g.  pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@envs-v0.6.0"
 # Pin a tag, not a branch: simulator and score behaviour is versioned deliberately.

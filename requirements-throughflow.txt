@@ -1,0 +1,3 @@
+# NASA backend stays outside the Apache-2.0 SuniMuhendis wheel.  Pin the exact
+# upstream commit so an experiment cannot change when NASA main advances.
+turbo-design @ git+https://github.com/nasa/turbo-design.git@23c2b0bf781b4b030014f458ecfde872896777a2

@@ -6,6 +6,13 @@ different simulator or score versions comparable.
 
 ## [Unreleased]
 
+- Added evaluator-owned loss and deviation policies for the experimental axial
+  throughflow environment, including corrected Carter compressor deviation.
+- Added loss-relevant blade geometry, DRC checks, row-level physics diagnostics,
+  and hash-pinned NASA correlation asset setup.
+- Kept throughflow reward disabled while independent physical validation and
+  upstream turbine-loss defects remain unresolved.
+
 ## [0.6.0] - 2026-09-21
 
 ### Changed

@@ -26,11 +26,11 @@ def test_fixed_loss_requires_explicit_fraction():
     parsed=ThroughflowTaskV1.model_validate(task(physics={"default_loss_model":"fixed_pressure"}))
     with pytest.raises(ValueError,match="requires a fraction"): parsed.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
 def test_candidate_profile_rejects_a_design_selected_loss_model():
-    parsed=ThroughflowTaskV1.model_validate(task(physics_profile="axial_turbine_candidate_v1",physics={"default_loss_model":"td2"}))
+    parsed=ThroughflowTaskV1.model_validate(task(physics_profile="axial_turbine_candidate_v1",physics={"default_loss_model":"kacker_okapuu"}))
     with pytest.raises(ValueError,match="does not allow loss models"):
         parsed.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
 def test_candidate_profile_rejects_the_wrong_machine_type():
-    parsed=ThroughflowTaskV1.model_validate(task(physics_profile="axial_compressor_candidate_v1",physics={"default_loss_model":"diffusion"}))
+    parsed=ThroughflowTaskV1.model_validate(task(physics_profile="axial_compressor_candidate_v1",physics={"default_loss_model":"diffusion","default_deviation_model":"carter"}))
     with pytest.raises(ValueError,match="requires machine_type=compressor"):
         parsed.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
 def test_extra_fields_are_rejected():
@@ -47,7 +47,7 @@ def test_numerical_failure_is_not_reward_eligible():
 def test_environment_is_registered_and_lazy():
     assert "turbomachinery_throughflow" in list_environments()
     env=make_env("turbomachinery_throughflow")
-    assert env.simulator.VERSION=="nasa_turbo_design_experimental_v1"
+    assert env.simulator.VERSION=="nasa_turbo_design_experimental_v2"
 
 def test_axial_compressor_contract_accepts_total_pressure_boundary():
     from scripts.run_throughflow_compressor import build_case
@@ -62,3 +62,21 @@ def test_resolution_study_relative_difference():
     from scripts.run_throughflow_resolution_study import relative_difference
     assert relative_difference(99.0,100.0)==pytest.approx(.01)
     assert relative_difference(0.25,0.0)==pytest.approx(.25)
+
+def test_physical_profile_requires_loss_relevant_blade_geometry():
+    parsed=ThroughflowTaskV1.model_validate(task(physics_profile="axial_turbine_candidate_v1",physics={"default_loss_model":"td2"}))
+    with pytest.raises(ValueError,match="stagger_angle_deg"):
+        parsed.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
+
+def test_fixed_deviation_is_task_owned_and_requires_eleven_values():
+    parsed=ThroughflowTaskV1.model_validate(task(physics={"default_loss_model":"diffusion","default_deviation_model":"fixed","row_fixed_deviation_deg":{"s0":[1.0]*11,"r0":[2.0]*11}}))
+    parsed.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
+    with pytest.raises(ValidationError,match="eleven finite"):
+        ThroughflowTaskV1.model_validate(task(physics={"default_loss_model":"diffusion","default_deviation_model":"fixed","row_fixed_deviation_deg":{"s0":[1.0]*10}}))
+
+def test_drc_rejects_overlapping_blade_rows():
+    value=design()
+    value["rows"][2]["axial_location_m"]=0.11
+    ok,message=make_env("turbomachinery_throughflow").run_drc(value)
+    assert ok is False
+    assert "overlaps" in message

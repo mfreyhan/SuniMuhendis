@@ -13,6 +13,7 @@ from scripts.run_throughflow import build_case
 from scripts.run_throughflow_compressor import build_case as build_compressor_case
 from scripts.run_throughflow_resolution_study import run_study
 from sunimuhendis import make_env
+from sunimuhendis.environments.turbomachinery_throughflow.physics import CorrectedCarterDeviation
 
 REFERENCE={"power_W":3394088.5080275447,"pressure_ratio_total":3.38544143180728,"efficiency_polytropic":0.732031028534128}
 COMPRESSOR_REFERENCE={"power_W":527700.3258916077,"pressure_ratio_total":1.322718069014324,"efficiency_polytropic":1.0078571383675168}
@@ -91,3 +92,34 @@ def test_mattingly_compressor_adapter_matches_direct_upstream_solve():
     assert result.metrics["streamline_count"]==3.0
     assert result.metrics["efficiency_polytropic"]>1.0
     assert result.score.normalized_total==0.0
+
+def test_corrected_carter_deviation_matches_documented_algebra():
+    import numpy as np
+    class Row:
+        percent_hub_shroud=np.linspace(0.0,1.0,11)
+        metal_inlet_angle=[50.0]*11
+        metal_exit_angle=[30.0]*11
+        solidity=np.asarray([1.0]*11)
+    assert CorrectedCarterDeviation()(Row(),None)==pytest.approx([5.0]*11)
+
+def test_compressor_candidate_applies_spanwise_geometry_loss_and_deviation():
+    pytest.importorskip("turbodesign")
+    design,task=build_compressor_case(stages=2,streamtubes=10)
+    for row in design["rows"]:
+        if row["row_type"] not in ("rotor","stator"):
+            continue
+        row["stagger_angle_deg"]=[30.0+index for index in range(11)]
+        row["trailing_edge_thickness_m"]=0.0005
+        if row["row_type"]=="rotor":
+            row["tip_clearance_m"]=0.0005
+    task["physics_profile"]="axial_compressor_candidate_v1"
+    task["physics"]={"default_loss_model":"diffusion","default_deviation_model":"carter"}
+    with contextlib.redirect_stdout(io.StringIO()):
+        result=make_env("turbomachinery_throughflow").evaluate("validation",task,"physical_compressor",design)
+    assert result.status=="success"
+    assert result.score.normalized_total==0.0
+    assert result.raw_simulation_output["physics_profile"]["nominal_deviation_model"]=="carter"
+    for row in result.raw_simulation_output["rows"]:
+        assert any(abs(value)>1e-6 for value in row["deviation_deg"])
+        assert max(row["solidity"])-min(row["solidity"])>1e-3
+    assert any(any(value>0 for value in row["Yp"]) for row in result.raw_simulation_output["rows"])

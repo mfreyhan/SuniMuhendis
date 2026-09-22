@@ -33,13 +33,15 @@ class BladeRow(StrictModel):
     row_id: str=Field(min_length=1); stage_id: Optional[str]=None; row_type: Literal["inlet","stator","rotor","outlet"]; axial_location_m: float=Field(ge=0)
     blade_count: Optional[int]=Field(default=None,ge=1); axial_chord_m: Optional[float]=Field(default=None,gt=0)
     tip_clearance_m: Optional[float]=Field(default=None,ge=0)
+    trailing_edge_thickness_m: Optional[float]=Field(default=None,gt=0)
+    stagger_angle_deg: Optional[List[float]]=Field(default=None,min_length=DESIGN_STREAMLINES,max_length=DESIGN_STREAMLINES)
     metal_angle_in_deg: Optional[List[float]]=Field(default=None,min_length=DESIGN_STREAMLINES,max_length=DESIGN_STREAMLINES)
     metal_angle_out_deg: Optional[List[float]]=Field(default=None,min_length=DESIGN_STREAMLINES,max_length=DESIGN_STREAMLINES)
     @model_validator(mode="after")
     def valid(self):
         blade=self.row_type in ("stator","rotor")
         if blade and (self.stage_id is None or self.blade_count is None or self.axial_chord_m is None or self.metal_angle_in_deg is None or self.metal_angle_out_deg is None): raise ValueError("blade rows require stage_id, blade_count, axial_chord_m and both 11-point metal-angle arrays")
-        if not blade and (self.blade_count is not None or self.axial_chord_m is not None or self.metal_angle_in_deg is not None or self.metal_angle_out_deg is not None): raise ValueError("boundary rows cannot define blade geometry")
+        if not blade and (self.blade_count is not None or self.axial_chord_m is not None or self.metal_angle_in_deg is not None or self.metal_angle_out_deg is not None or self.trailing_edge_thickness_m is not None or self.stagger_angle_deg is not None): raise ValueError("boundary rows cannot define blade geometry")
         if self.tip_clearance_m is not None and self.row_type!="rotor": raise ValueError("clearance is rotor-only")
         return self
 class ThroughflowDesignV1(StrictModel):
@@ -63,28 +65,35 @@ class SecondaryPoint(StrictModel):
 class Numerics(StrictModel):
     streamlines: int=Field(default=DESIGN_STREAMLINES,ge=1,le=65); max_iterations: int=Field(default=100,ge=1,le=2000); residual_tolerance: float=Field(default=1e-6,gt=0,le=1e-2); massflow_spread_tolerance: float=Field(default=.01,gt=0,le=.25)
 LossModelName = Literal["fixed_pressure","diffusion","td2","kacker_okapuu","ainley_mathieson"]
+DeviationModelName = Literal["zero","fixed","carter"]
 class Physics(StrictModel):
     default_loss_model: LossModelName; row_loss_models: Dict[str,LossModelName]=Field(default_factory=dict); fixed_pressure_loss_fraction: Optional[float]=Field(default=None,ge=0,lt=1); row_fixed_pressure_loss_fractions: Dict[str,float]=Field(default_factory=dict)
+    default_deviation_model: DeviationModelName="zero"; row_deviation_models: Dict[str,DeviationModelName]=Field(default_factory=dict); row_fixed_deviation_deg: Dict[str,List[float]]=Field(default_factory=dict)
     @model_validator(mode="after")
     def fixed(self):
         if any(not math.isfinite(v) or v<0 or v>=1 for v in self.row_fixed_pressure_loss_fractions.values()): raise ValueError("row fixed pressure loss fractions must be finite in [0,1)")
         selected={self.default_loss_model,*self.row_loss_models.values()}; has="fixed_pressure" in selected
         if not has and (self.fixed_pressure_loss_fraction is not None or self.row_fixed_pressure_loss_fractions): raise ValueError("fixed pressure loss fractions are unused")
+        if any(len(values)!=DESIGN_STREAMLINES or any(not math.isfinite(value) for value in values) for values in self.row_fixed_deviation_deg.values()): raise ValueError("fixed deviation requires eleven finite span values")
+        selected_deviation={self.default_deviation_model,*self.row_deviation_models.values()}
+        if "fixed" not in selected_deviation and self.row_fixed_deviation_deg: raise ValueError("fixed deviation values are unused")
         return self
 class ThroughflowTaskV1(StrictModel):
     environment: Literal["turbomachinery_throughflow"]="turbomachinery_throughflow"; task_schema_version: Literal["throughflow_task_v1"]="throughflow_task_v1"
-    simulator_version: Literal["nasa_turbo_design_experimental_v1"]="nasa_turbo_design_experimental_v1"; operating_conditions: OperatingPoint
+    simulator_version: Literal["nasa_turbo_design_experimental_v2"]="nasa_turbo_design_experimental_v2"; operating_conditions: OperatingPoint
     physics_profile: Literal["experimental_custom_v1","mattingly_compressor_regression_v1","optturb_turbine_regression_v1","axial_compressor_candidate_v1","axial_turbine_candidate_v1"]="experimental_custom_v1"
     secondary_operating_points: List[SecondaryPoint]=Field(default_factory=list); physics: Physics; numerics: Numerics=Field(default_factory=Numerics); max_stages: int=Field(default=12,ge=1,le=30)
     def validate_design_ownership(self, design):
         if design.stage_count>self.max_stages: raise ValueError("design exceeds max_stages")
         get_physics_profile(self.physics_profile).validate(design,self.physics)
-        row_ids={r.row_id for r in design.rows}; unknown=(set(self.physics.row_loss_models)|set(self.physics.row_fixed_pressure_loss_fractions))-row_ids
-        if unknown: raise ValueError("loss models reference unknown rows: {}".format(sorted(unknown)))
+        row_ids={r.row_id for r in design.rows}; unknown=(set(self.physics.row_loss_models)|set(self.physics.row_fixed_pressure_loss_fractions)|set(self.physics.row_deviation_models)|set(self.physics.row_fixed_deviation_deg))-row_ids
+        if unknown: raise ValueError("physics models reference unknown rows: {}".format(sorted(unknown)))
         for row in design.rows:
             if row.row_type not in ("stator","rotor"): continue
             model=self.physics.row_loss_models.get(row.row_id,self.physics.default_loss_model)
             if model=="fixed_pressure" and row.row_id not in self.physics.row_fixed_pressure_loss_fractions and self.physics.fixed_pressure_loss_fraction is None: raise ValueError("fixed pressure loss requires a fraction for {}".format(row.row_id))
+            deviation=self.physics.row_deviation_models.get(row.row_id,self.physics.default_deviation_model)
+            if deviation=="fixed" and row.row_id not in self.physics.row_fixed_deviation_deg: raise ValueError("fixed deviation requires eleven values for {}".format(row.row_id))
 class Diagnostic(StrictModel):
     category: Literal["design_violation","model_validity","numerical_failure","infrastructure_failure","configuration_error"]
     code: str=Field(min_length=1); message: str=Field(min_length=1); location: Optional[str]=None
