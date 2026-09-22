@@ -87,7 +87,7 @@ def run_study(stages: int, streamtube_counts: list[int]) -> dict[str, object]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--stages", type=int, default=2)
-    parser.add_argument("--streamtubes", default="2,5,11,21")
+    parser.add_argument("--streamtubes", default="2,5,10,20")
     args = parser.parse_args()
     counts = [int(value) for value in args.streamtubes.split(",")]
     print(json.dumps(run_study(args.stages, counts), indent=2))

@@ -20,10 +20,6 @@ class NasaTurboDesignSimulator(BaseSimulator):
         except Exception as exc:
             return False, {}, {}, "NASA turbo-design solve failed: {}: {}".format(type(exc).__name__, exc)
 
-    @staticmethod
-    def _profile(profile, fallback):
-        return [point.value for point in profile.points] if profile is not None else [fallback]
-
     def _loss(self, name, fraction):
         if name == "fixed_pressure":
             from turbodesign.loss import FixedPressureLoss
@@ -66,10 +62,9 @@ class NasaTurboDesignSimulator(BaseSimulator):
             loss_name=task.physics.row_loss_models.get(row.row_id,task.physics.default_loss_model)
             fraction=task.physics.row_fixed_pressure_loss_fractions.get(row.row_id,task.physics.fixed_pressure_loss_fraction or 0.0)
             loss=self._loss(loss_name,fraction)
-            angles=self._profile(row.metal_angle_out_deg,70.0 if row.row_type=="stator" else -65.0)
-            built=(make_stator_row if row.row_type=="stator" else make_rotor_row)(hub_location=location,metal_exit_angle_deg=angles,loss_function=loss)
+            built=(make_stator_row if row.row_type=="stator" else make_rotor_row)(hub_location=location,metal_exit_angle_deg=row.metal_angle_out_deg,loss_function=loss,num_blades=row.blade_count,axial_chord=row.axial_chord_m)
+            built.metal_inlet_angle=row.metal_angle_in_deg
             built.stage_id=stage_index[row.stage_id]
-            built.axial_chord=row.axial_chord_m
             rows.append(built); row_map[row.row_id]=built
         fluid=Solution("air.yaml"); fluid.TP=op.inlet_total_temperature_k,op.inlet_total_pressure_pa
         spool=TurbineSpool(passage=passage,massflow=op.mass_flow_kg_s,inlet=inlet,outlet=outlet,rows=rows,rpm=op.shaft_speed_rpm,num_streamlines=task.numerics.streamlines,fluid=fluid)
@@ -77,7 +72,7 @@ class NasaTurboDesignSimulator(BaseSimulator):
         spool.solve()
         metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":float(spool.overall_pressure_ratio()),"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines),"streamtube_count":float(task.numerics.streamlines-1)}
         if not all(math.isfinite(v) for v in metrics.values()): raise ValueError("solver returned non-finite summary metrics")
-        raw={"backend":"nasa/turbo-design","backend_mode":"fixed_streamline_geometry","simulator_version":self.VERSION,"physics_profile":get_physics_profile(task.physics_profile).provenance(),"convergence_history":getattr(spool,"convergence_history",[]),"rows":[{"row_id":key,"P0":np.asarray(getattr(value,"P0",[])).tolist(),"T0":np.asarray(getattr(value,"T0",[])).tolist(),"M":np.asarray(getattr(value,"M",[])).tolist()} for key,value in row_map.items()]}
+        raw={"backend":"nasa/turbo-design","backend_mode":"fixed_streamline_geometry","simulator_version":self.VERSION,"physics_profile":get_physics_profile(task.physics_profile).provenance(),"convergence_history":getattr(spool,"convergence_history",[]),"rows":[{"row_id":key,"P0":np.asarray(getattr(value,"P0",[])).tolist(),"T0":np.asarray(getattr(value,"T0",[])).tolist(),"M":np.asarray(getattr(value,"M",[])).tolist(),"metal_angle_in_deg":np.asarray(getattr(value,"beta1_metal",[])).tolist(),"metal_angle_out_deg":np.asarray(getattr(value,"beta2_metal",[])).tolist()} for key,value in row_map.items()]}
         return True,metrics,raw,""
 
     def _solve_compressor(self,design,task):
@@ -95,12 +90,12 @@ class NasaTurboDesignSimulator(BaseSimulator):
         length=float(x[-1]-x[0]); rows=[]; row_map={}; stage_ratio=(op.outlet_total_pressure_pa/op.inlet_total_pressure_pa)**(1/design.stage_count)
         stage_names=list(dict.fromkeys(r.stage_id for r in design.rows if r.row_type=="rotor")); stage_index={name:i for i,name in enumerate(stage_names)}
         for row in design.rows[1:-1]:
-            location=(row.axial_location_m-x[0])/length; loss_name=task.physics.row_loss_models.get(row.row_id,task.physics.default_loss_model); fraction=task.physics.row_fixed_pressure_loss_fractions.get(row.row_id,task.physics.fixed_pressure_loss_fraction or 0.0); loss=self._loss(loss_name,fraction); angles=self._profile(row.metal_angle_out_deg,-23.87 if row.row_type=="rotor" else op.inlet_flow_angle_deg)
+            location=(row.axial_location_m-x[0])/length; loss_name=task.physics.row_loss_models.get(row.row_id,task.physics.default_loss_model); fraction=task.physics.row_fixed_pressure_loss_fractions.get(row.row_id,task.physics.fixed_pressure_loss_fraction or 0.0); loss=self._loss(loss_name,fraction)
             factory=make_rotor_row if row.row_type=="rotor" else make_stator_row
-            built=factory(hub_location=location,metal_exit_angle_deg=angles,loss_function=loss,P0_ratio=stage_ratio if row.row_type=="stator" else 1.0,num_blades=row.blade_count,axial_chord=row.axial_chord_m); built.stage_id=stage_index[row.stage_id]; rows.append(built); row_map[row.row_id]=built
+            built=factory(hub_location=location,metal_exit_angle_deg=row.metal_angle_out_deg,loss_function=loss,P0_ratio=stage_ratio if row.row_type=="stator" else 1.0,num_blades=row.blade_count,axial_chord=row.axial_chord_m); built.metal_inlet_angle=row.metal_angle_in_deg; built.stage_id=stage_index[row.stage_id]; rows.append(built); row_map[row.row_id]=built
         fluid=Solution("air.yaml"); fluid.TP=op.inlet_total_temperature_k,op.inlet_total_pressure_pa
         spool=CompressorSpool(passage,op.mass_flow_kg_s,inlet,outlet,rows,num_streamlines=task.numerics.streamlines,fluid=fluid,rpm=op.shaft_speed_rpm); spool.adjust_streamlines=False; spool.solve_balance_pressure()
         metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":float(spool.overall_pressure_ratio()),"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines),"streamtube_count":float(task.numerics.streamlines-1)}
         if not all(math.isfinite(v) for v in metrics.values()): raise ValueError("solver returned non-finite summary metrics")
-        raw={"backend":"nasa/turbo-design","backend_mode":"fixed_streamline_geometry","simulator_version":self.VERSION,"physics_profile":get_physics_profile(task.physics_profile).provenance(),"convergence_history":getattr(spool,"convergence_history",[]),"rows":[{"row_id":key,"P0":np.asarray(getattr(value,"P0",[])).tolist(),"T0":np.asarray(getattr(value,"T0",[])).tolist(),"M":np.asarray(getattr(value,"M",[])).tolist()} for key,value in row_map.items()]}
+        raw={"backend":"nasa/turbo-design","backend_mode":"fixed_streamline_geometry","simulator_version":self.VERSION,"physics_profile":get_physics_profile(task.physics_profile).provenance(),"convergence_history":getattr(spool,"convergence_history",[]),"rows":[{"row_id":key,"P0":np.asarray(getattr(value,"P0",[])).tolist(),"T0":np.asarray(getattr(value,"T0",[])).tolist(),"M":np.asarray(getattr(value,"M",[])).tolist(),"metal_angle_in_deg":np.asarray(getattr(value,"beta1_metal",[])).tolist(),"metal_angle_out_deg":np.asarray(getattr(value,"beta2_metal",[])).tolist()} for key,value in row_map.items()]}
         return True,metrics,raw,""

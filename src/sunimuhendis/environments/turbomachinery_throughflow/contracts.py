@@ -26,24 +26,20 @@ class PassageGeometry(StrictModel):
         x=[v.axial_m for v in self.stations]
         if any(b<=a for a,b in zip(x,x[1:])): raise ValueError("stations must have increasing axial_m")
         return self
-class ProfilePoint(StrictModel):
-    span_fraction: float = Field(ge=0,le=1); value: float
-class RadialProfile(StrictModel):
-    interpolation: Literal["linear"]="linear"; points: List[ProfilePoint]=Field(min_length=2)
-    @model_validator(mode="after")
-    def valid(self):
-        s=[p.span_fraction for p in self.points]
-        if s[0]!=0 or s[-1]!=1 or any(b<=a for a,b in zip(s,s[1:])): raise ValueError("profile must cover ordered span 0..1")
-        return self
+SPAN_FRACTIONS = tuple(index / 10 for index in range(11))
+DESIGN_STREAMLINES = len(SPAN_FRACTIONS)
+DESIGN_STREAMTUBES = DESIGN_STREAMLINES - 1
 class BladeRow(StrictModel):
     row_id: str=Field(min_length=1); stage_id: Optional[str]=None; row_type: Literal["inlet","stator","rotor","outlet"]; axial_location_m: float=Field(ge=0)
     blade_count: Optional[int]=Field(default=None,ge=1); axial_chord_m: Optional[float]=Field(default=None,gt=0)
-    tip_clearance_m: Optional[float]=Field(default=None,ge=0); metal_angle_in_deg: Optional[RadialProfile]=None; metal_angle_out_deg: Optional[RadialProfile]=None
+    tip_clearance_m: Optional[float]=Field(default=None,ge=0)
+    metal_angle_in_deg: Optional[List[float]]=Field(default=None,min_length=DESIGN_STREAMLINES,max_length=DESIGN_STREAMLINES)
+    metal_angle_out_deg: Optional[List[float]]=Field(default=None,min_length=DESIGN_STREAMLINES,max_length=DESIGN_STREAMLINES)
     @model_validator(mode="after")
     def valid(self):
         blade=self.row_type in ("stator","rotor")
-        if blade and (self.stage_id is None or self.blade_count is None or self.axial_chord_m is None): raise ValueError("blade rows require stage_id, blade_count and axial_chord_m")
-        if not blade and (self.blade_count is not None or self.axial_chord_m is not None): raise ValueError("boundary rows cannot define blade geometry")
+        if blade and (self.stage_id is None or self.blade_count is None or self.axial_chord_m is None or self.metal_angle_in_deg is None or self.metal_angle_out_deg is None): raise ValueError("blade rows require stage_id, blade_count, axial_chord_m and both 11-point metal-angle arrays")
+        if not blade and (self.blade_count is not None or self.axial_chord_m is not None or self.metal_angle_in_deg is not None or self.metal_angle_out_deg is not None): raise ValueError("boundary rows cannot define blade geometry")
         if self.tip_clearance_m is not None and self.row_type!="rotor": raise ValueError("clearance is rotor-only")
         return self
 class ThroughflowDesignV1(StrictModel):
@@ -65,7 +61,7 @@ class OperatingPoint(StrictModel):
 class SecondaryPoint(StrictModel):
     name: str=Field(min_length=1); mass_flow_kg_s: Optional[float]=Field(default=None,gt=0); shaft_speed_rpm: Optional[float]=Field(default=None,gt=0); outlet_static_pressure_pa: Optional[float]=Field(default=None,gt=0)
 class Numerics(StrictModel):
-    streamlines: int=Field(default=5,ge=1,le=65); max_iterations: int=Field(default=100,ge=1,le=2000); residual_tolerance: float=Field(default=1e-6,gt=0,le=1e-2); massflow_spread_tolerance: float=Field(default=.01,gt=0,le=.25)
+    streamlines: int=Field(default=DESIGN_STREAMLINES,ge=1,le=65); max_iterations: int=Field(default=100,ge=1,le=2000); residual_tolerance: float=Field(default=1e-6,gt=0,le=1e-2); massflow_spread_tolerance: float=Field(default=.01,gt=0,le=.25)
 LossModelName = Literal["fixed_pressure","diffusion","td2","kacker_okapuu","ainley_mathieson"]
 class Physics(StrictModel):
     default_loss_model: LossModelName; row_loss_models: Dict[str,LossModelName]=Field(default_factory=dict); fixed_pressure_loss_fraction: Optional[float]=Field(default=None,ge=0,lt=1); row_fixed_pressure_loss_fractions: Dict[str,float]=Field(default_factory=dict)

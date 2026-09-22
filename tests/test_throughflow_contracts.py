@@ -1,12 +1,12 @@
 import pytest
 from pydantic import ValidationError
-from sunimuhendis.environments.turbomachinery_throughflow import ThroughflowDesignV1, ThroughflowTaskV1, ThroughflowSimulationResultV1
+from sunimuhendis.environments.turbomachinery_throughflow import SPAN_FRACTIONS, ThroughflowDesignV1, ThroughflowTaskV1, ThroughflowSimulationResultV1
 from sunimuhendis import list_environments, make_env
 
 def design(n=1):
     rows=[{"row_id":"in","row_type":"inlet","axial_location_m":0.0}]
     for i in range(n):
-        rows += [{"row_id":f"s{i}","stage_id":f"st{i}","row_type":"stator","axial_location_m":.1+2*i,"blade_count":30,"axial_chord_m":.02},{"row_id":f"r{i}","stage_id":f"st{i}","row_type":"rotor","axial_location_m":.2+2*i,"blade_count":40,"axial_chord_m":.03}]
+        rows += [{"row_id":f"s{i}","stage_id":f"st{i}","row_type":"stator","axial_location_m":.1+2*i,"blade_count":30,"axial_chord_m":.02,"metal_angle_in_deg":[0.0]*11,"metal_angle_out_deg":[20.0]*11},{"row_id":f"r{i}","stage_id":f"st{i}","row_type":"rotor","axial_location_m":.2+2*i,"blade_count":40,"axial_chord_m":.03,"metal_angle_in_deg":[0.0]*11,"metal_angle_out_deg":[-30.0]*11}]
     rows += [{"row_id":"out","row_type":"outlet","axial_location_m":.3+2*(n-1)}]
     return {"machine_type":"turbine","flow_path":"axial","passage":{"stations":[{"axial_m":0.0,"hub_radius_m":.2,"shroud_radius_m":.3},{"axial_m":5.0,"hub_radius_m":.2,"shroud_radius_m":.3}]},"rows":rows}
 def task(**kw):
@@ -15,6 +15,8 @@ def task(**kw):
 
 @pytest.mark.parametrize("n",[1,2,6])
 def test_single_and_multistage(n): assert ThroughflowDesignV1.model_validate(design(n)).stage_count==n
+def test_design_grid_is_fixed_at_tenth_span_intervals():
+    assert SPAN_FRACTIONS==pytest.approx(tuple(index/10 for index in range(11)))
 def test_resolution_and_row_loss_are_task_owned():
     d=ThroughflowDesignV1.model_validate(design(2)); t=ThroughflowTaskV1.model_validate(task(physics={"default_loss_model":"td2","row_loss_models":{"r1":"diffusion"}},numerics={"streamlines":17},max_stages=2)); t.validate_design_ownership(d)
 def test_unknown_loss_row_is_rejected():
@@ -34,6 +36,11 @@ def test_candidate_profile_rejects_the_wrong_machine_type():
 def test_extra_fields_are_rejected():
     value=design(); value["rows"][0]["unknown"]=1
     with pytest.raises(ValidationError): ThroughflowDesignV1.model_validate(value)
+def test_blade_rows_require_exactly_eleven_inlet_and_exit_angles():
+    value=design(); value["rows"][1]["metal_angle_in_deg"]=[0.0]*10
+    with pytest.raises(ValidationError): ThroughflowDesignV1.model_validate(value)
+    value=design(); del value["rows"][1]["metal_angle_out_deg"]
+    with pytest.raises(ValidationError,match="both 11-point metal-angle arrays"): ThroughflowDesignV1.model_validate(value)
 def test_numerical_failure_is_not_reward_eligible():
     with pytest.raises(ValidationError,match="clean success"): ThroughflowSimulationResultV1.model_validate({"status":"success","reward_eligible":True,"diagnostics":[{"category":"numerical_failure","code":"massflow","message":"spread exceeded"}]})
 
