@@ -19,7 +19,7 @@ def build_case(stages):
     else: mass,p0,t0,rpm,pout=22.0,1000000.0,1300.0,7500.0,1000000.0/4.45
     fractions={}
     for i in range(stages): fractions[f"stator_{i+1}"]=.221 if stages==1 else .15; fractions[f"rotor_{i+1}"]=.30 if stages==1 else .18
-    task={"operating_conditions":{"mass_flow_kg_s":mass,"inlet_total_pressure_pa":p0,"inlet_total_temperature_k":t0,"shaft_speed_rpm":rpm,"outlet_static_pressure_pa":pout},"physics":{"default_loss_model":"fixed_pressure","row_fixed_pressure_loss_fractions":fractions},"numerics":{"streamlines":5 if stages==2 else 3}}
+    task={"physics_profile":"optturb_turbine_regression_v1","operating_conditions":{"mass_flow_kg_s":mass,"inlet_total_pressure_pa":p0,"inlet_total_temperature_k":t0,"shaft_speed_rpm":rpm,"outlet_static_pressure_pa":pout},"physics":{"default_loss_model":"fixed_pressure","row_fixed_pressure_loss_fractions":fractions},"numerics":{"streamlines":5 if stages==2 else 3}}
     return design,task
 
 if __name__ == "__main__":

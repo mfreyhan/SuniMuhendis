@@ -23,6 +23,14 @@ def test_unknown_loss_row_is_rejected():
 def test_fixed_loss_requires_explicit_fraction():
     parsed=ThroughflowTaskV1.model_validate(task(physics={"default_loss_model":"fixed_pressure"}))
     with pytest.raises(ValueError,match="requires a fraction"): parsed.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
+def test_candidate_profile_rejects_a_design_selected_loss_model():
+    parsed=ThroughflowTaskV1.model_validate(task(physics_profile="axial_turbine_candidate_v1",physics={"default_loss_model":"td2"}))
+    with pytest.raises(ValueError,match="does not allow loss models"):
+        parsed.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
+def test_candidate_profile_rejects_the_wrong_machine_type():
+    parsed=ThroughflowTaskV1.model_validate(task(physics_profile="axial_compressor_candidate_v1",physics={"default_loss_model":"diffusion"}))
+    with pytest.raises(ValueError,match="requires machine_type=compressor"):
+        parsed.validate_design_ownership(ThroughflowDesignV1.model_validate(design()))
 def test_extra_fields_are_rejected():
     value=design(); value["rows"][0]["unknown"]=1
     with pytest.raises(ValidationError): ThroughflowDesignV1.model_validate(value)
@@ -42,3 +50,8 @@ def test_axial_compressor_contract_accepts_total_pressure_boundary():
     task_model.validate_design_ownership(design_model)
     assert design_model.machine_type=="compressor"
     assert task_model.operating_conditions.outlet_total_pressure_pa is not None
+
+def test_resolution_study_relative_difference():
+    from scripts.run_throughflow_resolution_study import relative_difference
+    assert relative_difference(99.0,100.0)==pytest.approx(.01)
+    assert relative_difference(0.25,0.0)==pytest.approx(.25)

@@ -11,6 +11,7 @@ import pytest
 
 from scripts.run_throughflow import build_case
 from scripts.run_throughflow_compressor import build_case as build_compressor_case
+from scripts.run_throughflow_resolution_study import run_study
 from sunimuhendis import make_env
 
 REFERENCE={"power_W":3394088.5080275447,"pressure_ratio_total":3.38544143180728,"efficiency_polytropic":0.732031028534128}
@@ -27,6 +28,8 @@ def test_optturb_adapter_matches_direct_upstream_solve():
         assert result.metrics[name]==pytest.approx(expected,rel=1e-12,abs=1e-9)
     assert result.metrics["stage_count"]==1.0
     assert result.metrics["streamline_count"]==3.0
+    assert result.raw_simulation_output["physics_profile"]["profile_id"]=="optturb_turbine_regression_v1"
+    assert result.raw_simulation_output["physics_profile"]["backend_revision"]=="23c2b0bf781b4b030014f458ecfde872896777a2"
     assert result.score.normalized_total==0.0
 
 def test_two_stage_compressor_with_eleven_streamtubes_is_deterministic():
@@ -47,6 +50,18 @@ def test_two_stage_compressor_with_eleven_streamtubes_is_deterministic():
         assert all(len(row["P0"])==12 for row in result.raw_simulation_output["rows"])
     assert results[0].metrics==results[1].metrics
     assert results[0].raw_simulation_output["rows"]==results[1].raw_simulation_output["rows"]
+
+def test_eleven_streamtubes_are_close_to_twenty_one_for_the_regression_case():
+    pytest.importorskip("turbodesign")
+    with contextlib.redirect_stdout(io.StringIO()):
+        report=run_study(stages=2,streamtube_counts=[11,21])
+    assert report["physical_validation"] is False
+    coarse=report["observations"][0]
+    assert coarse["status"]=="success"
+    differences=coarse["relative_difference_to_finest"]
+    assert differences["power_W"]<5e-4
+    assert differences["pressure_ratio_total"]<2e-3
+    assert differences["efficiency_polytropic"]<1e-3
 
 def test_mattingly_compressor_adapter_matches_direct_upstream_solve():
     pytest.importorskip("turbodesign")

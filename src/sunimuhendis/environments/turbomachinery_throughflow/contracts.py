@@ -1,8 +1,9 @@
-"""Versioned SI-unit contracts. The NASA backend is not registered yet."""
+"""Versioned SI-unit contracts for the NASA throughflow adapter."""
 from enum import Enum
 import math
 from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from .profiles import get_physics_profile
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
@@ -77,9 +78,11 @@ class Physics(StrictModel):
 class ThroughflowTaskV1(StrictModel):
     environment: Literal["turbomachinery_throughflow"]="turbomachinery_throughflow"; task_schema_version: Literal["throughflow_task_v1"]="throughflow_task_v1"
     simulator_version: Literal["nasa_turbo_design_experimental_v1"]="nasa_turbo_design_experimental_v1"; operating_conditions: OperatingPoint
+    physics_profile: Literal["experimental_custom_v1","mattingly_compressor_regression_v1","optturb_turbine_regression_v1","axial_compressor_candidate_v1","axial_turbine_candidate_v1"]="experimental_custom_v1"
     secondary_operating_points: List[SecondaryPoint]=Field(default_factory=list); physics: Physics; numerics: Numerics=Field(default_factory=Numerics); max_stages: int=Field(default=12,ge=1,le=30)
     def validate_design_ownership(self, design):
         if design.stage_count>self.max_stages: raise ValueError("design exceeds max_stages")
+        get_physics_profile(self.physics_profile).validate(design,self.physics)
         row_ids={r.row_id for r in design.rows}; unknown=(set(self.physics.row_loss_models)|set(self.physics.row_fixed_pressure_loss_fractions))-row_ids
         if unknown: raise ValueError("loss models reference unknown rows: {}".format(sorted(unknown)))
         for row in design.rows:
