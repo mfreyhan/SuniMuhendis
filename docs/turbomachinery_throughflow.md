@@ -58,6 +58,10 @@ only after independent compressor and turbine validation cases establish error
 limits for performance, spanwise flow, off-design behavior, and numerical
 resolution.
 
+The current compressor evidence, executable comparison, NASA EEE audit, and
+reward-eligibility gate are documented in
+[compressor_validation.md](compressor_validation.md).
+
 ## Result diagnostics
 
 Each blade row reports total pressure and temperature, absolute and relative

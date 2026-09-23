@@ -11,6 +11,7 @@ import pytest
 
 from scripts.run_throughflow import build_case
 from scripts.run_throughflow_compressor import build_case as build_compressor_case
+from scripts.run_throughflow_compressor_benchmark import run_comparison
 from scripts.run_throughflow_resolution_study import run_study
 from sunimuhendis import make_env
 from sunimuhendis.environments.turbomachinery_throughflow.physics import CorrectedCarterDeviation
@@ -123,3 +124,70 @@ def test_compressor_candidate_applies_spanwise_geometry_loss_and_deviation():
         assert any(abs(value)>1e-6 for value in row["deviation_deg"])
         assert max(row["solidity"])-min(row["solidity"])>1e-3
     assert any(any(value>0 for value in row["Yp"]) for row in result.raw_simulation_output["rows"])
+
+
+def test_public_compressor_comparison_runs_with_convergence_evidence():
+    pytest.importorskip("turbodesign")
+    report = run_comparison()
+    assert len(report["runs"]) == 4
+    assert all(run["status"] == "success" for run in report["runs"])
+    for run in report["runs"]:
+        metrics = run["metrics"]
+        assert metrics["streamline_count"] == 11.0
+        assert metrics["streamtube_count"] == 10.0
+        assert metrics["massflow_residual"] <= 1e-6
+        assert "pressure_ratio_relative_error" in metrics
+    regression = report["runs"][0]
+    assert regression["metrics"]["pressure_ratio_total"] == pytest.approx(1.3, rel=0.02)
+    for run in report["runs"]:
+        if "candidate" in run["label"]:
+            assert 0.0 < run["metrics"]["efficiency_polytropic"] <= 1.0
+
+
+def test_compressor_rejects_a_solution_outside_its_residual_tolerance():
+    pytest.importorskip("turbodesign")
+    design, task = build_compressor_case(stages=1, streamtubes=10)
+    task["numerics"]["residual_tolerance"] = 1e-10
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = make_env("turbomachinery_throughflow").evaluate(
+            "validation", task, "strict_residual", design
+        )
+    assert result.status == "simulation_error"
+    assert "massflow residual" in result.error_message
+
+
+def test_candidate_rejects_polytropic_efficiency_above_unity():
+    pytest.importorskip("turbodesign")
+    design, task = build_compressor_case(stages=2, streamtubes=10)
+    span = [index / 10 for index in range(11)]
+    for row in design["rows"]:
+        if row["row_type"] == "rotor":
+            inlet = [-18.0 - 4.0 * value for value in span]
+            outlet = [-22.0 - 4.0 * value for value in span]
+            row["metal_angle_in_deg"] = inlet
+            row["metal_angle_out_deg"] = outlet
+            row["stagger_angle_deg"] = [
+                (first + second) / 2 for first, second in zip(inlet, outlet)
+            ]
+            row["tip_clearance_m"] = 0.0005
+            row["trailing_edge_thickness_m"] = 0.0005
+        elif row["row_type"] == "stator":
+            inlet = [42.0 - 4.0 * value for value in span]
+            outlet = [41.0 - 2.0 * value for value in span]
+            row["metal_angle_in_deg"] = inlet
+            row["metal_angle_out_deg"] = outlet
+            row["stagger_angle_deg"] = [
+                (first + second) / 2 for first, second in zip(inlet, outlet)
+            ]
+            row["trailing_edge_thickness_m"] = 0.0005
+    task["physics_profile"] = "axial_compressor_candidate_v1"
+    task["physics"] = {
+        "default_loss_model": "diffusion",
+        "default_deviation_model": "carter",
+    }
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = make_env("turbomachinery_throughflow").evaluate(
+            "validation", task, "nonphysical_efficiency", design
+        )
+    assert result.status == "simulation_error"
+    assert "non-physical polytropic efficiency" in result.error_message

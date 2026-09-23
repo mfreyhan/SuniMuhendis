@@ -129,6 +129,9 @@ class NasaTurboDesignSimulator(BaseSimulator):
                 "NASA DiffusionLoss is a preliminary diffusion-factor model and does not include a separate incidence-loss correlation."
             )
             notes.append(
+                "The pinned DiffusionLoss uses rotor speed in its loading term; for stators U=0, so ordinary de-swirl commonly clips the predicted stator loss to zero. Treat this profile as a solver demonstration, not a validated loss prediction."
+            )
+            notes.append(
                 "Carter deviation uses the corrected documented algebra because the pinned NASA class has a radians/degrees interface mismatch."
             )
         if task.physics_profile == "axial_turbine_candidate_v1":
@@ -140,6 +143,40 @@ class NasaTurboDesignSimulator(BaseSimulator):
                     "No general turbine deviation correlation is available in the pinned backend; exit flow follows exit metal angle unless calibrated fixed deviation is supplied."
                 )
         return notes
+
+    @staticmethod
+    def _compressor_convergence(spool, task):
+        """Return dimensionless convergence evidence and reject loose solves."""
+        history = list(getattr(spool, "convergence_history", []) or [])
+        if not history:
+            raise RuntimeError("compressor solver returned no convergence history")
+        final_std = float(history[-1]["massflow_std"])
+        massflow = float(task.operating_conditions.mass_flow_kg_s)
+        residual = final_std / massflow
+        rows = spool._all_rows()[1:-1]
+        row_flows = [
+            float(row.total_massflow_no_coolant)
+            for row in rows
+            if hasattr(row, "total_massflow_no_coolant")
+        ]
+        spread = (max(row_flows) - min(row_flows)) / massflow if row_flows else 0.0
+        if residual > task.numerics.residual_tolerance:
+            raise RuntimeError(
+                "compressor massflow residual {:.3e} exceeds tolerance {:.3e}".format(
+                    residual, task.numerics.residual_tolerance
+                )
+            )
+        if spread > task.numerics.massflow_spread_tolerance:
+            raise RuntimeError(
+                "compressor row massflow spread {:.3e} exceeds tolerance {:.3e}".format(
+                    spread, task.numerics.massflow_spread_tolerance
+                )
+            )
+        return {
+            "massflow_residual": residual,
+            "massflow_row_spread": spread,
+            "solver_iterations": float(len(history)),
+        }
 
     def _solve_turbine(self, design, task):
         import numpy as np
@@ -223,7 +260,16 @@ class NasaTurboDesignSimulator(BaseSimulator):
             spool.balance_pressure()
         else:
             spool.solve_balance_pressure()
-        metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":float(spool.overall_pressure_ratio()),"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines),"streamtube_count":float(task.numerics.streamlines-1)}
+        pressure_ratio=float(spool.overall_pressure_ratio())
+        target_pressure_ratio=op.outlet_total_pressure_pa/op.inlet_total_pressure_pa
+        metrics={"power_W":float(spool.total_power()),"pressure_ratio_total":pressure_ratio,"target_pressure_ratio_total":target_pressure_ratio,"pressure_ratio_relative_error":abs(pressure_ratio-target_pressure_ratio)/target_pressure_ratio,"efficiency_polytropic":float(spool.overall_polytropic_efficiency()),"stage_count":float(design.stage_count),"streamline_count":float(task.numerics.streamlines),"streamtube_count":float(task.numerics.streamlines-1)}
+        metrics.update(self._compressor_convergence(spool,task))
         if not all(math.isfinite(v) for v in metrics.values()): raise ValueError("solver returned non-finite summary metrics")
+        if profile.maturity == "candidate" and not (0.0 < metrics["efficiency_polytropic"] <= 1.0):
+            raise ValueError(
+                "candidate compressor returned non-physical polytropic efficiency {:.6f}".format(
+                    metrics["efficiency_polytropic"]
+                )
+            )
         raw={"backend":"nasa/turbo-design","backend_mode":"fixed_streamline_geometry","simulator_version":self.VERSION,"physics_profile":profile.provenance(),"convergence_history":getattr(spool,"convergence_history",[]),"fidelity_notes":self._fidelity_notes(task),"rows":[self._row_output(key,value,*row_physics[key]) for key,value in row_map.items()]}
         return True,metrics,raw,""
