@@ -1,0 +1,71 @@
+site_name: SM-Bench
+site_description: Physics-based evaluation environments for machine-generated engineering designs.
+site_url: https://suni-muhendis.github.io/sm-bench/
+site_author: Suni Muhendis
+repo_url: https://github.com/suni-muhendis/sm-bench
+repo_name: suni-muhendis/sm-bench
+edit_uri: edit/main/docs/
+copyright: Code Apache-2.0 · Benchmark data CC BY 4.0 · Part of Suni Muhendis
+
+# Only pages listed in nav are published (see scripts/mkdocs_hooks.py).
+nav:
+  - Home: index.md
+  - Leaderboard: leaderboard.md
+  - Guides:
+      - Using the library: library.md
+      - Running benchmarks: benchmarking.md
+      - Development and releases: development.md
+
+theme:
+  name: material
+  language: en
+  font:
+    text: IBM Plex Sans
+    code: IBM Plex Mono
+  icon:
+    logo: material/chevron-right
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+
+hooks:
+  - scripts/mkdocs_hooks.py
+
+extra_css:
+  - stylesheets/extra.css
+extra_javascript:
+  - javascripts/leaderboard.js
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+validation:
+  links:
+    absolute_links: relative_to_docs
+    unrecognized_links: warn

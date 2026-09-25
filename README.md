@@ -118,6 +118,7 @@ repository tools and are excluded from the wheel.
 
 ## Documentation
 
+- [Documentation site and leaderboard](https://suni-muhendis.github.io/sm-bench/)
 - [Library API and task auditing](docs/library.md)
 - [Benchmarking, cost accounting, and dashboard](docs/benchmarking.md)
 - [Development and release workflow](docs/development.md)

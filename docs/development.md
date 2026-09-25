@@ -51,6 +51,23 @@ Windows and Ubuntu.
 | `python scripts/calibrate_hard_task.py` | Audit a task's feasible design space |
 | `python scripts/token_report.py` | Report token use and spend |
 
+## Documentation site
+
+The site at <https://suni-muhendis.github.io/sm-bench/> is built from `docs/`
+with MkDocs Material and deployed by the `docs` workflow on every push to
+`main`. Only pages listed in the `nav` of `mkdocs.yml` are published. The
+leaderboard is computed from `results/` at build time, so new benchmark runs
+appear after the next push.
+
+To preview it locally, install the pinned site dependencies in a separate
+environment and run:
+
+```bash
+python -m pip install -r requirements-docs.txt
+python scripts/build_site_data.py
+python -m mkdocs serve
+```
+
 ## Release checklist
 
 1. Update `CHANGELOG.md`, `pyproject.toml`, `CITATION.cff`, and public docs.

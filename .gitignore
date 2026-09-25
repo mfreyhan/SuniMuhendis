@@ -75,3 +75,7 @@ scripts/examples/outputs/
 
 # Generated training data (local only, not published)
 datasets/sft/
+
+# Documentation site build output (see mkdocs.yml)
+site/
+docs/data/
