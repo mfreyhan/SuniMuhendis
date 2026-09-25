@@ -11,7 +11,7 @@ reproducibility but do not receive routine fixes.
 Do not open a public issue for a suspected vulnerability, leaked credential, or
 unsafe third-party artifact. Use GitHub's private vulnerability reporting:
 
-https://github.com/mfreyhan/SuniMuhendis/security/advisories/new
+https://github.com/suni-muhendis/sm-bench/security/advisories/new
 
 Include the affected version or commit, reproduction steps, expected impact,
 and any proposed mitigation. Remove API keys, personal data, and unrelated logs

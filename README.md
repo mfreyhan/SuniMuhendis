@@ -1,6 +1,6 @@
 # SuniMuhendis
 
-[![Tests](https://github.com/mfreyhan/SuniMuhendis/actions/workflows/tests.yml/badge.svg)](https://github.com/mfreyhan/SuniMuhendis/actions/workflows/tests.yml)
+[![Tests](https://github.com/suni-muhendis/sm-bench/actions/workflows/tests.yml/badge.svg)](https://github.com/suni-muhendis/sm-bench/actions/workflows/tests.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-31210/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#project-status)
@@ -32,7 +32,7 @@ Python 3.12 is required. Install from a release tag so simulator and scoring
 behavior cannot move underneath an experiment:
 
 ```bash
-pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/mfreyhan/SuniMuhendis.git@envs-v0.6.0"
+pip install "sunimuhendis[heat_exchanger] @ git+https://github.com/suni-muhendis/sm-bench.git@envs-v0.6.0"
 ```
 
 The supported runtime contract is `>=3.12,<3.13`. Support for another Python
@@ -124,8 +124,8 @@ repository tools and are excluded from the wheel.
 ## Development
 
 ```bash
-git clone https://github.com/mfreyhan/SuniMuhendis.git
-cd SuniMuhendis
+git clone https://github.com/suni-muhendis/sm-bench.git
+cd sm-bench
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -c constraints/python312.txt -r requirements.txt -e .

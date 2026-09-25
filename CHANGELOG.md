@@ -25,6 +25,6 @@ different simulator or score versions comparable.
   task-owned operating conditions.
 - Added live price snapshots and token/cost accounting for benchmark runs.
 
-[Unreleased]: https://github.com/mfreyhan/SuniMuhendis/compare/envs-v0.6.0...main
-[0.6.0]: https://github.com/mfreyhan/SuniMuhendis/releases/tag/envs-v0.6.0
-[0.5.0]: https://github.com/mfreyhan/SuniMuhendis/releases/tag/envs-v0.5.0
+[Unreleased]: https://github.com/suni-muhendis/sm-bench/compare/envs-v0.6.0...main
+[0.6.0]: https://github.com/suni-muhendis/sm-bench/releases/tag/envs-v0.6.0
+[0.5.0]: https://github.com/suni-muhendis/sm-bench/releases/tag/envs-v0.5.0

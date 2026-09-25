@@ -5,8 +5,8 @@ type: software
 version: 0.6.0
 date-released: 2026-09-21
 license: Apache-2.0
-repository-code: "https://github.com/mfreyhan/SuniMuhendis"
-url: "https://github.com/mfreyhan/SuniMuhendis"
+repository-code: "https://github.com/suni-muhendis/sm-bench"
+url: "https://github.com/suni-muhendis/sm-bench"
 authors:
   - family-names: Reyhan
     given-names: Mehmet Fatih

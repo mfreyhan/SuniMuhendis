@@ -54,7 +54,7 @@ class OpenRouterClient(BaseModelClient):
 
         # OpenRouter recommendation: Send HTTP-Referer and X-Title via Headers.
         default_headers = {
-            "HTTP-Referer": "https://github.com/SuniMuhendis", # Your site address or repository link
+            "HTTP-Referer": "https://github.com/suni-muhendis/sm-bench", # Your site address or repository link
             "X-Title": "Heat Exchanger Benchmark"
         }
 
