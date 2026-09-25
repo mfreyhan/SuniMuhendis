@@ -737,7 +737,7 @@ def _render_header(experiment_track: str) -> None:
         <div class="hero">
           <div class="hero-glow"></div>
           <div class="hero-main">
-            <div class="eyebrow"><span></span>SUNIMUHENDIS / BENCHMARK INTELLIGENCE</div>
+            <div class="eyebrow"><span></span>SM-BENCH / BENCHMARK INTELLIGENCE</div>
             <h1>Heat Exchanger <em>Evaluation Lab</em></h1>
           </div>
           <div class="hero-tags">
@@ -2466,7 +2466,7 @@ def _render_filter_bar(runs: pd.DataFrame, scope: str) -> pd.DataFrame:
 
 def main() -> None:
     st.set_page_config(
-        page_title="SuniMuhendis Benchmark Lab",
+        page_title="SM-Bench Lab",
         page_icon="⚙️",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -2476,7 +2476,7 @@ def main() -> None:
     st.sidebar.markdown(
         """
         <div class="sidebar-brand">
-          <span>SM</span><div><strong>SUNIMUHENDIS</strong><small>Evaluation console</small></div>
+          <span>SM</span><div><strong>SM-BENCH</strong><small>Evaluation console</small></div>
         </div>
         """,
         unsafe_allow_html=True,

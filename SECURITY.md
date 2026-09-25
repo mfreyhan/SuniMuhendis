@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-SuniMuhendis is alpha research software. Security fixes are applied to the
+SM-Bench is alpha research software. Security fixes are applied to the
 latest release line and `main`; older environment tags remain available for
 reproducibility but do not receive routine fixes.
 

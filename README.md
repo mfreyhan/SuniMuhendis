@@ -1,4 +1,4 @@
-# SuniMuhendis
+# SM-Bench
 
 [![Tests](https://github.com/suni-muhendis/sm-bench/actions/workflows/tests.yml/badge.svg)](https://github.com/suni-muhendis/sm-bench/actions/workflows/tests.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-31210/)
@@ -7,7 +7,10 @@
 
 **Physics-based evaluation environments for machine-generated engineering designs.**
 
-SuniMuhendis turns a proposed design into structured engineering feedback and a
+Part of [Suni Muhendis](https://github.com/suni-muhendis). The library is
+published as the `sunimuhendis` Python package.
+
+SM-Bench turns a proposed design into structured engineering feedback and a
 normalized score. Each environment applies schema validation, design-rule checks,
 a deterministic physics simulation, and a versioned scoring function. The same
 API can be used from this repository, an optimizer, or a separate training system.

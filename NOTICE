@@ -1,7 +1,7 @@
-SuniMuhendis
+SM-Bench
 Copyright 2026 Mehmet Fatih Reyhan and Ertuğrul Şahin
 
-This product includes software developed by the SuniMuhendis project.
+This product includes software developed by the SM-Bench project (Suni Muhendis).
 
 Licensing summary
 -----------------
@@ -15,7 +15,7 @@ Third-party components
 ----------------------
 The distributed Python package declares the following core and environment
 dependencies, each governed by its own upstream license. Their source trees
-are not copied into the SuniMuhendis wheel:
+are not copied into the sunimuhendis wheel:
 
   ht           - MIT License
   fluids       - BSD License

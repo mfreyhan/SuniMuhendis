@@ -1,6 +1,6 @@
 # Library API
 
-SuniMuhendis exposes versioned engineering environments through a small public
+SM-Bench exposes versioned engineering environments through a small public
 registry:
 
 ```python

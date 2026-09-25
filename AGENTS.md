@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents (Claude Code, Codex, and others)
 
 ## What this is
 
-SuniMuhendis is a framework researching whether an LLM can learn to produce **valid, performant engineering designs** using physics-simulation feedback . The first concrete environment is a **heat exchanger**: it takes a design (JSON), runs real engineering calculations, and returns a normalized benchmark score in `[0.0, 1.0]`. The current weight of the codebase is the *evaluation engine* ("referee").
+SM-Bench (Python package `sunimuhendis`) is a framework researching whether an LLM can learn to produce **valid, performant engineering designs** using physics-simulation feedback . The first concrete environment is a **heat exchanger**: it takes a design (JSON), runs real engineering calculations, and returns a normalized benchmark score in `[0.0, 1.0]`. The current weight of the codebase is the *evaluation engine* ("referee").
 
 ## Environment & commands
 

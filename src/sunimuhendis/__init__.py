@@ -1,4 +1,4 @@
-"""SuniMuhendis — physics-simulation evaluation environments.
+"""sunimuhendis — SM-Bench physics-simulation evaluation environments.
 
 Public API for consumers (e.g. a training repo) that only need the
 "referee" (DRC + simulator + score) for one or more environments:
